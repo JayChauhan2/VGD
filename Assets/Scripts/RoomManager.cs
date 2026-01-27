@@ -5,6 +5,7 @@ using UnityEngine.UIElements;
 public class RoomManager : MonoBehaviour
 {
     [SerializeField] GameObject roomPrefab;
+    [SerializeField] PathfindingGrid pathfindingGrid;
 
     [SerializeField] private int maxRooms = 15; 
     [SerializeField] private int minRooms = 10;
@@ -25,6 +26,12 @@ public class RoomManager : MonoBehaviour
     {
         roomGrid = new int[gridSizeX, gridSizeY];
         roomQueue = new Queue<Vector2Int>();
+
+        if (pathfindingGrid == null)
+        {
+            pathfindingGrid = FindFirstObjectByType<PathfindingGrid>();
+            if (pathfindingGrid == null) Debug.LogWarning("RoomManager: PathfindingGrid still not found after auto-search.");
+        }
 
         Vector2Int initialRoomIndex = new Vector2Int(gridSizeX / 2, gridSizeY / 2);
         StartRoomGenerationFromRoom(initialRoomIndex);
@@ -47,6 +54,18 @@ public class RoomManager : MonoBehaviour
         {
             Debug.Log($"GenerationComplete, {roomCount} rooms created");
             generationComplete = true;
+
+            if (pathfindingGrid != null)
+            {
+                // Calculate total map size
+                Vector2 mapSize = new Vector2(gridSizeX * roomWidth, gridSizeY * roomHeight);
+                pathfindingGrid.CreateGrid(Vector2.zero, mapSize);
+                Debug.Log($"RoomManager: Created PathfindingGrid with size {mapSize} at {Vector2.zero}");
+            }
+            else
+            {
+                Debug.LogError("RoomManager: PathfindingGrid reference is missing!");
+            }
         }
     }
 
@@ -68,6 +87,12 @@ public class RoomManager : MonoBehaviour
     {
         int x = roomIndex.x;
         int y = roomIndex.y;
+
+        if (x < 0 || x >= gridSizeX || y < 0 || y >= gridSizeY)
+            return false;
+
+        if (roomGrid[x, y] != 0)
+            return false;
 
         if (roomCount >= maxRooms)
             return false;

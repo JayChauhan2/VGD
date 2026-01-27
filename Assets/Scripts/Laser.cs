@@ -16,17 +16,27 @@ public class Laser : MonoBehaviour
     {
         ShootLaser();
     }
+    public float damagePerSecond = 30f;
+    
     void ShootLaser()
     {
-        if (Physics2D.Raycast(m_transform.position, transform.right))
+        RaycastHit2D _hit = Physics2D.Raycast(m_transform.position, transform.right);
+        
+        if (_hit.collider != null) // Hit something
         {
-            RaycastHit2D _hit = Physics2D.Raycast(laserFirePoint.position, transform.right);
             Draw2DRay(laserFirePoint.position, _hit.point);
+            
+            // Apply Damage
+            EnemyAI enemy = _hit.collider.GetComponent<EnemyAI>();
+            if (enemy != null)
+            {
+                // Applying damage over time
+                enemy.TakeDamage(damagePerSecond * Time.deltaTime);
+            }
         }
         else
         {
-            Draw2DRay(laserFirePoint.position, laserFirePoint.transform.right * defDistanceRay);
-
+            Draw2DRay(laserFirePoint.position, laserFirePoint.position + transform.right * defDistanceRay);
         }
     }
     void Draw2DRay(Vector2 startPos, Vector2 endPos)

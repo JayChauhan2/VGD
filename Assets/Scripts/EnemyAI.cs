@@ -12,8 +12,15 @@ public class EnemyAI : MonoBehaviour
     List<Node> path;
     int targetIndex;
 
+    public float maxHealth = 100f;
+    private float currentHealth;
+    private Room parentRoom;
+
     void Start()
     {
+        currentHealth = maxHealth;
+        parentRoom = GetComponentInParent<Room>();
+
         // Try to find the Player if target not assigned
         if (target == null)
         {
@@ -32,13 +39,38 @@ public class EnemyAI : MonoBehaviour
         StartCoroutine(UpdatePath());
     }
 
+    public void TakeDamage(float damage)
+    {
+        currentHealth -= damage;
+        Debug.Log($"Enemy Health: {currentHealth}/{maxHealth}");
+        
+        if (currentHealth <= 0)
+        {
+            Die();
+        }
+    }
+
+    private void Die()
+    {
+        if (parentRoom != null)
+        {
+            parentRoom.EnemyDefeated(this);
+        }
+        Destroy(gameObject);
+    }
+
     IEnumerator UpdatePath()
     {
+        while (pathfinding == null || !pathfinding.IsGridReady)
+        {
+            yield return new WaitForSeconds(0.5f);
+        }
+
         if (target == null) yield break;
 
         while (true)
         {
-            if (pathfinding != null)
+            if (pathfinding != null && pathfinding.IsGridReady)
             {
                 path = pathfinding.FindPath(transform.position, target.position);
                 if (path != null && path.Count > 0)
@@ -47,7 +79,7 @@ public class EnemyAI : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning($"EnemyAI: Path calculation returned null or empty path to target {target.position}");
+                    // Debug.LogWarning($"EnemyAI: Path calculation returned null or empty path");
                 }
             }
             yield return new WaitForSeconds(pathUpdateDelay);

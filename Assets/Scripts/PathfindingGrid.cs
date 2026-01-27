@@ -10,6 +10,7 @@ public class PathfindingGrid : MonoBehaviour
 
     float nodeDiameter;
     int gridSizeX, gridSizeY;
+    public bool IsInitialized => grid != null;
 
     // Optional: Draw gizmos to see the grid
     public bool displayGridGizmos = true;

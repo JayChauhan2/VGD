@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class Pathfinding : MonoBehaviour
 {
     PathfindingGrid grid;
+    public bool IsGridReady => grid != null && grid.IsInitialized;
 
     void Awake()
     {
@@ -13,14 +14,15 @@ public class Pathfinding : MonoBehaviour
 
     public List<Node> FindPath(Vector3 startPos, Vector3 targetPos)
     {
+        if (!IsGridReady) return null;
+
         Node startNode = grid.NodeFromWorldPoint(startPos);
         Node targetNode = grid.NodeFromWorldPoint(targetPos);
         
         // Validation
         if (startNode == null || targetNode == null) 
         {
-            Debug.LogError($"Pathfinding: Unable to get nodes from grid. StartNode: {startNode != null}, TargetNode: {targetNode != null}. Grid might not be initialized or positions are out of bounds. Start: {startPos}, Target: {targetPos}");
-            if (grid == null) Debug.LogError("Pathfinding: Grid reference is null inside FindPath!");
+            // Debug.LogError($"Pathfinding: Unable to get nodes... (suppressed)");
             return null;
         }
 

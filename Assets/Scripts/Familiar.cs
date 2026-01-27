@@ -2,50 +2,66 @@ using UnityEngine;
 
 public class Familiar : MonoBehaviour
 {
-    [Tooltip("The player to follow. If empty, will auto-find tag 'Player' or PlayerMovement script.")]
-    public Transform player;
-
     [Tooltip("Time it takes to reach the target. Lower is faster/closer.")]
     public float smoothTime = 0.1f;
 
-    [Tooltip("Optional offset from the player center.")]
+    [Header("Fallback (Only if Manager missing)")]
+    public Transform fallbackPlayer;
     public Vector3 followOffset = Vector3.zero;
 
     private Vector3 currentVelocity;
+    private Vector3 targetPosition;
+    private bool controlledByManager = false;
 
     void Start()
     {
-        if (player == null)
+        // Try to register with Manager
+        if (FamiliarManager.Instance != null)
         {
-            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            if (playerObj != null)
+            FamiliarManager.Instance.RegisterFamiliar(this);
+            controlledByManager = true;
+        }
+        else
+        {
+            // Fallback logic
+            if (fallbackPlayer == null)
             {
-                player = playerObj.transform;
-            }
-            else
-            {
-                // Fallback: Find by type
-                var pm = Object.FindFirstObjectByType<PlayerMovement>(); // Unity 2023+
-                if (pm == null) pm = Object.FindObjectOfType<PlayerMovement>(); // Old Unity
-                
-                if (pm != null) player = pm.transform;
+                GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+                if (playerObj != null) fallbackPlayer = playerObj.transform;
+                else
+                {
+                    var pm = Object.FindFirstObjectByType<PlayerMovement>();
+                    if (pm == null) pm = Object.FindObjectOfType<PlayerMovement>();
+                    if (pm != null) fallbackPlayer = pm.transform;
+                }
             }
         }
+        
+        targetPosition = transform.position;
+    }
 
-        if (player == null)
+    void OnDestroy()
+    {
+        if (FamiliarManager.Instance != null)
         {
-            Debug.LogWarning("Familiar: Could not find Player! Is there an object with tag 'Player' or PlayerMovement script?");
+            FamiliarManager.Instance.UnregisterFamiliar(this);
         }
+    }
+
+    public void SetTargetPosition(Vector3 pos)
+    {
+        targetPosition = pos;
+        controlledByManager = true;
     }
 
     void LateUpdate()
     {
-        if (player != null)
+        if (!controlledByManager && fallbackPlayer != null)
         {
-            Vector3 targetPosition = player.position + followOffset;
-            
-            // SmoothDamp provides a nice "catch up" effect similar to a trailing familiar
-            transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref currentVelocity, smoothTime);
+            targetPosition = fallbackPlayer.position + followOffset;
         }
+
+        // Apply movement
+        transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref currentVelocity, smoothTime);
     }
 }

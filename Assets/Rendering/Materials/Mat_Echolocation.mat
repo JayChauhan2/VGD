@@ -43,7 +43,7 @@ Material:
     m_Floats:
     - _EdgeWidth: 2
     - _EnableExternalAlpha: 0
-    - _Radius: 11.701274
+    - _Radius: 11.908869
     - _ZWrite: 0
     m_Colors:
     - _Center: {r: 0, g: 0, b: -8.1543, a: 0}

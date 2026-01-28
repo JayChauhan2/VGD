@@ -75,12 +75,12 @@ public class Door : MonoBehaviour
                 // If visuals are the root object, don't disable gameObject (kills script/collider)
                 // Disable Renderer instead if present
                 var renderer = GetComponent<Renderer>();
-                if (renderer != null) renderer.enabled = locked;
+                if (renderer != null) renderer.enabled = !locked;
             }
             else
             {
                 // Visuals are a child/separate object
-                doorVisuals.SetActive(locked);
+                doorVisuals.SetActive(!locked);
             }
         }
     }

@@ -16,9 +16,18 @@ public class EnemyAI : MonoBehaviour
     private float currentHealth;
     private Room parentRoom;
 
+    public event System.Action<float, float> OnHealthChanged;
+
     void Start()
     {
+        // Auto-add health bar if missing
+        if (GetComponent<EnemyHealthBar>() == null)
+        {
+            gameObject.AddComponent<EnemyHealthBar>();
+        }
+
         currentHealth = maxHealth;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
         
         // 1. Try Hierarchy
         parentRoom = GetComponentInParent<Room>();
@@ -48,8 +57,8 @@ public class EnemyAI : MonoBehaviour
         // Try to find the Player if target not assigned
         if (target == null)
         {
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null) target = player.transform;
+            FindPlayer();
+            if (target == null) Debug.LogWarning("EnemyAI: Player with tag 'Player' not found in Start. Will keep searching.");
         }
 
         CheckPathfinding();
@@ -69,6 +78,7 @@ public class EnemyAI : MonoBehaviour
     public void TakeDamage(float damage)
     {
         currentHealth -= damage;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
         Debug.Log($"Enemy Health: {currentHealth}/{maxHealth}");
         
         if (currentHealth <= 0)
@@ -95,7 +105,8 @@ public class EnemyAI : MonoBehaviour
     {
         while (pathfinding == null || !pathfinding.IsGridReady)
         {
-            yield return new WaitForSeconds(0.5f);
+            Debug.LogWarning($"EnemyAI: Waiting for Pathfinding Grid... (Pathfinding Obj: '{(pathfinding != null ? pathfinding.name : "null")}', IsGridReady: {pathfinding?.IsGridReady})");
+            yield return new WaitForSeconds(1.0f);
         }
 
         while (true)
@@ -103,8 +114,7 @@ public class EnemyAI : MonoBehaviour
             // Retry finding player if missing
             if (target == null)
             {
-                GameObject player = GameObject.FindGameObjectWithTag("Player");
-                if (player != null) target = player.transform;
+                FindPlayer();
             }
 
             if (target != null && pathfinding != null && pathfinding.IsGridReady)
@@ -113,6 +123,10 @@ public class EnemyAI : MonoBehaviour
                 if (path != null && path.Count > 0)
                 {
                     targetIndex = 0;
+                }
+                else
+                {
+                     Debug.LogWarning($"EnemyAI: Path calculation failed (Result null or empty). TargetPos: {target.position}");
                 }
             }
             yield return new WaitForSeconds(pathUpdateDelay);
@@ -132,6 +146,16 @@ public class EnemyAI : MonoBehaviour
         if (Vector3.Distance(transform.position, currentWaypoint) < 0.1f)
         {
             targetIndex++;
+        }
+    }
+
+    void FindPlayer()
+    {
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            target = player.transform;
+            Debug.Log($"EnemyAI: Player found (Name: {player.name}) and assigned as target.");
         }
     }
 

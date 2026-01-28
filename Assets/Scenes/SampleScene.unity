@@ -679,7 +679,7 @@ GameObject:
   - component: {fileID: 1106899277}
   m_Layer: 0
   m_Name: Square
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -804,7 +804,7 @@ BoxCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1106899272}
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
   m_Material: {fileID: 0}
@@ -1454,7 +1454,7 @@ MonoBehaviour:
   unwalkableMask:
     serializedVersion: 2
     m_Bits: 0
-  gridWorldSize: {x: 15.61, y: 52.43}
+  gridWorldSize: {x: 8.8, y: 8.6}
   nodeRadius: 0.1
   displayGridGizmos: 1
 --- !u!4 &1986833166

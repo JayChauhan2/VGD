@@ -35,9 +35,13 @@ public class RoomManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
+    private bool hasStarted = false;
+
     private void Start()
     {
+        hasStarted = true;
         roomGrid = new int[gridSizeX, gridSizeY];
+
         roomComponentGrid = new Room[gridSizeX, gridSizeY];
         roomQueue = new Queue<Vector2Int>();
 
@@ -53,16 +57,22 @@ public class RoomManager : MonoBehaviour
 
     private void Update()
     {
-        if(roomQueue.Count > 0 && roomCount < maxRooms && !generationComplete)
+        if (!hasStarted) return;
+
+        if(roomQueue.Count > 0 && !generationComplete)
         {
             Vector2Int roomIndex = roomQueue.Dequeue();
-            int gridX = roomIndex.x;
-            int gridY = roomIndex.y;
 
-            TryGenerateRoom(new Vector2Int(gridX - 1, gridY));
-            TryGenerateRoom(new Vector2Int(gridX + 1, gridY));
-            TryGenerateRoom(new Vector2Int(gridX, gridY + 1));
-            TryGenerateRoom(new Vector2Int(gridX, gridY - 1));
+            if (roomCount < maxRooms)
+            {
+                int gridX = roomIndex.x;
+                int gridY = roomIndex.y;
+
+                TryGenerateRoom(new Vector2Int(gridX - 1, gridY));
+                TryGenerateRoom(new Vector2Int(gridX + 1, gridY));
+                TryGenerateRoom(new Vector2Int(gridX, gridY + 1));
+                TryGenerateRoom(new Vector2Int(gridX, gridY - 1));
+            }
         }
         else if (!generationComplete && roomQueue.Count == 0)
         {
@@ -74,6 +84,10 @@ public class RoomManager : MonoBehaviour
             {
                 Vector2 mapSize = new Vector2(gridSizeX * roomWidth, gridSizeY * roomHeight);
                 pathfindingGrid.CreateGrid(Vector2.zero, mapSize);
+            }
+            else
+            {
+                Debug.LogError("RoomManager: Cannot creating PathfindingGrid because reference is null!");
             }
 
             // Link Rooms
@@ -94,6 +108,11 @@ public class RoomManager : MonoBehaviour
     private void LinkRooms()
     {
         if (roomsLinked) return;
+        if (roomComponentGrid == null)
+        {
+            Debug.LogError("RoomManager: roomComponentGrid is null in LinkRooms! Generation failed or Start didn't run.");
+            return;
+        }
 
         for (int x = 0; x < gridSizeX; x++)
         {

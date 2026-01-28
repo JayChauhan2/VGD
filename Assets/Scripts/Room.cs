@@ -21,6 +21,8 @@ public class Room : MonoBehaviour
     {
         if (!AllRooms.Contains(this)) AllRooms.Add(this);
         
+        Debug.Log($"Room {name}: Awake. Checked Inspector Assignments -> Top: {topDoorObj}, Bottom: {bottomDoorObj}, Left: {leftDoorObj}, Right: {rightDoorObj}");
+
         // Validation & Auto-Assign
         Transform doorsParent = transform.Find("Doors");
         if (doorsParent == null) doorsParent = transform; // Fallback to root if "Doors" container missing
@@ -74,10 +76,15 @@ public class Room : MonoBehaviour
 
     private void SetupDoor(GameObject doorObj, Room neighbor, Vector2Int dir, ref Door doorRef)
     {
+        Debug.Log($"Room {name}: SetupDoor called for Dir {dir}. Neighbor: {neighbor}, DoorObj: {doorObj}");
         if (neighbor == null)
         {
             // No neighbor, deactivate door entirely (wall)
-            if (doorObj != null) doorObj.SetActive(false);
+            if (doorObj != null) 
+            {
+                doorObj.SetActive(false);
+                Debug.Log($"Room {name}: Deactivated door {dir} (No neighbor)");
+            }
         }
         else
         {
@@ -89,8 +96,10 @@ public class Room : MonoBehaviour
                 if (doorRef == null) doorRef = doorObj.AddComponent<Door>(); // Add script if missing
                 
                 doorRef.Initialize(neighbor, dir);
-                // Start doors in locked state (invisible) - they'll unlock when room is entered/cleared
+                // Start doors in locked state (Visible/Solid) - they'll unlock when room is entered/cleared
                 doorRef.SetLocked(true);
+                
+                Debug.Log($"Room {name}: SetupDoor Success for {dir}. DoorRef: {doorRef}");
             }
             else
             {

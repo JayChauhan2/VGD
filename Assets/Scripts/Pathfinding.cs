@@ -10,6 +10,7 @@ public class Pathfinding : MonoBehaviour
     void Awake()
     {
         grid = GetComponent<PathfindingGrid>();
+        if (grid == null) Debug.LogError($"Pathfinding: Missing 'PathfindingGrid' component on GameObject '{name}'!");
     }
 
     public List<Node> FindPath(Vector3 startPos, Vector3 targetPos)

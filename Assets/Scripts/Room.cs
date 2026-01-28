@@ -64,6 +64,7 @@ public class Room : MonoBehaviour
     
     private List<EnemyAI> activeEnemies = new List<EnemyAI>();
     public bool IsCleared { get; private set; } = false;
+    public bool PlayerHasEntered { get; private set; } = false;
 
     // Called by RoomManager after generation
     public void SetNeighbor(Vector2Int direction, Room neighbor)
@@ -114,6 +115,12 @@ public class Room : MonoBehaviour
         {
             activeEnemies.Add(enemy);
             Debug.Log($"Room {name}: Registered enemy. Total: {activeEnemies.Count}");
+            
+            // If player already entered (combat started), activate immediately
+            if (PlayerHasEntered && !IsCleared)
+            {
+                enemy.SetActive(true);
+            }
         }
     }
 
@@ -129,10 +136,15 @@ public class Room : MonoBehaviour
         // No longer finding by children, relying on manual registration
         
         Debug.Log($"Room {name} Entered. Active Enemies: {activeEnemies.Count}");
+        PlayerHasEntered = true;
 
         if (activeEnemies.Count > 0 && !IsCleared)
         {
             LockDoors();
+            foreach (var enemy in activeEnemies)
+            {
+                if (enemy != null) enemy.SetActive(true);
+            }
         }
         else
         {

@@ -43,10 +43,10 @@ Material:
     m_Floats:
     - _EdgeWidth: 2
     - _EnableExternalAlpha: 0
-    - _Radius: 15.701462
+    - _Radius: 8.479472
     - _ZWrite: 0
     m_Colors:
-    - _Center: {r: 0, g: 0, b: -8.1543, a: 0}
+    - _Center: {r: 7.432961, g: 0, b: -8.1543, a: 0}
     - _Color: {r: 1, g: 0.958875, b: 0.028301895, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

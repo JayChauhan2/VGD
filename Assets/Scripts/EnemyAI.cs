@@ -12,6 +12,8 @@ public class EnemyAI : MonoBehaviour
     List<Node> path;
     int targetIndex;
 
+    public bool IsActive { get; private set; } = false;
+
     public float maxHealth = 100f;
     private float currentHealth;
     private Room parentRoom;
@@ -111,6 +113,12 @@ public class EnemyAI : MonoBehaviour
 
         while (true)
         {
+            if (!IsActive)
+            {
+                yield return new WaitForSeconds(pathUpdateDelay);
+                continue;
+            }
+
             // Retry finding player if missing
             if (target == null)
             {
@@ -135,6 +143,7 @@ public class EnemyAI : MonoBehaviour
 
     void Update()
     {
+        if (!IsActive) return;
         if (path == null || targetIndex >= path.Count) return;
 
         Vector3 currentWaypoint = path[targetIndex].worldPosition;
@@ -178,5 +187,11 @@ public class EnemyAI : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void SetActive(bool active)
+    {
+        IsActive = active;
+        Debug.Log($"EnemyAI: Active state set to {active}");
     }
 }

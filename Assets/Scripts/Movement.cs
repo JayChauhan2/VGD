@@ -37,9 +37,37 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
+    public void ApplyKnockback(Vector2 force, float duration)
+    {
+        StartCoroutine(KnockbackRoutine(force, duration));
+    }
+
+    System.Collections.IEnumerator KnockbackRoutine(Vector2 force, float duration)
+    {
+        bool wasKinematic = rb.isKinematic;
+        rb.isKinematic = false; // Ensure physics can apply
+        rb.linearVelocity = Vector2.zero; // Reset current velocity
+        rb.AddForce(force, ForceMode2D.Impulse);
+        
+        // Disable input control
+        enabled = false; 
+
+        yield return new WaitForSeconds(duration);
+
+        // Re-enable input control
+        enabled = true;
+        rb.linearVelocity = Vector2.zero; // Stop sliding after knockback
+        rb.isKinematic = wasKinematic;
+    }
+
     void FixedUpdate()
     {
         // Apply velocity to the Rigidbody2D based on input and speed
+        // Input control is handled by enabling/disabling this script or checking a flag
+        // Since we disable 'this.enabled' in KnockbackRoutine, FixedUpdate won't run when knocked back.
+        // However, we need to ensure rb.velocity isn't overwritten if we were using a flag. 
+        // Using 'enabled = false' is the simplest way to stop Update/FixedUpdate.
+        
         rb.linearVelocity = moveInput * moveSpeed;
     }
 }

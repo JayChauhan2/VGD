@@ -189,6 +189,27 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
+
+    private float lastDamageTime;
+    public float damageCooldown = 1.0f;
+
+    void OnCollisionStay2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            if (Time.time >= lastDamageTime + damageCooldown)
+            {
+                PlayerHealth playerHealth = collision.gameObject.GetComponent<PlayerHealth>();
+                if (playerHealth != null)
+                {
+                    Vector2 knockbackDir = (collision.transform.position - transform.position).normalized;
+                    playerHealth.TakeDamage(10f, knockbackDir);
+                    lastDamageTime = Time.time;
+                }
+            }
+        }
+    }
+
     public void SetActive(bool active)
     {
         IsActive = active;

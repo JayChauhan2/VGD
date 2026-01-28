@@ -81,6 +81,20 @@ public class RoomManager : MonoBehaviour
         }
         else if (!generationComplete && roomQueue.Count == 0)
         {
+            // Check if we met the minimum room requirement
+            if (roomCount < minRooms && roomObjects.Count > 0)
+            {
+                Debug.Log($"Generation stalled at {roomCount} rooms (Min: {minRooms}). Restarting from random room.");
+                // Pick a random existing room to continue generation from
+                GameObject randomRoom = roomObjects[Random.Range(0, roomObjects.Count)];
+                Room r = randomRoom.GetComponent<Room>();
+                if (r != null)
+                {
+                   roomQueue.Enqueue(r.RoomIndex);
+                }
+                return; // Continue next frame
+            }
+
             // Generation Finished
             Debug.Log($"GenerationComplete, {roomCount} rooms created");
             generationComplete = true;
@@ -207,7 +221,9 @@ public class RoomManager : MonoBehaviour
         if (x < 0 || x >= gridSizeX || y < 0 || y >= gridSizeY) return false;
         if (roomGrid[x, y] != 0) return false;
         if (roomCount >= maxRooms) return false;
-        if (Random.value < 0.5f && roomIndex != Vector2Int.zero) return false;
+        
+        // Fix: If we haven't reached minRooms, we MUST NOT skip generation due to RNG
+        if (roomCount >= minRooms && Random.value < 0.5f && roomIndex != Vector2Int.zero) return false;
 
         roomQueue.Enqueue(roomIndex);
         roomGrid[x, y] = 1;

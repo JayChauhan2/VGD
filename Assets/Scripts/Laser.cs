@@ -18,6 +18,9 @@ public class Laser : MonoBehaviour
     public LineRenderer m_lineRenderer;
     Transform m_transform;
 
+    private bool isOverheated = false;
+    [SerializeField] private float overheatThreshold = 20f; // Must recharge to this to shoot again
+
     private void Awake()
     {
         m_transform = GetComponent<Transform>();
@@ -26,8 +29,10 @@ public class Laser : MonoBehaviour
 
     private void Update()
     {
-        // Require Mouse Input AND Energy
-        if (Input.GetMouseButton(0) && currentEnergy > 0)
+        // Require Mouse Input AND Energy AND Not Overheated
+        bool tryingToShoot = Input.GetMouseButton(0);
+        
+        if (tryingToShoot && !isOverheated && currentEnergy > 0)
         {
             ShootLaser();
             DrainEnergy();
@@ -47,7 +52,11 @@ public class Laser : MonoBehaviour
     void DrainEnergy()
     {
         currentEnergy -= drainRate * Time.deltaTime;
-        if (currentEnergy < 0) currentEnergy = 0;
+        if (currentEnergy <= 0) 
+        {
+            currentEnergy = 0;
+            isOverheated = true; // Trigger cooldown
+        }
     }
 
     void RechargeEnergy()
@@ -55,6 +64,13 @@ public class Laser : MonoBehaviour
         if (currentEnergy < maxEnergy)
         {
             currentEnergy += rechargeRate * Time.deltaTime;
+            
+            // Check if we recovered from overheat
+            if (isOverheated && currentEnergy >= overheatThreshold)
+            {
+                isOverheated = false;
+            }
+
             if (currentEnergy > maxEnergy) currentEnergy = maxEnergy;
         }
     }

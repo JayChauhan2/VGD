@@ -27,7 +27,12 @@ public class RoomManager : MonoBehaviour
     public bool IsInitialized() => generationComplete;
 
     // Movement after entering door
-    public float doorExitOffset = 2f; 
+    public float doorExitOffset = 3f; 
+    
+    public float teleportCooldown = 0.5f;
+    private float lastTeleportTime = -1f;
+
+    public bool CanTeleport => Time.time >= lastTeleportTime + teleportCooldown; 
 
     void Awake()
     {
@@ -139,6 +144,9 @@ public class RoomManager : MonoBehaviour
 
     public void EnterRoom(Room room, Vector2Int entryDirectionFromPrevious)
     {
+        if (!CanTeleport) return;
+        lastTeleportTime = Time.time;
+
         // Direction is: Previous -> New Room.
         // e.g. We walked UP (0,1) to get here.
         // So we should spawn at the BOTTOM of the new room.

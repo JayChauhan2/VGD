@@ -90,6 +90,8 @@ public class Door : MonoBehaviour
         Debug.Log($"Door {name} triggered by: {other.name} (Tag: {other.tag})");
         if (other.CompareTag("Player"))
         {
+            if (RoomManager.Instance != null && !RoomManager.Instance.CanTeleport) return;
+
             if (ConnectedRoom != null)
             {
                 Debug.Log($"Door {name}: Entering room {ConnectedRoom.name} in Direction {Direction}");

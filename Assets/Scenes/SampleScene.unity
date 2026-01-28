@@ -879,6 +879,7 @@ MonoBehaviour:
   roomWidth: 20
   roomHeight: 12
   doorExitOffset: 2
+  teleportCooldown: 0.5
 --- !u!4 &1234879618
 Transform:
   m_ObjectHideFlags: 0
@@ -1115,7 +1116,7 @@ MonoBehaviour:
   defDistanceRay: 100
   laserFirePoint: {fileID: 1960840414}
   m_lineRenderer: {fileID: 1341453056}
-  damagePerSecond: 30
+  damagePerSecond: 100
 --- !u!1 &1565469895
 GameObject:
   m_ObjectHideFlags: 0

@@ -24,6 +24,7 @@ public class RoomManager : MonoBehaviour
 
     private bool generationComplete = false;
     private bool roomsLinked = false;
+    public bool IsInitialized() => generationComplete;
 
     // Movement after entering door
     public float doorExitOffset = 2f; 
@@ -211,6 +212,22 @@ public class RoomManager : MonoBehaviour
         return new Vector3(roomWidth * (gridX - gridSizeX / 2), roomHeight * (gridY - gridSizeY / 2));
     }
     
+    public Room GetRoomAt(Vector3 position)
+    {
+        // Inverse of GetPositionFromGridIndex
+        // pos.x = width * (gridX - gridSizeX/2)
+        // gridX = (pos.x / width) + gridSizeX/2
+        
+        int gridX = Mathf.RoundToInt((position.x / roomWidth) + (gridSizeX / 2));
+        int gridY = Mathf.RoundToInt((position.y / roomHeight) + (gridSizeY / 2));
+        
+        if (gridX >= 0 && gridX < gridSizeX && gridY >= 0 && gridY < gridSizeY)
+        {
+            return roomComponentGrid[gridX, gridY];
+        }
+        return null;
+    }
+
     private void OnDrawGizmos()
     {
         Color gizmoColor = new Color(0, 1, 1, 0.05f);

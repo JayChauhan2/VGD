@@ -28,6 +28,7 @@ public class Door : MonoBehaviour
         // So Locked = Invisible (Inactive).
         
         bool active = !locked;
+        Debug.Log($"Door {name}: SetLocked({locked}) -> Active: {active}. Visuals: {doorVisuals?.name}, Collider: {doorCollider?.name}");
         
         if (doorVisuals != null) doorVisuals.SetActive(active);
         if (doorCollider != null) doorCollider.enabled = active;

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.Rendering.RenderGraphModule;
+using System.Collections.Generic;
 
 public class EcholocationFeature : ScriptableRendererFeature
 {
@@ -23,6 +24,27 @@ public class EcholocationFeature : ScriptableRendererFeature
             this.material = material;
         }
 
+        // Safe replacement for deprecated RenderingUtils.fullscreenMesh
+        private Mesh m_FullscreenMesh;
+        private Mesh FullscreenMesh
+        {
+            get
+            {
+                if (m_FullscreenMesh != null) return m_FullscreenMesh;
+                m_FullscreenMesh = new Mesh { name = "Fullscreen Quad" };
+                m_FullscreenMesh.SetVertices(new List<Vector3>
+                {
+                    new Vector3(-1, -1, 0), new Vector3(-1, 1, 0), new Vector3(1, -1, 0), new Vector3(1, 1, 0)
+                });
+                m_FullscreenMesh.SetUVs(0, new List<Vector2>
+                {
+                    new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 0), new Vector2(1, 1)
+                });
+                m_FullscreenMesh.SetIndices(new[] { 0, 1, 2, 2, 1, 3 }, MeshTopology.Triangles, 0, false);
+                return m_FullscreenMesh;
+            }
+        }
+
         // --- Compatible/Non-RenderGraph Path ---
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
@@ -32,7 +54,7 @@ public class EcholocationFeature : ScriptableRendererFeature
         {
             if (material == null) return;
             CommandBuffer cmd = CommandBufferPool.Get("Echolocation");
-            cmd.DrawMesh(RenderingUtils.fullscreenMesh, Matrix4x4.identity, material, 0, 0);
+            cmd.DrawMesh(FullscreenMesh, Matrix4x4.identity, material, 0, 0);
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }
@@ -62,7 +84,7 @@ public class EcholocationFeature : ScriptableRendererFeature
 
                 builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
                 {
-                    context.cmd.DrawMesh(RenderingUtils.fullscreenMesh, Matrix4x4.identity, data.material, 0, 0);
+                    context.cmd.DrawMesh(FullscreenMesh, Matrix4x4.identity, data.material, 0, 0);
                 });
             }
         }

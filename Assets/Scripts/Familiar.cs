@@ -31,7 +31,7 @@ public class Familiar : MonoBehaviour
                 else
                 {
                     var pm = Object.FindFirstObjectByType<PlayerMovement>();
-                    if (pm == null) pm = Object.FindObjectOfType<PlayerMovement>();
+                    // if (pm == null) pm = Object.FindObjectOfType<PlayerMovement>(); // Removed deprecated fallback
                     if (pm != null) fallbackPlayer = pm.transform;
                 }
             }

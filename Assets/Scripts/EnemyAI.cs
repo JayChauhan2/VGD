@@ -19,7 +19,31 @@ public class EnemyAI : MonoBehaviour
     void Start()
     {
         currentHealth = maxHealth;
+        
+        // 1. Try Hierarchy
         parentRoom = GetComponentInParent<Room>();
+        
+        // 2. Try Spatial Lookup via RoomManager
+        if (parentRoom == null && RoomManager.Instance != null && RoomManager.Instance.IsInitialized())
+        {
+            parentRoom = RoomManager.Instance.GetRoomAt(transform.position);
+        }
+        
+        // 3. Try Global Room Search (Handle manually placed rooms)
+        if (parentRoom == null)
+        {
+            parentRoom = Room.GetRoomContaining(transform.position);
+        }
+
+        if (parentRoom != null)
+        {
+            Debug.Log($"EnemyAI: Found Room '{parentRoom.name}' and registering myself.");
+            parentRoom.RegisterEnemy(this);
+        }
+        else
+        {
+            Debug.LogError($"EnemyAI: Could not find ANY Room for enemy at {transform.position}! Tried: Parent, Manager, and Bounds.");
+        }
 
         // Try to find the Player if target not assigned
         if (target == null)
@@ -28,15 +52,18 @@ public class EnemyAI : MonoBehaviour
             if (player != null) target = player.transform;
         }
 
+        CheckPathfinding();
+        StartCoroutine(UpdatePath());
+    }
+    
+    void CheckPathfinding()
+    {
         pathfinding = FindFirstObjectByType<Pathfinding>(); // Unity 2023+ standard
-        if (pathfinding == null) 
-            pathfinding = FindObjectOfType<Pathfinding>(); // Fallback
+        // if (pathfinding == null) pathfinding = FindObjectOfType<Pathfinding>(); // Deprecated fix
+
 
         if (pathfinding == null) Debug.LogError("EnemyAI: Pathfinding component not found via FindFirstObjectByType or FindObjectOfType!");
         if (target == null) Debug.LogWarning("EnemyAI: Target is null! Enemy will not move.");
-        else Debug.Log($"EnemyAI: Initialized. Target: {target.name}, Pathfinding found: {pathfinding != null}");
-
-        StartCoroutine(UpdatePath());
     }
 
     public void TakeDamage(float damage)
@@ -54,7 +81,12 @@ public class EnemyAI : MonoBehaviour
     {
         if (parentRoom != null)
         {
+            Debug.Log($"EnemyAI: Dying, telling Room {parentRoom.name} I am dead.");
             parentRoom.EnemyDefeated(this);
+        }
+        else
+        {
+            Debug.LogError("EnemyAI: Dying but I have NO PARENT ROOM! I cannot unlock doors.");
         }
         Destroy(gameObject);
     }
@@ -66,20 +98,21 @@ public class EnemyAI : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
         }
 
-        if (target == null) yield break;
-
         while (true)
         {
-            if (pathfinding != null && pathfinding.IsGridReady)
+            // Retry finding player if missing
+            if (target == null)
+            {
+                GameObject player = GameObject.FindGameObjectWithTag("Player");
+                if (player != null) target = player.transform;
+            }
+
+            if (target != null && pathfinding != null && pathfinding.IsGridReady)
             {
                 path = pathfinding.FindPath(transform.position, target.position);
                 if (path != null && path.Count > 0)
                 {
                     targetIndex = 0;
-                }
-                else
-                {
-                    // Debug.LogWarning($"EnemyAI: Path calculation returned null or empty path");
                 }
             }
             yield return new WaitForSeconds(pathUpdateDelay);

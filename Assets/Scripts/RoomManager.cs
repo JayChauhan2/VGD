@@ -26,6 +26,8 @@ public class RoomManager : MonoBehaviour
     private bool roomsLinked = false;
     public bool IsInitialized() => generationComplete;
 
+    public Room[,] GetRoomGrid() => roomComponentGrid;
+
     [SerializeField] private float generationChance = 0.5f;
 
     // Movement after entering door

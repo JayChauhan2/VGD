@@ -124,6 +124,8 @@ public class Room : MonoBehaviour
         }
     }
 
+    public static event System.Action<Room> OnRoomEntered;
+
     public void OnPlayerEnter()
     {
         // 1. Move Camera
@@ -137,6 +139,8 @@ public class Room : MonoBehaviour
         
         Debug.Log($"Room {name} Entered. Active Enemies: {activeEnemies.Count}");
         PlayerHasEntered = true;
+
+        OnRoomEntered?.Invoke(this);
 
         if (activeEnemies.Count > 0 && !IsCleared)
         {

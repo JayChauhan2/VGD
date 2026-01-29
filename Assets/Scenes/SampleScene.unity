@@ -282,7 +282,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: fbc3f06df41d70146adb37466ca210b0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -606,8 +606,9 @@ MonoBehaviour:
   echolocationMaterial: {fileID: 2100000, guid: fbc3f06df41d70146adb37466ca210b0, type: 2}
   expandSpeed: 10
   maxRadius: 20
-  fadeDuration: 0.5
   pingInterval: 2
+  edgeWidth: 2
+  rippleColor: {r: 0, g: 1, b: 1, a: 1}
 --- !u!114 &519420036
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -621,6 +622,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   smoothTime: 0.2
+  recoilSmoothTime: 0.1
 --- !u!1 &652129563
 GameObject:
   m_ObjectHideFlags: 0
@@ -1315,6 +1317,7 @@ GameObject:
   - component: {fileID: 1106899278}
   - component: {fileID: 1106899279}
   - component: {fileID: 1106899280}
+  - component: {fileID: 1106899281}
   m_Layer: 0
   m_Name: Square
   m_TagString: Player
@@ -1338,6 +1341,9 @@ MonoBehaviour:
   dashSpeed: 15
   dashDuration: 0.2
   dashCooldown: 0.5
+  wallLayer:
+    serializedVersion: 2
+    m_Bits: 64
   rb: {fileID: 1106899274}
   smoothTime: 0.1
 --- !u!50 &1106899274
@@ -1431,7 +1437,7 @@ Transform:
   m_GameObject: {fileID: 1106899272}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.0062, y: 0.4432, z: -1.8092}
+  m_LocalPosition: {x: 1.968, y: 1.133, z: -1.8092}
   m_LocalScale: {x: 0.24316098, y: 0.24316098, z: 0.24316098}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1503,6 +1509,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   offset: {x: 0, y: 0.4, z: 0}
   size: {x: 0.6, y: 0.02}
+--- !u!114 &1106899281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1106899272}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b61d075fc99bfc04a9fd5b90439215ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  echolocationMaterial: {fileID: 2100000, guid: fbc3f06df41d70146adb37466ca210b0, type: 2}
+  expandSpeed: 250.72
+  maxRadius: 243.5
+  pingInterval: 2
+  edgeWidth: 7.1
+  rippleColor: {r: 0, g: 1, b: 1, a: 1}
 --- !u!1 &1234879616
 GameObject:
   m_ObjectHideFlags: 0
@@ -1990,6 +2014,7 @@ MonoBehaviour:
   laserFirePoint: {fileID: 1960840414}
   m_lineRenderer: {fileID: 1341453056}
   overheatThreshold: 20
+  chargeDuration: 0.1
 --- !u!1 &1565469895
 GameObject:
   m_ObjectHideFlags: 0

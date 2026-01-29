@@ -10,7 +10,7 @@ public class EcholocationFeature : ScriptableRendererFeature
     public class Settings
     {
         public Material material;
-        public RenderPassEvent renderPassEvent = RenderPassEvent.AfterRenderingTransparents;
+        public RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
     }
 
     public Settings settings = new Settings();
@@ -19,12 +19,7 @@ public class EcholocationFeature : ScriptableRendererFeature
     {
         public Material material;
         
-        public EcholocationPass(Material material)
-        {
-            this.material = material;
-        }
-
-        // Safe replacement for deprecated RenderingUtils.fullscreenMesh
+        // Caching the full screen mesh
         private Mesh m_FullscreenMesh;
         private Mesh FullscreenMesh
         {
@@ -45,7 +40,12 @@ public class EcholocationFeature : ScriptableRendererFeature
             }
         }
 
-        // --- Compatible/Non-RenderGraph Path ---
+        public EcholocationPass(Material material)
+        {
+            this.material = material;
+        }
+
+        // --- Deprecated / Non-RenderGraph Path (Fallback) ---
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
         }
@@ -59,10 +59,11 @@ public class EcholocationFeature : ScriptableRendererFeature
             CommandBufferPool.Release(cmd);
         }
 
-        // --- RenderGraph Path (URP 17+) ---
+        // --- RenderGraph Path (Unity 6 / URP 17+) ---
         private class PassData
         {
             public Material material;
+            public Mesh mesh;
         }
 
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
@@ -70,21 +71,22 @@ public class EcholocationFeature : ScriptableRendererFeature
             if (material == null) return;
 
             UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
+            UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
 
+            // Simplified: Just render the ripple overlay without edge detection for now
+            // Edge detection requires complex texture copying in RenderGraph which is causing issues
+            // We'll just draw the basic ripple ring effect
+            
             using (var builder = renderGraph.AddRasterRenderPass<PassData>("Echolocation Pass", out var passData))
             {
                 passData.material = material;
-
-                // Declare that we need the Depth Texture
-                if (resourceData.cameraDepthTexture.IsValid())
-                    builder.UseTexture(resourceData.cameraDepthTexture, AccessFlags.Read);
-
-                // Set the active color buffer as the render target
+                passData.mesh = FullscreenMesh;
+                
                 builder.SetRenderAttachment(resourceData.activeColorTexture, 0, AccessFlags.Write);
-
+                
                 builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
                 {
-                    context.cmd.DrawMesh(FullscreenMesh, Matrix4x4.identity, data.material, 0, 0);
+                    context.cmd.DrawMesh(data.mesh, Matrix4x4.identity, data.material, 0, 0);
                 });
             }
         }

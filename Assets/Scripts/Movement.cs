@@ -8,6 +8,7 @@ public class PlayerMovement : MonoBehaviour
     public float dashSpeed = 15f;
     public float dashDuration = 0.2f;
     public float dashCooldown = 0.5f;
+    public LayerMask wallLayer; // Assign in Inspector to detect walls/obstacles
 
     public Rigidbody2D rb;
     private Vector2 moveInput;
@@ -17,6 +18,7 @@ public class PlayerMovement : MonoBehaviour
 
     private bool isDashing = false;
     private float dashCooldownTimer = 0f;
+    private System.Collections.IEnumerator currentDashCoroutine;
 
     // Properties for UI
     public float DashCooldownProgress => 1f - Mathf.Clamp01(dashCooldownTimer / dashCooldown); // 0 = empty, 1 = full
@@ -62,7 +64,8 @@ public class PlayerMovement : MonoBehaviour
             // Dash Input
             if (Input.GetKeyDown(KeyCode.Space) && IsDashReady && moveInput != Vector2.zero)
             {
-                StartCoroutine(DashRoutine());
+                currentDashCoroutine = DashRoutine();
+                StartCoroutine(currentDashCoroutine);
             }
         }
     }
@@ -75,28 +78,40 @@ public class PlayerMovement : MonoBehaviour
         // Capture current movement direction for the dash
         Vector2 dashDir = moveInput.normalized;
         
-        // If for some reason input is zero (should satisfy moveInput != Vector2.zero check above), fallback to forward? 
-        // But the requirement says "dash in the direction theyre moving". 
-        // If moving, moveInput is non-zero.
-
-        rb.linearVelocity = dashDir * dashSpeed;
+        // Calculate maximum dash distance
+        float maxDashDistance = dashSpeed * dashDuration;
+        
+        // Raycast to check for walls in dash direction
+        float actualDashDistance = maxDashDistance;
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, dashDir, maxDashDistance, wallLayer);
+        
+        if (hit.collider != null)
+        {
+            // Wall detected - clamp dash distance to stop just before the wall
+            actualDashDistance = Mathf.Max(0.1f, hit.distance - 0.3f); // Leave small buffer (0.3 units before wall)
+        }
+        
+        // Calculate adjusted dash speed to cover the actual distance in the same duration
+        float adjustedDashSpeed = actualDashDistance / dashDuration;
+        
+        rb.linearVelocity = dashDir * adjustedDashSpeed;
 
         yield return new WaitForSeconds(dashDuration);
 
-        rb.linearVelocity = Vector2.zero; // Optional: stop immediately after dash? Or keep momentum? 
-        // Usually dash feels better if it stops or returns to normal control.
-        // Let's reset to normal velocity logic handle in next frame.
+        rb.linearVelocity = Vector2.zero;
         
         isDashing = false;
+        currentDashCoroutine = null;
     }
 
     public void ApplyKnockback(Vector2 force, float duration)
     {
         // Cancel dash if knocked back
-        if (isDashing)
+        if (isDashing && currentDashCoroutine != null)
         {
-            StopCoroutine("DashRoutine"); // String name safer if we haven't stored Coroutine ref
+            StopCoroutine(currentDashCoroutine);
             isDashing = false;
+            currentDashCoroutine = null;
         }
         StartCoroutine(KnockbackRoutine(force, duration));
     }
@@ -139,5 +154,20 @@ public class PlayerMovement : MonoBehaviour
         // Using 'enabled = false' is the simplest way to stop Update/FixedUpdate.
         
         rb.linearVelocity = moveInput.normalized * moveSpeed; // Normalized to prevent faster diagonal movement
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        // If we hit a wall while dashing, stop the dash immediately to prevent physics issues
+        if (isDashing && ((1 << collision.gameObject.layer) & wallLayer) != 0)
+        {
+            if (currentDashCoroutine != null)
+            {
+                StopCoroutine(currentDashCoroutine);
+                currentDashCoroutine = null;
+            }
+            isDashing = false;
+            rb.linearVelocity = Vector2.zero;
+        }
     }
 }

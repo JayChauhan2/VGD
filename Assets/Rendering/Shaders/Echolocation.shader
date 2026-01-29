@@ -3,20 +3,26 @@ Shader "Hidden/Echolocation"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
-        _Color ("Ripple Color", Color) = (1, 1, 1, 1)
+        _Color ("Ripple Color", Color) = (0, 1, 1, 1)
         _Center ("Center Position", Vector) = (0, 0, 0, 0)
         _Radius ("Current Radius", Float) = 0
-        _EdgeWidth ("Edge Width", Float) = 1
+        _EdgeWidth ("Edge Width", Float) = 2
+        
+        // 2D Support
+        _CameraPos ("Camera Position", Vector) = (0,0,0,0)
+        _OrthographicSize ("Ortho Size", Float) = 5
+        _AspectRatio ("Aspect Ratio", Float) = 1.77
+        _IsOrtho ("Is Orthographic", Float) = 0
     }
     SubShader
     {
         Tags { "RenderType"="Opaque" "RenderPipeline" = "UniversalPipeline"}
         LOD 100
-        ZTest Always // Always draw on top (or handle depth manually?)
+        ZTest Always
         ZWrite Off
         Cull Off
-        Blend SrcAlpha OneMinusSrcAlpha // Alpha blending
-
+        Blend SrcAlpha One
+        
         Pass
         {
             Name "EcholocationPass"
@@ -25,7 +31,6 @@ Shader "Hidden/Echolocation"
             #pragma vertex vert
             #pragma fragment frag
             
-            // Core URP libraries
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 
@@ -48,62 +53,68 @@ Shader "Hidden/Echolocation"
             float4 _Center;
             float _Radius;
             float _EdgeWidth;
+            
+            float4 _CameraPos;
+            float _OrthographicSize;
+            float _AspectRatio;
+            float _IsOrtho;
 
             Varyings vert (Attributes input)
             {
                 Varyings output;
-                
-                // Standard Fullscreen Vertex Shader logic
                 VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
                 output.positionCS = vertexInput.positionCS;
                 output.uv = input.uv;
-                
                 return output;
             }
 
             float4 frag (Varyings input) : SV_Target
             {
-                // 1. Sample Scene Depth
-                float depth = SampleSceneDepth(input.uv);
+                float3 worldPos;
+                float alphaMultiplier = 1.0;
 
-                // 2. Reconstruct World Position
-                // We need to unproject the screen UV + Depth to World Space.
-                // URP Core.hlsl provides ComputeWorldSpacePosition, but it usually needs depth in raw or linear.
-                // A common way in URP for full screen:
-                float3 worldPos = ComputeWorldSpacePosition(input.uv, depth, UNITY_MATRIX_I_VP);
-                
-                // 3. Calculate distance from Center
-                float dist = distance(worldPos, _Center.xyz);
-                
-                // 4. Determine if we are on the ripple ring
-                // Ripple is at _Radius. Width is _EdgeWidth.
-                // We want a value of 1.0 when dist == _Radius, and falloff to 0.0 at _Radius +/- _EdgeWidth
-                
+                if (_IsOrtho > 0.5)
+                {
+                    // --- 2D Orthographic Logic ---
+                    float2 uvCentered = input.uv - 0.5;
+                    float height = _OrthographicSize * 2.0;
+                    float width = height * _AspectRatio;
+                    
+                    float2 worldOffset = uvCentered * float2(width, height);
+                    worldPos = float3(_CameraPos.x + worldOffset.x, _CameraPos.y + worldOffset.y, 0); 
+                }
+                else
+                {
+                    // --- 3D Depth Logic (Fallback) ---
+                    float depth = SampleSceneDepth(input.uv);
+                    worldPos = ComputeWorldSpacePosition(input.uv, depth, UNITY_MATRIX_I_VP);
+                    
+                    #if UNITY_REVERSED_Z
+                        if(depth <= 0.0001) alphaMultiplier = 0;
+                    #else
+                        if(depth >= 0.9999) alphaMultiplier = 0;
+                    #endif
+                }
+
+                // --- Ripple Ring Logic ---
+                float dist = distance(worldPos.xy, _Center.xy); 
+                if (_IsOrtho < 0.5) dist = distance(worldPos, _Center.xyz);
+
                 float halfWidth = _EdgeWidth * 0.5;
                 float lowerBound = _Radius - halfWidth;
                 float upperBound = _Radius + halfWidth;
-
+                
                 float alpha = 0;
-
+                
+                // Draw the ring
                 if (dist > lowerBound && dist < upperBound)
                 {
-                    // Simple linear fade or hard edge? Let's do a smooth bell curve or linear fade.
-                    // 1 at center, 0 at edges.
-                    float distFromCenterOfRing = abs(dist - _Radius);
-                    alpha = 1.0 - (distFromCenterOfRing / halfWidth);
+                    float distFromCenter = abs(dist - _Radius);
+                    alpha = 1.0 - (distFromCenter / halfWidth);
+                    alpha = pow(alpha, 2);
                 }
-                
-                // 5. Check if it's the skybox
-                // Scene depth is usually 0 or 1 at the far plane (depending on Z-buffer direction).
-                // Usually LinearEyeDepth gives a large value.
-                // To be safe, if using Raw depth, check against 0 (Reverse Z) or 1 (Standard Z).
-                #if UNITY_REVERSED_Z
-                    if(depth <= 0.0001) alpha = 0;
-                #else
-                    if(depth >= 0.9999) alpha = 0;
-                #endif
 
-                return float4(_Color.rgb, alpha * _Color.a);
+                return float4(_Color.rgb * alpha * alphaMultiplier, alpha * alphaMultiplier);
             }
             ENDHLSL
         }

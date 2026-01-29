@@ -8,15 +8,15 @@ public class EnemyAI : MonoBehaviour
     public float speed = 5f;
     public float pathUpdateDelay = 0.2f;
 
-    Pathfinding pathfinding;
-    List<Node> path;
-    int targetIndex;
+    protected Pathfinding pathfinding;
+    protected List<Node> path;
+    protected int targetIndex;
 
     public bool IsActive { get; private set; } = false;
 
     public float maxHealth = 100f;
-    private float currentHealth;
-    private Room parentRoom;
+    protected float currentHealth;
+    protected Room parentRoom;
 
     public event System.Action<float, float> OnHealthChanged;
 
@@ -65,7 +65,13 @@ public class EnemyAI : MonoBehaviour
 
         CheckPathfinding();
         StartCoroutine(UpdatePath());
+        
+        // Virtual hook for subclasses
+        OnEnemyStart();
     }
+    
+    // Virtual method for subclasses to override
+    protected virtual void OnEnemyStart() { }
     
     void CheckPathfinding()
     {
@@ -77,7 +83,7 @@ public class EnemyAI : MonoBehaviour
         if (target == null) Debug.LogWarning("EnemyAI: Target is null! Enemy will not move.");
     }
 
-    public void TakeDamage(float damage)
+    public virtual void TakeDamage(float damage)
     {
         currentHealth -= damage;
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
@@ -89,8 +95,11 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    private void Die()
+    protected virtual void Die()
     {
+        // Virtual hook for subclasses (called before room notification)
+        OnEnemyDeath();
+        
         if (parentRoom != null)
         {
             Debug.Log($"EnemyAI: Dying, telling Room {parentRoom.name} I am dead.");
@@ -102,6 +111,9 @@ public class EnemyAI : MonoBehaviour
         }
         Destroy(gameObject);
     }
+    
+    // Virtual method for subclasses to override (e.g., spawn enemies, explode)
+    protected virtual void OnEnemyDeath() { }
 
     IEnumerator UpdatePath()
     {
@@ -144,6 +156,10 @@ public class EnemyAI : MonoBehaviour
     void Update()
     {
         if (!IsActive) return;
+        
+        // Virtual hook for subclasses to add custom update logic
+        OnEnemyUpdate();
+        
         if (path == null || targetIndex >= path.Count) return;
 
         Vector3 currentWaypoint = path[targetIndex].worldPosition;
@@ -157,6 +173,9 @@ public class EnemyAI : MonoBehaviour
             targetIndex++;
         }
     }
+    
+    // Virtual method for subclasses to add custom update behavior
+    protected virtual void OnEnemyUpdate() { }
 
     void FindPlayer()
     {
@@ -214,5 +233,63 @@ public class EnemyAI : MonoBehaviour
     {
         IsActive = active;
         Debug.Log($"EnemyAI: Active state set to {active}");
+        
+        // Virtual hook for subclasses
+        if (active) OnEnemyActivated();
+    }
+    
+    // Virtual method for subclasses to override when enemy becomes active
+    protected virtual void OnEnemyActivated() { }
+    
+    // Helper method for subclasses to get room bounds
+    protected Bounds GetRoomBounds()
+    {
+        if (parentRoom != null)
+        {
+            Vector3 center = parentRoom.transform.position;
+            Vector2 size = parentRoom.roomSize;
+            return new Bounds(center, new Vector3(size.x, size.y, 1f));
+        }
+        return new Bounds(transform.position, Vector3.one * 20f);
+    }
+    // Helper method to check if a position is valid (not inside a wall)
+    protected bool IsPositionValid(Vector3 position, float radius = 0.3f)
+    {
+        // Check for walls at the position
+        Collider2D hit = Physics2D.OverlapCircle(position, radius, LayerMask.GetMask("Wall"));
+        if (hit != null) return false;
+        
+        // Also check if inside room bounds
+        if (parentRoom != null)
+        {
+            Bounds bounds = GetRoomBounds();
+            // Shrink bounds slightly to avoid hugging walls too closely
+            bounds.Expand(-1f); 
+            if (!bounds.Contains(position)) return false;
+        }
+        
+        return true;
+    }
+
+    // Helper method for safe movement (stops at walls)
+    protected void MoveSafely(Vector3 direction, float distance)
+    {
+        // Cast a ray to check for walls
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, distance + 0.5f, LayerMask.GetMask("Wall"));
+        
+        if (hit.collider == null)
+        {
+            // Clear path, move normally
+            transform.position += direction * distance;
+        }
+        else
+        {
+            // Wall detected, limit movement to hit point (minus buffer)
+            float safeDistance = Mathf.Max(0, hit.distance - 0.5f);
+            if (safeDistance > 0)
+            {
+                transform.position += direction * Mathf.Min(distance, safeDistance);
+            }
+        }
     }
 }

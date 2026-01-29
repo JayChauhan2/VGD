@@ -46,10 +46,12 @@ public class EcholocationFeature : ScriptableRendererFeature
         }
 
         // --- Deprecated / Non-RenderGraph Path (Fallback) ---
+        [System.Obsolete]
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
         }
 
+        [System.Obsolete]
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             if (material == null) return;

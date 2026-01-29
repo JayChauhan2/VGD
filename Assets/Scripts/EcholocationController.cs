@@ -15,6 +15,12 @@ public class EcholocationController : MonoBehaviour
     private float currentRadius;
     private bool isExpanding = false;
     private float timer = 0f;
+    
+    // Event for Shadow Stalker enemy visibility
+    public static event System.Action OnEcholocationPulse;
+    
+    // Jammer tracking
+    private static System.Collections.Generic.List<EcholocationJammerEnemy> activeJammers = new System.Collections.Generic.List<EcholocationJammerEnemy>();
 
     void Start()
     {
@@ -73,11 +79,6 @@ public class EcholocationController : MonoBehaviour
 
     void StartPing()
     {
-        // Debug.Log($"[Echolocation] Ping Started at {transform.position}");
-        // If the previous ping hasn't finished, it will merely restart.
-        // To fix "Max Radius not doing anything", the user just needs to set Ping Interval > MaxRadius / Speed.
-        // I will add a warning in Start if this config is detected.
-        
         currentRadius = 0;
         isExpanding = true;
         
@@ -85,6 +86,51 @@ public class EcholocationController : MonoBehaviour
         {
             echolocationMaterial.SetVector("_Center", transform.position);
         }
+        
+        // Trigger event for Shadow Stalker enemies
+        OnEcholocationPulse?.Invoke();
+        
+        // Notify all Shadow Stalker enemies directly
+        ShadowStalkerEnemy[] stalkers = FindObjectsByType<ShadowStalkerEnemy>(FindObjectsSortMode.None);
+        foreach (var stalker in stalkers)
+        {
+            stalker.OnEcholocationPulse();
+        }
+    }
+    
+    // Jammer management methods
+    public static void RegisterJammer(EcholocationJammerEnemy jammer)
+    {
+        if (!activeJammers.Contains(jammer))
+        {
+            activeJammers.Add(jammer);
+            Debug.Log("EcholocationController: Jammer registered");
+        }
+    }
+    
+    public static void UnregisterJammer(EcholocationJammerEnemy jammer)
+    {
+        if (activeJammers.Contains(jammer))
+        {
+            activeJammers.Remove(jammer);
+            Debug.Log("EcholocationController: Jammer unregistered");
+        }
+    }
+    
+    public static bool IsJammed(Vector3 position)
+    {
+        foreach (var jammer in activeJammers)
+        {
+            if (jammer != null && jammer.IsJamming())
+            {
+                float distance = Vector2.Distance(position, jammer.transform.position);
+                if (distance <= jammer.GetJammerRadius())
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
     
     void OnValidate() {

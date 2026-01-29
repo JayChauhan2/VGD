@@ -49,8 +49,8 @@ Material:
     - _Radius: -1
     - _ZWrite: 0
     m_Colors:
-    - _CameraPos: {r: -4e-45, g: 6e-45, b: -2.7238119, a: 0}
-    - _Center: {r: -1.9956121, g: 0.65804195, b: 0, a: 0}
+    - _CameraPos: {r: 8.1056704e-24, g: 1.522675e-25, b: -1.4487125, a: 0}
+    - _Center: {r: 5.6121554, g: 0.03223242, b: 0, a: 0}
     - _Color: {r: 0, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

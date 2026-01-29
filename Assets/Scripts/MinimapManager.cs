@@ -66,7 +66,7 @@ public class MinimapManager : MonoBehaviour
         container.anchorMin = new Vector2(1, 1);
         container.anchorMax = new Vector2(1, 1);
         container.pivot = new Vector2(1, 1);
-        container.anchoredPosition = new Vector2(-20, -20); // Padding
+        container.anchoredPosition = new Vector2(-20, -100); // Shifted down to avoid coin UI
         container.sizeDelta = new Vector2(300, 200); // Fixed size for now, or dynamic?
     }
 

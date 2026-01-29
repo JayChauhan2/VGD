@@ -45,7 +45,7 @@ public class EnemyProjectile : MonoBehaviour
         }
         
         // Destroy on walls
-        if (collision.CompareTag("Wall") || collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
+        if (collision.CompareTag("Obstacle") || collision.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
         {
             Destroy(gameObject);
         }

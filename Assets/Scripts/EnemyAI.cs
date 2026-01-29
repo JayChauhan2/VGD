@@ -256,7 +256,7 @@ public class EnemyAI : MonoBehaviour
     protected bool IsPositionValid(Vector3 position, float radius = 0.3f)
     {
         // Check for walls at the position
-        Collider2D hit = Physics2D.OverlapCircle(position, radius, LayerMask.GetMask("Wall"));
+        Collider2D hit = Physics2D.OverlapCircle(position, radius, LayerMask.GetMask("Obstacle"));
         if (hit != null) return false;
         
         // Also check if inside room bounds
@@ -275,7 +275,7 @@ public class EnemyAI : MonoBehaviour
     protected void MoveSafely(Vector3 direction, float distance)
     {
         // Cast a ray to check for walls
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, distance + 0.5f, LayerMask.GetMask("Wall"));
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, distance + 0.5f, LayerMask.GetMask("Obstacle"));
         
         if (hit.collider == null)
         {

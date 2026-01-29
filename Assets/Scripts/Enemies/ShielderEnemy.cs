@@ -52,14 +52,22 @@ public class ShielderEnemy : EnemyAI
         return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f));
     }
 
+    [Header("Rotation Settings")]
+    public float rotationSpeed = 200f; // Degrees per second
+
     protected override void OnEnemyUpdate()
     {
         if (target == null) return;
         
-        // Always rotate to face player
+        // Calculate target angle
         Vector2 direction = (target.position - transform.position).normalized;
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        transform.rotation = Quaternion.Euler(0, 0, angle);
+        float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        
+        // Smoothly rotate towards target angle
+        float currentAngle = transform.rotation.eulerAngles.z;
+        float newAngle = Mathf.MoveTowardsAngle(currentAngle, targetAngle, rotationSpeed * Time.deltaTime);
+        
+        transform.rotation = Quaternion.Euler(0, 0, newAngle);
     }
 
     public override void TakeDamage(float damage)

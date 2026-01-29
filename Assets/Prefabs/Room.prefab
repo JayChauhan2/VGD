@@ -1207,7 +1207,7 @@ GameObject:
   - component: {fileID: 5008123408000284834}
   - component: {fileID: 346228544225960972}
   - component: {fileID: 836365252093304314}
-  - component: {fileID: 8323508799876628024}
+  - component: {fileID: 3866587628254353928}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -1358,7 +1358,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
---- !u!114 &8323508799876628024
+--- !u!114 &3866587628254353928
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1367,7 +1367,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5591662224288696791}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 758c3bd8ab1437d498718aebac58287a, type: 3}
+  m_Script: {fileID: 11500000, guid: 24f32602d4f7aa14fa1b23c8fdf6c741, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
@@ -1375,9 +1375,8 @@ MonoBehaviour:
   pathUpdateDelay: 0.2
   maxHealth: 100
   damageCooldown: 1
-  shieldedDuration: 3
-  vulnerableDuration: 2
-  reflectDamageMultiplier: 0.5
+  revealDistance: 2.5
+  attackSpeed: 7
 --- !u!1 &8221443159474845957
 GameObject:
   m_ObjectHideFlags: 0

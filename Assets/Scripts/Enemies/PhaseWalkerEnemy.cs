@@ -131,8 +131,8 @@ public class PhaseWalkerEnemy : EnemyAI
         // When intangible, don't collide with walls
         if (currentPhase == PhaseState.Intangible)
         {
-            if (collision.gameObject.CompareTag("Wall") || 
-                collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
+            if (collision.gameObject.CompareTag("Obstacle") || 
+                collision.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
             {
                 // Ignore wall collision
                 Physics2D.IgnoreCollision(enemyCollider, collision.collider, true);
@@ -145,8 +145,8 @@ public class PhaseWalkerEnemy : EnemyAI
         // Re-enable collision when solid
         if (currentPhase == PhaseState.Solid)
         {
-            if (collision.gameObject.CompareTag("Wall") || 
-                collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
+            if (collision.gameObject.CompareTag("Obstacle") || 
+                collision.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
             {
                 Physics2D.IgnoreCollision(enemyCollider, collision.collider, false);
             }

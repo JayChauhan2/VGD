@@ -21,6 +21,10 @@ public class Laser : MonoBehaviour
     private bool isOverheated = false;
     [SerializeField] private float overheatThreshold = 20f; // Must recharge to this to shoot again
 
+    private bool isCharging = false;
+    private float chargeTimer = 0f;
+    [SerializeField] private float chargeDuration = 0f; // Short delay for "power up"
+
     private void Awake()
     {
         m_transform = GetComponent<Transform>();
@@ -31,14 +35,57 @@ public class Laser : MonoBehaviour
     {
         // Require Mouse Input AND Energy AND Not Overheated
         bool tryingToShoot = Input.GetMouseButton(0);
-        
-        if (tryingToShoot && !isOverheated && currentEnergy > 0)
+        bool justClicked = Input.GetMouseButtonDown(0);
+
+        if (justClicked && currentEnergy > 0 && !isOverheated)
         {
-            ShootLaser();
-            DrainEnergy();
+            isCharging = true;
+            chargeTimer = chargeDuration;
+        }
+
+        // Handle Camera Effect - PUSH away from aim direction
+        if (tryingToShoot && currentEnergy > 0 && !isOverheated)
+        {
+            if (CameraController.Instance != null)
+            {
+                // Push camera BACK (negative right)
+                // Magnitude reduced to 0.125f (1/4 of previous 0.5f) as per user request
+                CameraController.Instance.SetRecoilOffset(-transform.right * 0.125f);
+            }
         }
         else
         {
+            // Reset to center
+            if (CameraController.Instance != null)
+            {
+                CameraController.Instance.SetRecoilOffset(Vector3.zero);
+            }
+        }
+
+        if (tryingToShoot && !isOverheated && currentEnergy > 0)
+        {
+            if (isCharging)
+            {
+                // Wait for charge to finish
+                chargeTimer -= Time.deltaTime;
+                if (chargeTimer <= 0)
+                {
+                    isCharging = false;
+                    ShootLaser();
+                    DrainEnergy();
+                }
+            }
+            else
+            {
+                // Already charged, just shoot
+                ShootLaser();
+                DrainEnergy();
+            }
+        }
+        else
+        {
+            // Stopped shooting or ran out/overheated
+            isCharging = false;
             DisableLaser();
             RechargeEnergy();
         }

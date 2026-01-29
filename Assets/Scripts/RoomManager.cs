@@ -26,6 +26,8 @@ public class RoomManager : MonoBehaviour
     private bool roomsLinked = false;
     public bool IsInitialized() => generationComplete;
 
+    [SerializeField] private float generationChance = 0.5f;
+
     // Movement after entering door
     public float doorExitOffset = 3f; 
     
@@ -73,10 +75,31 @@ public class RoomManager : MonoBehaviour
                 int gridX = roomIndex.x;
                 int gridY = roomIndex.y;
 
-                TryGenerateRoom(new Vector2Int(gridX - 1, gridY));
-                TryGenerateRoom(new Vector2Int(gridX + 1, gridY));
-                TryGenerateRoom(new Vector2Int(gridX, gridY + 1));
-                TryGenerateRoom(new Vector2Int(gridX, gridY - 1));
+                // Randomize directions
+                List<Vector2Int> directions = new List<Vector2Int> 
+                { 
+                    Vector2Int.up, 
+                    Vector2Int.down, 
+                    Vector2Int.left, 
+                    Vector2Int.right 
+                };
+                
+                // Fisher-Yates shuffle
+                for (int i = 0; i < directions.Count; i++)
+                {
+                    Vector2Int temp = directions[i];
+                    int randomIndex = Random.Range(i, directions.Count);
+                    directions[i] = directions[randomIndex];
+                    directions[randomIndex] = temp;
+                }
+
+                foreach(var dir in directions)
+                {
+                    if (Random.value < generationChance)
+                    {
+                         TryGenerateRoom(new Vector2Int(gridX + dir.x, gridY + dir.y));
+                    }
+                }
             }
         }
         else if (!generationComplete && roomQueue.Count == 0)
@@ -222,8 +245,7 @@ public class RoomManager : MonoBehaviour
         if (roomGrid[x, y] != 0) return false;
         if (roomCount >= maxRooms) return false;
         
-        // Fix: If we haven't reached minRooms, we MUST NOT skip generation due to RNG
-        if (roomCount >= minRooms && Random.value < 0.5f && roomIndex != Vector2Int.zero) return false;
+        // Removed old forced randomness logic since we handle it in Update now
 
         roomQueue.Enqueue(roomIndex);
         roomGrid[x, y] = 1;

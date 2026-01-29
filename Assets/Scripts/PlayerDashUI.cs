@@ -23,8 +23,13 @@ public class PlayerDashUI : MonoBehaviour
     {
         if (canvasGO != null)
         {
+            // Force world position to be player position + offset (ignoring player rotation)
+            // This ensures the bar is always "above" the player on the screen, not relative to player's head direction
+            canvasGO.transform.position = transform.position + offset;
+
             // Billboard effect
-            canvasGO.transform.rotation = Camera.main.transform.rotation;
+            if (Camera.main != null)
+                canvasGO.transform.rotation = Camera.main.transform.rotation;
         }
 
         UpdateDashBar();

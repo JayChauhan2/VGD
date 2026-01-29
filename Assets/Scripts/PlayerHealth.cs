@@ -32,6 +32,11 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(float amount, Vector2 knockbackDirection)
     {
+        if (playerMovement != null && playerMovement.IsDashing)
+        {
+            return;
+        }
+
         CurrentHealth -= amount;
         
         if (playerMovement != null)

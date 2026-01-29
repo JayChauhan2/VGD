@@ -21,6 +21,7 @@ public class PlayerMovement : MonoBehaviour
     // Properties for UI
     public float DashCooldownProgress => 1f - Mathf.Clamp01(dashCooldownTimer / dashCooldown); // 0 = empty, 1 = full
     public bool IsDashReady => dashCooldownTimer <= 0f;
+    public bool IsDashing => isDashing;
 
 
     void Start()

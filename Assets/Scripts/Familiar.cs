@@ -38,6 +38,12 @@ public class Familiar : MonoBehaviour
         }
         
         targetPosition = transform.position;
+
+        // Auto-add Attack component if missing
+        if (GetComponent<FamiliarAttack>() == null)
+        {
+            gameObject.AddComponent<FamiliarAttack>();
+        }
     }
 
     void OnDestroy()

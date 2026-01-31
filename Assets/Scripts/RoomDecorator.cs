@@ -6,6 +6,7 @@ public class RoomDecorator : MonoBehaviour
     public static RoomDecorator Instance;
 
     [Header("Obstacle Settings")]
+    [SerializeField] private bool enableDecoration = false;
     [SerializeField] private Color obstacleColor = Color.white;
     [SerializeField] private Vector2 obstacleSize = new Vector2(1f, 1f);
     
@@ -53,6 +54,8 @@ public class RoomDecorator : MonoBehaviour
 
     public void Decorate(Room room)
     {
+        if (!enableDecoration) return;
+
         // Don't decorate the starting room or critical rooms if needed
         // For now, random layout
         RoomLayout layout = (RoomLayout)Random.Range(0, System.Enum.GetValues(typeof(RoomLayout)).Length);

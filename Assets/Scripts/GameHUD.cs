@@ -46,7 +46,7 @@ public class GameHUD : MonoBehaviour
         else
         {
             // Fallback for finding by type
-            playerHealth = FindObjectOfType<PlayerHealth>();
+            playerHealth = FindFirstObjectByType<PlayerHealth>();
         }
 
         UpdateCoinDisplay();
@@ -133,7 +133,7 @@ public class GameHUD : MonoBehaviour
                 // Try finding it again if we missed it start (e.g. player spawned late)
                 if (Random.Range(0, 100) < 5) // Occasional retry
                 {
-                     PlayerHealth ph = FindObjectOfType<PlayerHealth>();
+                     PlayerHealth ph = FindFirstObjectByType<PlayerHealth>();
                      if (ph != null) playerHealth = ph;
                 }
             }

@@ -29,6 +29,29 @@ public class CameraController : MonoBehaviour
 
     private Vector3 targetPosition;
 
+    // Zoom Settings
+    public float defaultSize = 10f; 
+    public float zoomMultiplier = 0.95f; // 5% zoom in
+    public float zoomFollowAmount = 0.05f; // Move 5% towards mouse
+    public float zoomSmoothTime = 0.2f; // Smooth transition
+    
+    private Camera cam;
+    private float targetSize;
+    private float currentSizeVelocity;
+    
+    private Vector3 currentZoomOffset = Vector3.zero;
+    private Vector3 zoomFollowVelocity = Vector3.zero;
+
+    void Start()
+    {
+        cam = GetComponent<Camera>();
+        if (cam != null)
+        {
+            if (cam.orthographic) defaultSize = cam.orthographicSize;
+            else defaultSize = 6f; // Fallback
+        }
+    }
+
 
 
     private Vector3 currentRecoilOffset = Vector3.zero;
@@ -47,11 +70,38 @@ public class CameraController : MonoBehaviour
         internalPos = Vector3.SmoothDamp(internalPos, targetPosition, ref velocity, smoothTime);
 
         // 2. Smoothly move Recoil to target
-        // If Laser stops calling SetRecoilOffset, we should ensure logic elsewhere resets it?
-        // Or better: The Laser will reset it to Zero when not shooting.
         currentRecoilOffset = Vector3.SmoothDamp(currentRecoilOffset, targetRecoilOffset, ref recoilVelocity, recoilSmoothTime);
 
-        // 3. Apply both
-        transform.position = internalPos + currentRecoilOffset;
+        // 3. Handle Zoom & Shift
+        Vector3 targetZoomOffset = Vector3.zero;
+        float desiredSize = defaultSize;
+
+        if (cam != null)
+        {
+            if (Input.GetMouseButton(1)) // Right Click Held
+            {
+                desiredSize = defaultSize * zoomMultiplier;
+                
+                // Calculate Mouse Offset from Screen Center (World Space)
+                Vector3 mousePos = cam.ScreenToWorldPoint(Input.mousePosition);
+                mousePos.z = 0;
+                Vector3 screenCenter = internalPos; // Use internal pos as anchor
+                
+                // Vector from Center to Mouse
+                Vector3 direction = mousePos - screenCenter;
+                
+                // Shift small amount towards mouse
+                targetZoomOffset = direction * zoomFollowAmount;
+            }
+            
+            // Smooth Zoom Size
+            cam.orthographicSize = Mathf.SmoothDamp(cam.orthographicSize, desiredSize, ref currentSizeVelocity, zoomSmoothTime);
+            
+            // Smooth Zoom Position Offset
+            currentZoomOffset = Vector3.SmoothDamp(currentZoomOffset, targetZoomOffset, ref zoomFollowVelocity, zoomSmoothTime);
+        }
+
+        // 4. Apply all
+        transform.position = internalPos + currentRecoilOffset + currentZoomOffset;
     }
 }

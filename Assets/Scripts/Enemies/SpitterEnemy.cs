@@ -13,7 +13,6 @@ public class SpitterEnemy : EnemyAI
     public GameObject projectilePrefab;
     
     private float shootTimer;
-    private bool isFleeing;
 
     protected override void OnEnemyStart()
     {
@@ -93,11 +92,9 @@ public class SpitterEnemy : EnemyAI
         if (distanceToPlayer < fleeDistance)
         {
             FleeFromPlayer();
-            isFleeing = true;
         }
         else
         {
-            isFleeing = false;
             
             // Shoot if in range
             if (distanceToPlayer <= shootRange)

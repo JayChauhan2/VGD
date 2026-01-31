@@ -40,8 +40,8 @@ public class EnemySpawner : MonoBehaviour
         // Cleanup nulls
         activeSpawns.RemoveAll(x => x == null);
         
-        // Stop spawning if the room is cleared
-        if (currentRoom != null && currentRoom.IsCleared) return;
+        // Stop spawning if the room is cleared OR player hasn't entered
+        if (currentRoom != null && (currentRoom.IsCleared || !currentRoom.PlayerHasEntered)) return;
         
         // Stop spawning if active enemies limit reached
         if (activeSpawns.Count < maxActiveEnemies)

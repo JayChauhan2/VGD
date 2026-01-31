@@ -60,6 +60,15 @@ public class RoomManager : MonoBehaviour
             if (pathfindingGrid == null) Debug.LogWarning("RoomManager: PathfindingGrid still not found after auto-search.");
         }
 
+
+
+        // Ensure RoomDecorator exists
+        if (RoomDecorator.Instance == null)
+        {
+            GameObject decoratorObj = new GameObject("RoomDecorator");
+            decoratorObj.AddComponent<RoomDecorator>();
+        }
+
         Vector2Int initialRoomIndex = new Vector2Int(gridSizeX / 2, gridSizeY / 2);
         StartRoomGenerationFromRoom(initialRoomIndex);
     }

@@ -109,6 +109,15 @@ public class Room : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        // Decorate this room
+        if (RoomDecorator.Instance != null)
+        {
+            RoomDecorator.Instance.Decorate(this);
+        }
+    }
+
     public void RegisterEnemy(EnemyAI enemy)
     {
         if (!activeEnemies.Contains(enemy))

@@ -4,7 +4,6 @@ public class SpitterEnemy : EnemyAI
 {
     [Header("Spitter Settings")]
     public float shootRange = 8f;
-    public float fleeDistance = 3f;
     public float shootInterval = 2f;
     public float projectileSpeed = 6f;
     public float projectileDamage = 8f;
@@ -39,6 +38,7 @@ public class SpitterEnemy : EnemyAI
         SpriteRenderer sr = prefab.AddComponent<SpriteRenderer>();
         sr.sprite = CreateCircleSprite();
         sr.color = Color.red;
+        sr.sortingOrder = 10; // Ensure it renders on top
         prefab.transform.localScale = Vector3.one * 0.3f;
         
         // Add circle collider
@@ -53,6 +53,9 @@ public class SpitterEnemy : EnemyAI
         
         // Add projectile script
         prefab.AddComponent<EnemyProjectile>();
+        
+        // Hide the template
+        prefab.SetActive(false);
         
         return prefab;
     }
@@ -88,36 +91,19 @@ public class SpitterEnemy : EnemyAI
         
         float distanceToPlayer = Vector2.Distance(transform.position, target.position);
         
-        // Flee if player is too close
-        if (distanceToPlayer < fleeDistance)
+        // Maintain standard AI movement (chase behavior from base class) happens in base.Update() which calls this.
+        // We just need to handle shooting here.
+        
+        // Shoot if in range
+        if (distanceToPlayer <= shootRange)
         {
-            FleeFromPlayer();
-        }
-        else
-        {
-            
-            // Shoot if in range
-            if (distanceToPlayer <= shootRange)
+            shootTimer -= Time.deltaTime;
+            if (shootTimer <= 0)
             {
-                shootTimer -= Time.deltaTime;
-                if (shootTimer <= 0)
-                {
-                    ShootProjectile();
-                    shootTimer = shootInterval;
-                }
+                ShootProjectile();
+                shootTimer = shootInterval;
             }
         }
-    }
-
-    void FleeFromPlayer()
-    {
-        // Disable pathfinding and move away from player
-        path = null;
-        
-        Vector2 fleeDirection = (transform.position - target.position).normalized;
-        
-        // Use MoveSafely to prevent going through walls
-        MoveSafely(fleeDirection, speed * Time.deltaTime);
     }
 
     void ShootProjectile()
@@ -127,10 +113,20 @@ public class SpitterEnemy : EnemyAI
         // Calculate direction to player
         Vector2 direction = (target.position - transform.position).normalized;
         
-        // Spawn projectile
+        // Spawn projectile from hidden template
         GameObject projectileObj = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+        projectileObj.SetActive(true); // Activate the instance
+        
         EnemyProjectile projectile = projectileObj.GetComponent<EnemyProjectile>();
         
+        // Ignore collision with self
+        Collider2D myCollider = GetComponent<Collider2D>();
+        Collider2D projCollider = projectileObj.GetComponent<Collider2D>();
+        if (myCollider != null && projCollider != null)
+        {
+            Physics2D.IgnoreCollision(myCollider, projCollider);
+        }
+
         if (projectile != null)
         {
             projectile.Initialize(direction, projectileSpeed, projectileDamage);

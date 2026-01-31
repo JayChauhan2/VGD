@@ -20,6 +20,7 @@ public class EnemySpawner : MonoBehaviour
     private List<EnemyAI> activeSpawns = new List<EnemyAI>();
     private Room currentRoom;
     private static Sprite cachedWalkerSprite;
+    private static Sprite cachedSpitterSprite;
 
     private void Start()
     {
@@ -73,8 +74,8 @@ public class EnemySpawner : MonoBehaviour
         }
         else
         {
-            // Procedurally generate generic Walker
-            newEnemyObj = CreateProceduralWalker(spawnPos);
+            // Procedurally generate generic Spitter
+            newEnemyObj = CreateProceduralSpitter(spawnPos);
             enemyScript = newEnemyObj.GetComponent<EnemyAI>();
         }
 
@@ -132,6 +133,33 @@ public class EnemySpawner : MonoBehaviour
         WandererEnemy wanderer = obj.AddComponent<WandererEnemy>();
         // Ensure stats are set if they aren't in Awake/Start vs OnEnemyStart
         // EnemyAI calls OnEnemyStart in Start(), so this should work fine.
+        
+        return obj;
+    }
+
+    // fallback procedural generation for "Spitter"
+    private GameObject CreateProceduralSpitter(Vector3 pos)
+    {
+        GameObject obj = new GameObject("SpawnedSpitter");
+        obj.transform.position = pos;
+        
+        // Sprite
+        SpriteRenderer sr = obj.AddComponent<SpriteRenderer>();
+        if (cachedSpitterSprite == null) cachedSpitterSprite = CreateCircleSprite();
+        sr.sprite = cachedSpitterSprite;
+        sr.color = Color.green; // Green for Spitter
+        obj.transform.localScale = Vector3.one * 0.7f;
+
+        // Physics
+        Rigidbody2D rb = obj.AddComponent<Rigidbody2D>();
+        rb.gravityScale = 0;
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+
+        CircleCollider2D col = obj.AddComponent<CircleCollider2D>();
+        col.radius = 0.5f;
+
+        // Logic
+        SpitterEnemy spitter = obj.AddComponent<SpitterEnemy>();
         
         return obj;
     }

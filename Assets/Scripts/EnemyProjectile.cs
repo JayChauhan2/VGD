@@ -32,6 +32,8 @@ public class EnemyProjectile : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D collision)
     {
+        if (collision == null) return;
+
         // Damage player
         if (collision.CompareTag("Player"))
         {

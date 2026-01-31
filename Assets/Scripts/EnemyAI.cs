@@ -5,7 +5,7 @@ using System.Collections;
 public class EnemyAI : MonoBehaviour
 {
     public Transform target;
-    public float speed = 5f;
+    public float speed = 10f;
     public float pathUpdateDelay = 0.2f;
 
     protected Pathfinding pathfinding;
@@ -20,8 +20,12 @@ public class EnemyAI : MonoBehaviour
 
     public event System.Action<float, float> OnHealthChanged;
 
+    protected Rigidbody2D rb;
+
     void Start()
     {
+        rb = GetComponent<Rigidbody2D>();
+        
         // Auto-add health bar if missing
         if (GetComponent<EnemyHealthBar>() == null)
         {
@@ -164,8 +168,17 @@ public class EnemyAI : MonoBehaviour
 
         Vector3 currentWaypoint = path[targetIndex].worldPosition;
         
-        // Move towards waypoint
-        transform.position = Vector3.MoveTowards(transform.position, currentWaypoint, speed * Time.deltaTime);
+        // Move towards waypoint using Physics if available
+        Vector3 nextPosition = Vector3.MoveTowards(transform.position, currentWaypoint, speed * Time.deltaTime);
+        
+        if (rb != null)
+        {
+            rb.MovePosition(nextPosition);
+        }
+        else
+        {
+            transform.position = nextPosition;
+        }
 
         // Check if close to waypoint
         if (Vector3.Distance(transform.position, currentWaypoint) < 0.1f)

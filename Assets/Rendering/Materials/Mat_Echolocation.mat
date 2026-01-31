@@ -45,12 +45,12 @@ Material:
     - _EdgeWidth: 7.1
     - _EnableExternalAlpha: 0
     - _IsOrtho: 1
-    - _OrthographicSize: 5
+    - _OrthographicSize: 4.999992
     - _Radius: -1
     - _ZWrite: 0
     m_Colors:
-    - _CameraPos: {r: 19.999979, g: 23.999952, b: -3.9468307, a: 0}
-    - _Center: {r: 18.054403, g: 26.884083, b: 0, a: 0}
+    - _CameraPos: {r: -0.000000012439485, g: -0.000000001645422, b: -1.0779878, a: 0}
+    - _Center: {r: -6.5590158, g: -2.868858, b: 0, a: 0}
     - _Color: {r: 0, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

@@ -35,8 +35,17 @@ public class GameHUD : MonoBehaviour
         }
     }
 
+    private Text winText; // Reference to the Win Text component
+    
+    private void OnDestroy()
+    {
+         Room.OnRoomCleared -= CheckWinCondition;
+    }
+    
     private void Start()
     {
+         Room.OnRoomCleared += CheckWinCondition;
+
         // Find player health
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
@@ -50,6 +59,38 @@ public class GameHUD : MonoBehaviour
         }
 
         UpdateCoinDisplay();
+        
+        // Hide Win Text just in case
+        if (winText != null) winText.gameObject.SetActive(false);
+    }
+    
+    private void CheckWinCondition(Room room)
+    {
+        // Check if ALL rooms in Room.AllRooms are cleared
+        bool allCleared = true;
+        foreach(var r in Room.AllRooms)
+        {
+            if (!r.IsCleared) 
+            {
+                allCleared = false;
+                break;
+            }
+        }
+        
+        if (allCleared)
+        {
+            ShowWinScreen();
+        }
+    }
+    
+    private void ShowWinScreen()
+    {
+        if (winText != null) 
+        {
+            winText.gameObject.SetActive(true);
+            winText.text = "Congrats you won!";
+        }
+        Time.timeScale = 0; // Pause game
     }
 
     private void Update()
@@ -102,6 +143,25 @@ public class GameHUD : MonoBehaviour
         healthRect.pivot = Vector2.one;
         // Positioned under coin text
         healthRect.anchoredPosition = new Vector2(coinPosition.x, coinPosition.y - 30); 
+        
+        // Win Text
+        GameObject winObj = new GameObject("WinText");
+        winObj.transform.SetParent(canvasObj.transform, false);
+        winText = winObj.AddComponent<Text>();
+        winText.font = coinText.font;
+        winText.fontSize = 60; 
+        winText.color = Color.yellow;
+        winText.alignment = TextAnchor.MiddleCenter;
+        winText.horizontalOverflow = HorizontalWrapMode.Overflow;
+        winText.verticalOverflow = VerticalWrapMode.Overflow;
+        
+        RectTransform winRect = winObj.GetComponent<RectTransform>();
+        winRect.anchorMin = new Vector2(0.5f, 0.5f); // Center
+        winRect.anchorMax = new Vector2(0.5f, 0.5f);
+        winRect.pivot = new Vector2(0.5f, 0.5f);
+        winRect.anchoredPosition = Vector2.zero;
+        
+        winObj.SetActive(false); // Hidden by default
     }
 
     public void AddCoin(int amount = 1)

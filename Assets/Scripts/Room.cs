@@ -134,6 +134,15 @@ public class Room : MonoBehaviour
     }
 
     public static event System.Action<Room> OnRoomEntered;
+    public static event System.Action<Room> OnRoomCleared; // New event
+
+    private bool hasSpawners = false;
+
+    public void RegisterSpawner()
+    {
+        hasSpawners = true;
+        Debug.Log($"Room {name}: Registered Spawner.");
+    }
 
     public void OnPlayerEnter()
     {
@@ -143,21 +152,28 @@ public class Room : MonoBehaviour
             CameraController.Instance.MoveTo(transform.position);
         }
 
-        // 2. Check Enemies (They should have registered themselves by now)
-        // No longer finding by children, relying on manual registration
-        
         Debug.Log($"Room {name} Entered. Active Enemies: {activeEnemies.Count}");
         PlayerHasEntered = true;
 
         OnRoomEntered?.Invoke(this);
 
-        if (activeEnemies.Count > 0 && !IsCleared)
+        // If we have enemies OR spawners, we lock.
+        // Even if activeEnemies is 0, if we have a spawner, it might spawn them next frame.
+        if ((activeEnemies.Count > 0 || hasSpawners) && !IsCleared)
         {
             LockDoors();
             foreach (var enemy in activeEnemies)
             {
                 if (enemy != null) enemy.SetActive(true);
             }
+        }
+        else if (!IsCleared) // No enemies, no spawners -> Auto Clear Logic?
+        {
+             // If truly empty, mark cleared immediately
+             Debug.Log("Room: Empty room entered. marking cleared.");
+             IsCleared = true;
+             UnlockDoors();
+             OnRoomCleared?.Invoke(this); // Check win condition
         }
         else
         {
@@ -180,11 +196,42 @@ public class Room : MonoBehaviour
             Debug.LogWarning("Room: Enemy died but was not in my active list!");
         }
 
+        // Check clearance
+        // If we have a spawner, we technically rely on the Spawner to STOP spawning 
+        // effectively, but the room itself just checks "Are there active enemies?".
+        // IF there is a spawner, it might spawn MORE active enemies later.
+        // However, the Spawner stops spawning if the room is cleared.
+        // So we need a condition: 
+        // If activeEnemies == 0
+        // AND (Spawner is done? Spawner doesn't tell us it's done).
+        // Actually, if activeEnemies hits 0, and we have a spawner, it might immediately spawn more?
+        // But Spawner spawns periodically.
+        
+        // ISSUE: If I kill the last enemy, activeEnemies is 0.
+        // Spawner timer might not be ready.
+        // Room thinks it's cleared -> Unlocks doors -> Spawner sees Room.IsCleared -> Stops spawning.
+        // This effectively means "You cleared the current WAVE".
+        // If we want "Kill X enemies total", we need more logic.
+        // Assuming current logic is "Target Active".
+        // Since `EnemySpawner` spawns based on `maxActiveEnemies`, if the user kills them faster than they spawn, the count hits 0.
+        // But the spawner might still want to spawn more?
+        // The user implementation of EnemySpawner just spawns infinitely until room is cleared?
+        // No, `activeSpawns.Count < maxActiveEnemies`. It doesn't have a "Total Waves" count.
+        // So effectively, "Clear Room" = "Kill all currently extant enemies".
+        // If the Spawner hasn't spawned any yet (very start), count is 0.
+        // But we locked doors on Entry if `hasSpawners` is true.
+        // So if I enter, doors lock. Spawner spawns 1.
+        // I kill 1. Count 0. Room Clears?
+        // Yes, ensuring the spawner spawning interval isn't super fast relative to my kill?
+        // Or essentially, "You only need to kill the current set".
+        // This seems to be the current design. We'll stick to it.
+        
         if (activeEnemies.Count == 0)
         {
-            Debug.Log("Room: All enemies dead. Unlocking doors.");
+            Debug.Log("Room: All active enemies defeated. Unlocking doors.");
             IsCleared = true;
             UnlockDoors();
+            OnRoomCleared?.Invoke(this);
         }
     }
     

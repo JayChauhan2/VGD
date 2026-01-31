@@ -32,6 +32,11 @@ public class EnemySpawner : MonoBehaviour
             currentRoom = GetComponentInParent<Room>();
         }
         
+        if (currentRoom != null)
+        {
+             currentRoom.RegisterSpawner();
+        }
+        
         Debug.Log($"EnemySpawner: Initialized in Room {(currentRoom != null ? currentRoom.name : "None")}");
     }
 

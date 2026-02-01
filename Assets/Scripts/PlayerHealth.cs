@@ -23,7 +23,7 @@ public class PlayerHealth : MonoBehaviour
     private PlayerMovement playerMovement;
     private GameObject forcefield;
 
-    public float knockbackForce = 10f;
+    public float knockbackForce = 5f;
 
     void Awake()
     {

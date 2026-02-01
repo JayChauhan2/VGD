@@ -64,6 +64,8 @@ public class FlashBomb : MonoBehaviour
         
         // Deal damage and knockback to all enemies AND player in radius
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, explosionRadius);
+        Debug.Log($"FlashBomb: Found {hits.Length} objects in blast radius");
+        
         foreach (Collider2D hit in hits)
         {
             // Calculate knockback direction and distance-based force
@@ -83,11 +85,20 @@ public class FlashBomb : MonoBehaviour
                 Rigidbody2D enemyRb = enemy.GetComponent<Rigidbody2D>();
                 if (enemyRb != null)
                 {
-                    float knockbackForce = 15f * distancePercent; // Max 15 force when at center
+                    // Reset velocity first to ensure knockback is applied cleanly
+                    enemyRb.linearVelocity = Vector2.zero;
+                    
+                    float knockbackForce = 10f * distancePercent; // Max 10 force when at center
                     enemyRb.AddForce(direction * knockbackForce, ForceMode2D.Impulse);
+                    
+                    Debug.Log($"FlashBomb: Applied {knockbackForce} knockback force to {enemy.name} at distance {distance:F2}");
+                }
+                else
+                {
+                    Debug.LogWarning($"FlashBomb: Enemy {enemy.name} has no Rigidbody2D!");
                 }
                 
-                Debug.Log($"FlashBomb: Dealt {damage} damage to {enemy.name} with {distancePercent:F2} knockback");
+                Debug.Log($"FlashBomb: Dealt {damage} damage to {enemy.name} with {distancePercent:F2} knockback percent");
             }
             
             // Check for player
@@ -95,11 +106,10 @@ public class FlashBomb : MonoBehaviour
             if (player != null)
             {
                 // Player takes exactly 1 heart (2 health units) of damage
-                float knockbackForce = 20f * distancePercent; // Stronger knockback for player
-                Vector2 knockbackVector = direction * knockbackForce;
-                
-                player.TakeDamage(2f, knockbackVector);
-                Debug.Log($"FlashBomb: Hit player with {distancePercent:F2} knockback");
+                // PlayerHealth.TakeDamage applies its own knockbackForce multiplier (10f)
+                // So we just pass the direction, not a pre-scaled force
+                player.TakeDamage(2f, direction);
+                Debug.Log($"FlashBomb: Hit player at distance {distance:F2}");
             }
         }
         

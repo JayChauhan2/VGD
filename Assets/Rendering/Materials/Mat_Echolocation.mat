@@ -42,15 +42,16 @@ Material:
     m_Ints: []
     m_Floats:
     - _AspectRatio: 1.7774141
+    - _Darkness: 0.9
     - _EdgeWidth: 7.1
     - _EnableExternalAlpha: 0
     - _IsOrtho: 1
     - _OrthographicSize: 5
-    - _Radius: 65.8223
+    - _Radius: 43.527573
     - _ZWrite: 0
     m_Colors:
-    - _CameraPos: {r: 0, g: 0, b: -7.65643, a: 0}
-    - _Center: {r: -7.943778, g: 0.9839081, b: 0, a: 0}
+    - _CameraPos: {r: 0.000052704523, g: -0.00000058022664, b: -2.9480088, a: 0}
+    - _Center: {r: 3.9870205, g: -4.408028, b: 0, a: 0}
     - _Color: {r: 0, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

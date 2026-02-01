@@ -1142,6 +1142,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1106899276}
+  - component: {fileID: 1106899283}
   - component: {fileID: 1106899275}
   - component: {fileID: 1106899274}
   - component: {fileID: 1106899273}
@@ -1149,7 +1150,6 @@ GameObject:
   - component: {fileID: 1106899279}
   - component: {fileID: 1106899280}
   - component: {fileID: 1106899282}
-  - component: {fileID: 1106899283}
   m_Layer: 0
   m_Name: Square
   m_TagString: Player
@@ -1381,11 +1381,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerTransform: {fileID: 1106899276}
   echolocationMaterial: {fileID: 2100000, guid: fbc3f06df41d70146adb37466ca210b0, type: 2}
-  expandSpeed: 34.6
+  expandSpeed: 25.5
   maxRadius: 268.8
   pingInterval: 2
-  edgeWidth: 7.1
+  edgeWidth: 4.69
   rippleColor: {r: 0, g: 1, b: 1, a: 1}
+  worldDarkness: 1
   fadeOutDuration: 0.5
 --- !u!1 &1234879616
 GameObject:

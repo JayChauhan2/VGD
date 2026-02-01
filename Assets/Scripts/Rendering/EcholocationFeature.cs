@@ -73,17 +73,13 @@ public class EcholocationFeature : ScriptableRendererFeature
             if (material == null) return;
 
             UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
-            UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
-
             TextureHandle activeColor = resourceData.activeColorTexture;
             
-            // Use the Blitter API which handles full screen quads correctly
             using (var builder = renderGraph.AddRasterRenderPass<PassData>("Echolocation Pass", out var passData))
             {
                 passData.material = material;
                 passData.mesh = FullscreenMesh;
                 
-                // We need to set the active color as the target
                 builder.SetRenderAttachment(activeColor, 0, AccessFlags.Write);
                 
                 builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
@@ -91,11 +87,8 @@ public class EcholocationFeature : ScriptableRendererFeature
                     // Force identity matrices so the full screen quad (-1 to 1) covers the screen
                     context.cmd.SetViewProjectionMatrices(Matrix4x4.identity, Matrix4x4.identity);
                     
-                    // Draw the full screen mesh
+                    // Draw the mesh
                     context.cmd.DrawMesh(data.mesh, Matrix4x4.identity, data.material, 0, 0);
-                    
-                    // Note: We don't restore matrices here because it's the end of the pass
-                    // and RenderGraph handles context state
                 });
             }
         }

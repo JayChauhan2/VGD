@@ -92,44 +92,43 @@ Shader "Hidden/Echolocation"
                     worldPos = ComputeWorldSpacePosition(input.uv, depth, UNITY_MATRIX_I_VP);
                 }
 
-                // --- Ripple Ring Logic ---
+                // --- Darkness & Reveal Logic ---
+                
+                // 1. Calculate Distance
                 float dist = distance(worldPos.xy, _Center.xy); 
                 if (_IsOrtho < 0.5) dist = distance(worldPos, _Center.xyz);
 
+                // 2. Base State: Dark Overlay
+                float3 finalColor = float3(0, 0, 0);
+                float finalAlpha = _Darkness; // Default darkness (e.g. 0.9 or 1.0)
+                
+                // 3. Reveal Logic (Flashlight Hole)
+                // If inside the current radius, make it transparent (reveal game)
+                if (dist < _Radius)
+                {
+                     // Inside the circle: Fully revealed
+                     finalAlpha = 0; 
+                }
+
+                // 4. Draw the Ripple Ring (The "Wave" front)
                 float halfWidth = _EdgeWidth * 0.5;
                 float lowerBound = _Radius - halfWidth;
                 float upperBound = _Radius + halfWidth;
                 
-                float rippleAlpha = 0;
-                
-                // Draw the ring
                 if (dist > lowerBound && dist < upperBound)
                 {
                     float distFromCenter = abs(dist - _Radius);
-                    rippleAlpha = 1.0 - (distFromCenter / halfWidth);
-                    rippleAlpha = pow(rippleAlpha, 2);
+                    float ringAlpha = 1.0 - (distFromCenter / halfWidth);
+                    ringAlpha = pow(ringAlpha, 2); // Smooth falloff
+                    
+                    // Add the ring color on top
+                    finalColor = _Color.rgb;
+                    
+                    // Make sure the ring itself is visible (opaque)
+                    // If we want the ring to be visible over darkness:
+                    finalAlpha = max(finalAlpha, ringAlpha * _Color.a);
                 }
 
-                // --- Darkness & Composition ---
-                // Base is black with _Darkness alpha
-                float3 finalColor = float3(0, 0, 0); 
-                float finalAlpha = _Darkness;
-
-                // Add ripple
-                // Use input color's alpha as global ripple opacity multiplier
-                float rippleOpacity = _Color.a * rippleAlpha;
-                
-                // Where ripple is, we want to show the ripple color AND reduce the darkness (maybe?)
-                // Or just draw ripple on top of darkness? 
-                // Let's draw ripple on top.
-                
-                finalColor = lerp(finalColor, _Color.rgb, rippleOpacity);
-                // Increase alpha where ripple is to ensure it shows up clearly? 
-                // Alternatively, if we want ripple to "reveal" (make transparent), we would REDUCE finalAlpha.
-                // But user probably wants "Sonar" look (Darkness + Bright Lines).
-                
-                finalAlpha = max(finalAlpha, rippleOpacity);
-                
                 return float4(finalColor, finalAlpha);
             }
             ENDHLSL

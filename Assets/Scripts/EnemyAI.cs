@@ -5,7 +5,7 @@ using System.Collections;
 public class EnemyAI : MonoBehaviour
 {
     public Transform target;
-    public float speed = 10f;
+    public float speed = 5f;
     public float pathUpdateDelay = 0.2f;
 
     protected Pathfinding pathfinding;
@@ -164,19 +164,23 @@ public class EnemyAI : MonoBehaviour
         // Virtual hook for subclasses to add custom update logic
         OnEnemyUpdate();
         
-        if (path == null || targetIndex >= path.Count) return;
+        if (path == null || targetIndex >= path.Count) 
+        {
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+            return;
+        }
 
         Vector3 currentWaypoint = path[targetIndex].worldPosition;
         
         // Move towards waypoint using Physics if available
-        Vector3 nextPosition = Vector3.MoveTowards(transform.position, currentWaypoint, speed * Time.deltaTime);
-        
         if (rb != null)
         {
-            rb.MovePosition(nextPosition);
+            Vector2 dir = (currentWaypoint - transform.position).normalized;
+            rb.linearVelocity = dir * speed;
         }
         else
         {
+            Vector3 nextPosition = Vector3.MoveTowards(transform.position, currentWaypoint, speed * Time.deltaTime);
             transform.position = nextPosition;
         }
 

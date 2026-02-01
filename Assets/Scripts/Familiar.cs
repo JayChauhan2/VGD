@@ -44,6 +44,9 @@ public class Familiar : MonoBehaviour
         {
             gameObject.AddComponent<FamiliarAttack>();
         }
+
+        // Detach from parent to ensure independent rotation
+        transform.SetParent(null);
     }
 
     void OnDestroy()

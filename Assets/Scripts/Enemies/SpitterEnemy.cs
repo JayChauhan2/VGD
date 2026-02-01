@@ -17,7 +17,7 @@ public class SpitterEnemy : EnemyAI
     {
         maxHealth = 35f;
         currentHealth = maxHealth;
-        speed = 3.5f;
+        speed = 6f;
         shootTimer = shootInterval;
         
         // Create projectile prefab if not assigned

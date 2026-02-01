@@ -25,10 +25,41 @@ public class PlayerMovement : MonoBehaviour
     public bool IsDashReady => dashCooldownTimer <= 0f;
     public bool IsDashing => isDashing;
 
+    [Header("Visual Deformation")]
+    public Transform modelTransform;
+    public float leanAmount = 0.2f; // How far the sprite shifts
+    public float leanSmoothTime = 0.1f;
+    private Vector3 originalLocalPos;
+    private Vector3 leanVelocity;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        
+        // Auto-assign modelTransform if not set
+        if (modelTransform == null)
+        {
+            // Try to find a child SpriteRenderer first (common for separating logic/visuals)
+            SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
+            if (sr != null && sr.transform != transform)
+            {
+                modelTransform = sr.transform;
+            }
+            else
+            {
+                // Fallback to self, but be warned this scales colliders too if they are on the same object
+                // For position offset, moving self (root) relative to... self? No, we can't move root relative to root.
+                // If we don't have a child model, we can't really do "local position offset" without moving the RB, which is bad.
+                // So we MUST have a child visual or this effect won't work well on the root.
+                // But let's leave it null if not found and not apply effect to avoid bugs.
+                modelTransform = null;
+            }
+        }
+        
+        if (modelTransform != null)
+        {
+            originalLocalPos = modelTransform.localPosition;
+        }
     }
 
     void Update()
@@ -67,6 +98,21 @@ public class PlayerMovement : MonoBehaviour
                 currentDashCoroutine = DashRoutine();
                 StartCoroutine(currentDashCoroutine);
             }
+        }
+        
+        // Visual Deformation (Lean/Lead Effect)
+        if (modelTransform != null)
+        {
+            // Calculate local velocity to know which way we are moving relative to our facing direction
+            Vector3 localVel = transform.InverseTransformDirection(rb.linearVelocity);
+            
+            // "Animate outward" -> Move the sprite slightly in the direction of movement.
+            // This creates a "leading" or "leaning" effect.
+            
+            Vector3 targetPos = originalLocalPos + (localVel * leanAmount * 0.1f); 
+            // Note: 0.1f is a magic number to keep inspector values reasonable (e.g. 0.2 instead of 0.02)
+            
+            modelTransform.localPosition = Vector3.SmoothDamp(modelTransform.localPosition, targetPos, ref leanVelocity, leanSmoothTime);
         }
     }
 

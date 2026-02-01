@@ -12,6 +12,8 @@ public class EcholocationController : MonoBehaviour
     [Header("Visuals")]
     public float edgeWidth = 2f;
     public Color rippleColor = Color.cyan;
+    [Range(0f, 1f)]
+    public float worldDarkness = 0.9f;
     public float fadeOutDuration = 0.5f; // Time for ripple to fade after reaching max radius
     
     private Transform centerTransform; // The actual transform to use for position
@@ -87,6 +89,7 @@ public class EcholocationController : MonoBehaviour
         if (echolocationMaterial != null)
         {
             echolocationMaterial.SetVector("_Center", centerPos);
+            echolocationMaterial.SetFloat("_Darkness", worldDarkness);
             
             // Only show ripple if expanding or fading out
             if (isExpanding || isFadingOut)

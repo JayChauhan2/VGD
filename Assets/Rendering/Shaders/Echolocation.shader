@@ -7,6 +7,7 @@ Shader "Hidden/Echolocation"
         _Center ("Center Position", Vector) = (0, 0, 0, 0)
         _Radius ("Current Radius", Float) = 0
         _EdgeWidth ("Edge Width", Float) = 2
+        _Darkness ("World Darkness", Range(0, 1)) = 0.9
         
         // 2D Support
         _CameraPos ("Camera Position", Vector) = (0,0,0,0)
@@ -21,7 +22,7 @@ Shader "Hidden/Echolocation"
         ZTest Always
         ZWrite Off
         Cull Off
-        Blend SrcAlpha One
+        Blend SrcAlpha OneMinusSrcAlpha
         
         Pass
         {
@@ -53,6 +54,7 @@ Shader "Hidden/Echolocation"
             float4 _Center;
             float _Radius;
             float _EdgeWidth;
+            float _Darkness;
             
             float4 _CameraPos;
             float _OrthographicSize;
@@ -71,8 +73,8 @@ Shader "Hidden/Echolocation"
             float4 frag (Varyings input) : SV_Target
             {
                 float3 worldPos;
-                float alphaMultiplier = 1.0;
-
+                
+                // --- World Position Reconstruction ---
                 if (_IsOrtho > 0.5)
                 {
                     // --- 2D Orthographic Logic ---
@@ -88,12 +90,6 @@ Shader "Hidden/Echolocation"
                     // --- 3D Depth Logic (Fallback) ---
                     float depth = SampleSceneDepth(input.uv);
                     worldPos = ComputeWorldSpacePosition(input.uv, depth, UNITY_MATRIX_I_VP);
-                    
-                    #if UNITY_REVERSED_Z
-                        if(depth <= 0.0001) alphaMultiplier = 0;
-                    #else
-                        if(depth >= 0.9999) alphaMultiplier = 0;
-                    #endif
                 }
 
                 // --- Ripple Ring Logic ---
@@ -104,17 +100,37 @@ Shader "Hidden/Echolocation"
                 float lowerBound = _Radius - halfWidth;
                 float upperBound = _Radius + halfWidth;
                 
-                float alpha = 0;
+                float rippleAlpha = 0;
                 
                 // Draw the ring
                 if (dist > lowerBound && dist < upperBound)
                 {
                     float distFromCenter = abs(dist - _Radius);
-                    alpha = 1.0 - (distFromCenter / halfWidth);
-                    alpha = pow(alpha, 2);
+                    rippleAlpha = 1.0 - (distFromCenter / halfWidth);
+                    rippleAlpha = pow(rippleAlpha, 2);
                 }
 
-                return float4(_Color.rgb * alpha * alphaMultiplier, alpha * alphaMultiplier);
+                // --- Darkness & Composition ---
+                // Base is black with _Darkness alpha
+                float3 finalColor = float3(0, 0, 0); 
+                float finalAlpha = _Darkness;
+
+                // Add ripple
+                // Use input color's alpha as global ripple opacity multiplier
+                float rippleOpacity = _Color.a * rippleAlpha;
+                
+                // Where ripple is, we want to show the ripple color AND reduce the darkness (maybe?)
+                // Or just draw ripple on top of darkness? 
+                // Let's draw ripple on top.
+                
+                finalColor = lerp(finalColor, _Color.rgb, rippleOpacity);
+                // Increase alpha where ripple is to ensure it shows up clearly? 
+                // Alternatively, if we want ripple to "reveal" (make transparent), we would REDUCE finalAlpha.
+                // But user probably wants "Sonar" look (Darkness + Bright Lines).
+                
+                finalAlpha = max(finalAlpha, rippleOpacity);
+                
+                return float4(finalColor, finalAlpha);
             }
             ENDHLSL
         }

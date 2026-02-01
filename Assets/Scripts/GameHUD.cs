@@ -285,12 +285,30 @@ public class GameHUD : MonoBehaviour
         {
             if (playerHealth != null)
             {
-                float percent = (playerHealth.CurrentHealth / playerHealth.maxHealth) * 100f;
-                healthText.text = $"Health: {Mathf.CeilToInt(percent)}%";
+                // Heart Display (6 units = 3 Hearts, so 2 units = 1 Heart)
+                int current = Mathf.Clamp(playerHealth.CurrentHealth, 0, playerHealth.maxHealth);
+                int fullHearts = current / 2;
+                bool hasHalfHeart = (current % 2) != 0;
+
+                string heartString = "";
+                for (int i = 0; i < fullHearts; i++)
+                {
+                    heartString += "❤";
+                }
+                if (hasHalfHeart)
+                {
+                    heartString += "💔"; 
+                }
+                
+                healthText.text = $"Health: {heartString}";
+                
+                // Color warning when equal to or less than 1 full heart (2 units)
+                if (current <= 2) healthText.color = Color.red;
+                else healthText.color = textColor;
             }
             else
             {
-                healthText.text = "Health: --%";
+                healthText.text = "Health: --";
                 // Try finding it again if we missed it start (e.g. player spawned late)
                 if (Random.Range(0, 100) < 5) // Occasional retry
                 {

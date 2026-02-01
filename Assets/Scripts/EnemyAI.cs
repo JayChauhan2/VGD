@@ -257,13 +257,33 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
+    private Coroutine activationCoroutine;
+
     public void SetActive(bool active)
     {
-        IsActive = active;
-        Debug.Log($"EnemyAI: Active state set to {active}");
-        
-        // Virtual hook for subclasses
-        if (active) OnEnemyActivated();
+        if (active)
+        {
+            if (IsActive) return; // Already active
+
+            // Start delay if not already running
+            if (activationCoroutine != null) StopCoroutine(activationCoroutine);
+            activationCoroutine = StartCoroutine(ActivateRoutine());
+        }
+        else
+        {
+            if (activationCoroutine != null) StopCoroutine(activationCoroutine);
+            IsActive = false;
+            Debug.Log($"EnemyAI: Active state set to {active}");
+        }
+    }
+
+    private IEnumerator ActivateRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
+        IsActive = true;
+        Debug.Log($"EnemyAI: Active state set to true (after delay)");
+        OnEnemyActivated();
+        activationCoroutine = null;
     }
     
     // Virtual method for subclasses to override when enemy becomes active

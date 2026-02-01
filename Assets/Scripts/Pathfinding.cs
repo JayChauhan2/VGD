@@ -27,6 +27,22 @@ public class Pathfinding : MonoBehaviour
             return null;
         }
 
+        // Check if target node is walkable
+        if (!targetNode.walkable)
+        {
+            // Find closest walkable node using BFS
+            Node closestWalkable = FindClosestWalkableNode(targetNode);
+            if (closestWalkable != null)
+            {
+                targetNode = closestWalkable;
+            }
+            else
+            {
+                 // No walkable node found nearby? Just fail or keep targetNode (which will fail search)
+                 // Debug.LogWarning("Pathfinding: Target is unwalkable and no walkable neighbor found.");
+            }
+        }
+
         List<Node> openSet = new List<Node>();
         HashSet<Node> closedSet = new HashSet<Node>();
         openSet.Add(startNode);
@@ -70,6 +86,36 @@ public class Pathfinding : MonoBehaviour
             }
         }
         Debug.LogWarning("Pathfinding: OpenSet exhausted. Path not found.");
+        return null;
+    }
+
+    Node FindClosestWalkableNode(Node startNode)
+    {
+        Queue<Node> queue = new Queue<Node>();
+        HashSet<Node> visited = new HashSet<Node>();
+        queue.Enqueue(startNode);
+        visited.Add(startNode);
+
+        // Limit search depth to avoid infinite loops or huge performance hits
+        int maxDepth = 20; 
+        int steps = 0;
+
+        while (queue.Count > 0 && steps < 100) // heuristic limit
+        {
+            Node current = queue.Dequeue();
+            steps++;
+
+            if (current.walkable) return current;
+
+            foreach (Node neighbor in grid.GetNeighbors(current))
+            {
+                if (!visited.Contains(neighbor))
+                {
+                    visited.Add(neighbor);
+                    queue.Enqueue(neighbor);
+                }
+            }
+        }
         return null;
     }
 

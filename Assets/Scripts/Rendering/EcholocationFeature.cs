@@ -75,20 +75,27 @@ public class EcholocationFeature : ScriptableRendererFeature
             UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
             UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
 
-            // Simplified: Just render the ripple overlay without edge detection for now
-            // Edge detection requires complex texture copying in RenderGraph which is causing issues
-            // We'll just draw the basic ripple ring effect
+            TextureHandle activeColor = resourceData.activeColorTexture;
             
+            // Use the Blitter API which handles full screen quads correctly
             using (var builder = renderGraph.AddRasterRenderPass<PassData>("Echolocation Pass", out var passData))
             {
                 passData.material = material;
                 passData.mesh = FullscreenMesh;
                 
-                builder.SetRenderAttachment(resourceData.activeColorTexture, 0, AccessFlags.Write);
+                // We need to set the active color as the target
+                builder.SetRenderAttachment(activeColor, 0, AccessFlags.Write);
                 
                 builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
                 {
+                    // Force identity matrices so the full screen quad (-1 to 1) covers the screen
+                    context.cmd.SetViewProjectionMatrices(Matrix4x4.identity, Matrix4x4.identity);
+                    
+                    // Draw the full screen mesh
                     context.cmd.DrawMesh(data.mesh, Matrix4x4.identity, data.material, 0, 0);
+                    
+                    // Note: We don't restore matrices here because it's the end of the pass
+                    // and RenderGraph handles context state
                 });
             }
         }

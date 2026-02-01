@@ -3,6 +3,7 @@ using UnityEngine;
 public class EcholocationController : MonoBehaviour
 {
     [Header("Settings")]
+    public Transform playerTransform; // Assign the Player GameObject transform (leave empty to use this GameObject)
     public Material echolocationMaterial; // Assign the material used by the Render Feature
     public float expandSpeed = 10f;
     public float maxRadius = 30f;
@@ -12,6 +13,8 @@ public class EcholocationController : MonoBehaviour
     public float edgeWidth = 2f;
     public Color rippleColor = Color.cyan;
     public float fadeOutDuration = 0.5f; // Time for ripple to fade after reaching max radius
+    
+    private Transform centerTransform; // The actual transform to use for position
 
     private float currentRadius;
     private bool isExpanding = false;
@@ -28,11 +31,16 @@ public class EcholocationController : MonoBehaviour
 
     void Start()
     {
+        // Determine which transform to use for the center
+        centerTransform = playerTransform != null ? playerTransform : transform;
+        
+        Debug.Log($"[Echolocation] Using transform: {centerTransform.gameObject.name} at position {centerTransform.position}");
+        
         // Initialize shader with default values
         if (echolocationMaterial != null)
         {
             echolocationMaterial.SetFloat("_Radius", -1.0f); // Hide initially
-            echolocationMaterial.SetVector("_Center", transform.position);
+            echolocationMaterial.SetVector("_Center", centerTransform.position);
             echolocationMaterial.SetFloat("_EdgeWidth", edgeWidth);
             echolocationMaterial.SetColor("_Color", rippleColor);
         }
@@ -72,9 +80,14 @@ public class EcholocationController : MonoBehaviour
             }
         }
 
-        // Update Shader
+        // Get the center position
+        Vector3 centerPos = centerTransform.position;
+        
+        // Update Shader - Set properties directly on the material
         if (echolocationMaterial != null)
         {
+            echolocationMaterial.SetVector("_Center", centerPos);
+            
             // Only show ripple if expanding or fading out
             if (isExpanding || isFadingOut)
             {
@@ -112,9 +125,17 @@ public class EcholocationController : MonoBehaviour
         currentAlpha = 1f;
         fadeTimer = 0f;
         
+        // Debug logging
+        Debug.Log($"[Echolocation] Ping started at position: {centerTransform.position}");
+        
         if (echolocationMaterial != null)
         {
-            echolocationMaterial.SetVector("_Center", transform.position);
+            echolocationMaterial.SetVector("_Center", centerTransform.position);
+            Debug.Log($"[Echolocation] Material center set to: {centerTransform.position}");
+        }
+        else
+        {
+            Debug.LogError("[Echolocation] Material is NULL!");
         }
         
         // Trigger event for Shadow Stalker enemies

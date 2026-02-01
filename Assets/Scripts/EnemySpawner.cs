@@ -63,7 +63,7 @@ public class EnemySpawner : MonoBehaviour
 
     public void Spawn()
     {
-        Vector3 spawnPos = GetRandomSpawnPosition();
+        Vector3 spawnPos = transform.position;
         GameObject newEnemyObj = null;
         EnemyAI enemyScript = null;
 
@@ -88,6 +88,9 @@ public class EnemySpawner : MonoBehaviour
             {
                 currentRoom.RegisterEnemy(enemyScript);
                 
+                // Explicitly tell the enemy about the room so it knows who to notify when it dies
+                enemyScript.AssignRoom(currentRoom);
+                
                 // If the room is already active (player is there), ensure enemy wakes up
                 if (currentRoom.PlayerHasEntered && !currentRoom.IsCleared)
                 {
@@ -102,11 +105,7 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    private Vector3 GetRandomSpawnPosition()
-    {
-        Vector2 circle = Random.insideUnitCircle * spawnRadius;
-        return transform.position + new Vector3(circle.x, circle.y, 0);
-    }
+
 
     // fallback procedural generation for "Walker"
     private GameObject CreateProceduralWalker(Vector3 pos)

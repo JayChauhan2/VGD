@@ -22,6 +22,13 @@ public class EnemyAI : MonoBehaviour
 
     protected Rigidbody2D rb;
 
+    // Public method to explicitly assign room (e.g. from Spawner)
+    public void AssignRoom(Room room)
+    {
+        parentRoom = room;
+        Debug.Log($"EnemyAI: Room explicitly assigned: {(room != null ? room.name : "null")}");
+    }
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -35,19 +42,23 @@ public class EnemyAI : MonoBehaviour
         currentHealth = maxHealth;
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         
-        // 1. Try Hierarchy
-        parentRoom = GetComponentInParent<Room>();
-        
-        // 2. Try Spatial Lookup via RoomManager
-        if (parentRoom == null && RoomManager.Instance != null && RoomManager.Instance.IsInitialized())
-        {
-            parentRoom = RoomManager.Instance.GetRoomAt(transform.position);
-        }
-        
-        // 3. Try Global Room Search (Handle manually placed rooms)
+        // If room not already assigned (e.g. by Spawner), try to find it
         if (parentRoom == null)
         {
-            parentRoom = Room.GetRoomContaining(transform.position);
+            // 1. Try Hierarchy
+            parentRoom = GetComponentInParent<Room>();
+            
+            // 2. Try Spatial Lookup via RoomManager
+            if (parentRoom == null && RoomManager.Instance != null && RoomManager.Instance.IsInitialized())
+            {
+                parentRoom = RoomManager.Instance.GetRoomAt(transform.position);
+            }
+            
+            // 3. Try Global Room Search (Handle manually placed rooms)
+            if (parentRoom == null)
+            {
+                parentRoom = Room.GetRoomContaining(transform.position);
+            }
         }
 
         if (parentRoom != null)

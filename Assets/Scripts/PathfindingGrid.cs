@@ -76,6 +76,17 @@ public class PathfindingGrid : MonoBehaviour
 
                 if (checkX >= 0 && checkX < gridSizeX && checkY >= 0 && checkY < gridSizeY)
                 {
+                    // Strict Diagonal Check: Don't cut corners
+                    if (Mathf.Abs(x) == 1 && Mathf.Abs(y) == 1)
+                    {
+                        Node nodeHorizontal = grid[checkX, node.gridY];
+                        Node nodeVertical = grid[node.gridX, checkY];
+
+                        // If either cardinal neighbor is blocked, don't allow diagonal
+                        if (!nodeHorizontal.walkable || !nodeVertical.walkable)
+                            continue;
+                    }
+
                     neighbors.Add(grid[checkX, checkY]);
                 }
             }

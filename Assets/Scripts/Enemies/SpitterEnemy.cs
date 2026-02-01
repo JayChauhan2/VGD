@@ -21,7 +21,20 @@ public class SpitterEnemy : EnemyAI
         shootTimer = shootInterval;
         
         // Use a smaller size for the Spitter
-        transform.localScale = Vector3.one * 0.7f;
+        transform.localScale = Vector3.one * 0.5f;
+
+        // Ensure CircleCollider for smooth movement
+        BoxCollider2D box = GetComponent<BoxCollider2D>();
+        if (box != null) Destroy(box);
+        
+        PolygonCollider2D poly = GetComponent<PolygonCollider2D>();
+        if (poly != null) Destroy(poly);
+        
+        if (GetComponent<CircleCollider2D>() == null)
+        {
+            CircleCollider2D circle = gameObject.AddComponent<CircleCollider2D>();
+            circle.radius = 0.3f; // Standard size
+        }
         
         // Create projectile prefab if not assigned
         if (projectilePrefab == null)

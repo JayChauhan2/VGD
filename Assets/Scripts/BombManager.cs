@@ -5,7 +5,7 @@ public class BombManager : MonoBehaviour
     public static BombManager Instance { get; private set; }
     
     [Header("Bomb Settings")]
-    public int startingBombs = 999;
+    public int startingBombs = 1;
     public GameObject bombPrefab; // Will be created procedurally if null
     
     private int currentBombs;

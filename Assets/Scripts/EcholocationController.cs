@@ -11,9 +11,13 @@ public class EcholocationController : MonoBehaviour
     [Header("Visuals")]
     public float edgeWidth = 2f;
     public Color rippleColor = Color.cyan;
+    public float fadeOutDuration = 0.5f; // Time for ripple to fade after reaching max radius
 
     private float currentRadius;
     private bool isExpanding = false;
+    private bool isFadingOut = false;
+    private float fadeTimer = 0f;
+    private float currentAlpha = 1f;
     private float timer = 0f;
     
     // Event for Shadow Stalker enemy visibility
@@ -48,22 +52,45 @@ public class EcholocationController : MonoBehaviour
         {
             currentRadius += expandSpeed * Time.deltaTime;
 
-            if (currentRadius > maxRadius)
+            if (currentRadius >= maxRadius)
             {
                 currentRadius = maxRadius;
                 isExpanding = false;
+                isFadingOut = true;
+                fadeTimer = 0f;
+            }
+        }
+        else if (isFadingOut)
+        {
+            fadeTimer += Time.deltaTime;
+            currentAlpha = 1f - (fadeTimer / fadeOutDuration);
+            
+            if (fadeTimer >= fadeOutDuration)
+            {
+                isFadingOut = false;
+                currentAlpha = 0f;
             }
         }
 
         // Update Shader
         if (echolocationMaterial != null)
         {
-            echolocationMaterial.SetFloat("_Radius", isExpanding ? currentRadius : maxRadius); // Keep showing max radius or fade?
-            // If we want it to disappear, we should animate a fade or set radius to -1
-            if (!isExpanding) echolocationMaterial.SetFloat("_Radius", -1);
-            
-            echolocationMaterial.SetFloat("_EdgeWidth", edgeWidth);
-            echolocationMaterial.SetColor("_Color", rippleColor);
+            // Only show ripple if expanding or fading out
+            if (isExpanding || isFadingOut)
+            {
+                echolocationMaterial.SetFloat("_Radius", currentRadius);
+                echolocationMaterial.SetFloat("_EdgeWidth", edgeWidth);
+                
+                // Apply alpha to color for fade-out effect
+                Color fadeColor = rippleColor;
+                fadeColor.a = currentAlpha;
+                echolocationMaterial.SetColor("_Color", fadeColor);
+            }
+            else
+            {
+                // Hide the ripple when not active
+                echolocationMaterial.SetFloat("_Radius", -1);
+            }
             
             // Pass Camera Properties for 2D Reconstruction
             Camera cam = Camera.main;
@@ -81,6 +108,9 @@ public class EcholocationController : MonoBehaviour
     {
         currentRadius = 0;
         isExpanding = true;
+        isFadingOut = false;
+        currentAlpha = 1f;
+        fadeTimer = 0f;
         
         if (echolocationMaterial != null)
         {
@@ -136,8 +166,9 @@ public class EcholocationController : MonoBehaviour
     void OnValidate() {
         if (expandSpeed > 0 && maxRadius > 0 && pingInterval > 0) {
             float travelTime = maxRadius / expandSpeed;
-            if (pingInterval < travelTime) {
-                Debug.LogWarning($"[Echolocation] Ping Interval ({pingInterval}s) is shorter than Travel Time ({travelTime}s). The ripple will reset before reaching Max Radius.");
+            float totalEffectTime = travelTime + fadeOutDuration;
+            if (pingInterval < totalEffectTime) {
+                Debug.LogWarning($"[Echolocation] Ping Interval ({pingInterval}s) is shorter than Total Effect Time ({totalEffectTime}s = {travelTime}s travel + {fadeOutDuration}s fade). The ripple will reset before completing.");
             }
         }
     }

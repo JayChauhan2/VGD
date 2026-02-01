@@ -98,6 +98,15 @@ public class PlayerMovement : MonoBehaviour
                 currentDashCoroutine = DashRoutine();
                 StartCoroutine(currentDashCoroutine);
             }
+            
+            // Bomb Input
+            if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
+            {
+                if (BombManager.Instance != null)
+                {
+                    BombManager.Instance.PlaceBomb(transform.position);
+                }
+            }
         }
         
         // Visual Deformation (Lean/Lead Effect)

@@ -75,11 +75,12 @@ public class EnemySpawner : MonoBehaviour
 
     public void Spawn()
     {
+        // Check if we have room for 3 more enemies before spawning
+        if (activeSpawns.Count >= maxActiveEnemies) return;
+        
         // Spawn 3 enemies at once
         for (int i = 0; i < 3; i++)
         {
-            if (activeSpawns.Count >= maxActiveEnemies) return;
-
             Vector3 spawnPos = transform.position;
             
             GameObject newEnemyObj = null;

@@ -13,6 +13,7 @@ public class GameHUD : MonoBehaviour
 
     private Text coinText;
     private Text healthText;
+    private Text bombText;
     private int coinCount = 0;
     private PlayerHealth playerHealth;
 
@@ -147,6 +148,7 @@ public class GameHUD : MonoBehaviour
     private void Update()
     {
         UpdateHealthDisplay();
+        UpdateBombDisplay();
     }
 
     private void CreateUI()
@@ -193,7 +195,25 @@ public class GameHUD : MonoBehaviour
         healthRect.anchorMax = Vector2.one;
         healthRect.pivot = Vector2.one;
         // Positioned under coin text
-        healthRect.anchoredPosition = new Vector2(coinPosition.x, coinPosition.y - 30); 
+        healthRect.anchoredPosition = new Vector2(coinPosition.x, coinPosition.y - 30);
+        
+        // Bomb Text
+        GameObject bombObj = new GameObject("BombText");
+        bombObj.transform.SetParent(canvasObj.transform, false);
+        bombText = bombObj.AddComponent<Text>();
+        bombText.font = coinText.font;
+        bombText.fontSize = fontSize - 4; // Slightly smaller
+        bombText.color = textColor;
+        bombText.alignment = TextAnchor.UpperRight;
+        bombText.horizontalOverflow = HorizontalWrapMode.Overflow;
+        bombText.verticalOverflow = VerticalWrapMode.Overflow;
+
+        RectTransform bombRect = bombObj.GetComponent<RectTransform>();
+        bombRect.anchorMin = Vector2.one; // Top Right
+        bombRect.anchorMax = Vector2.one;
+        bombRect.pivot = Vector2.one;
+        // Positioned under health text
+        bombRect.anchoredPosition = new Vector2(coinPosition.x, coinPosition.y - 60); 
         
         // Pressure Slider
         GameObject sliderObj = new GameObject("PressureSlider");
@@ -315,6 +335,21 @@ public class GameHUD : MonoBehaviour
                      PlayerHealth ph = FindFirstObjectByType<PlayerHealth>();
                      if (ph != null) playerHealth = ph;
                 }
+            }
+        }
+    }
+    
+    private void UpdateBombDisplay()
+    {
+        if (bombText != null)
+        {
+            if (BombManager.Instance != null)
+            {
+                bombText.text = $"Bombs: {BombManager.Instance.CurrentBombs}";
+            }
+            else
+            {
+                bombText.text = "Bombs: --";
             }
         }
     }

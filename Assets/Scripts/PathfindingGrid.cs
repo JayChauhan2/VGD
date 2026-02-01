@@ -6,6 +6,7 @@ public class PathfindingGrid : MonoBehaviour
     public LayerMask unwalkableMask;
     public Vector2 gridWorldSize;
     public float nodeRadius;
+    public float obstacleCheckRadius = 0f; // If 0, defaults to nodeRadius
     Node[,] grid;
 
     float nodeDiameter;
@@ -52,7 +53,9 @@ public class PathfindingGrid : MonoBehaviour
             {
                 Vector3 worldPoint = worldBottomLeft + Vector3.right * (x * nodeDiameter + nodeRadius) + Vector3.up * (y * nodeDiameter + nodeRadius);
                 // Check if walkable
-                bool walkable = !(Physics2D.OverlapCircle(worldPoint, nodeRadius - 0.1f, unwalkableMask));
+                float checkRadius = (obstacleCheckRadius > 0) ? obstacleCheckRadius : nodeRadius;
+                // strict check, no -0.1f buffer by default unless specified
+                bool walkable = !(Physics2D.OverlapCircle(worldPoint, checkRadius, unwalkableMask));
                 grid[x, y] = new Node(walkable, worldPoint, x, y);
             }
         }

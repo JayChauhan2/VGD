@@ -20,6 +20,9 @@ public class SpitterEnemy : EnemyAI
         speed = 6f;
         shootTimer = shootInterval;
         
+        // Use a smaller size for the Spitter
+        transform.localScale = Vector3.one * 0.7f;
+        
         // Create projectile prefab if not assigned
         if (projectilePrefab == null)
         {

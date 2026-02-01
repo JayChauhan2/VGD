@@ -80,9 +80,7 @@ public class EnemySpawner : MonoBehaviour
         {
             if (activeSpawns.Count >= maxActiveEnemies) return;
 
-            // Small offset for each so they don't stack perfectly
-            Vector3 offset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), 0);
-            Vector3 spawnPos = transform.position + offset;
+            Vector3 spawnPos = transform.position;
             
             GameObject newEnemyObj = null;
             EnemyAI enemyScript = null;

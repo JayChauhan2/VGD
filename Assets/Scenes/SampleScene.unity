@@ -1294,7 +1294,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 5
-  dashSpeed: 15
+  dashSpeed: 10
   dashDuration: 0.2
   dashCooldown: 0.5
   wallLayer:
@@ -1302,6 +1302,9 @@ MonoBehaviour:
     m_Bits: 64
   rb: {fileID: 1106899274}
   smoothTime: 0.1
+  modelTransform: {fileID: 0}
+  leanAmount: 0.2
+  leanSmoothTime: 0.1
 --- !u!50 &1106899274
 Rigidbody2D:
   serializedVersion: 5
@@ -1417,8 +1420,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a27737d0259aad9478c22f8986f67b74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
+  maxHealth: 3
   _currentHealth: 0
+  invincibilityDuration: 2
   knockbackForce: 4
 --- !u!58 &1106899279
 CircleCollider2D:
@@ -1993,6 +1997,7 @@ MonoBehaviour:
   m_lineRenderer: {fileID: 1341453056}
   overheatThreshold: 20
   chargeDuration: 0.1
+  missPressureRate: 5
 --- !u!1 &1565469895
 GameObject:
   m_ObjectHideFlags: 0
@@ -2979,6 +2984,7 @@ MonoBehaviour:
     m_Bits: 64
   gridWorldSize: {x: 8.8, y: 8.6}
   nodeRadius: 0.07
+  obstacleCheckRadius: 0
   displayGridGizmos: 1
 --- !u!4 &1986833166
 Transform:

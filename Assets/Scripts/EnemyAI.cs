@@ -5,7 +5,7 @@ using System.Collections;
 public class EnemyAI : MonoBehaviour
 {
     public Transform target;
-    public float speed = 5f;
+    public float speed = 3f;
     public float pathUpdateDelay = 0.2f;
 
     protected Pathfinding pathfinding;

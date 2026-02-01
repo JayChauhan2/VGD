@@ -42,9 +42,14 @@ public class GameHUD : MonoBehaviour
          Room.OnRoomCleared -= CheckWinCondition;
     }
     
+    private Slider pressureSlider;
+    private Image fillImage;
+    private Room currentRoom;
+
     private void Start()
     {
          Room.OnRoomCleared += CheckWinCondition;
+         Room.OnRoomEntered += OnRoomEntered;
 
         // Find player health
         GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -64,6 +69,52 @@ public class GameHUD : MonoBehaviour
         if (winText != null) winText.gameObject.SetActive(false);
     }
     
+    private void OnDisable()
+    {
+         Room.OnRoomCleared -= CheckWinCondition;
+         Room.OnRoomEntered -= OnRoomEntered;
+    }
+    
+    private void OnRoomEntered(Room room)
+    {
+        // Unsubscribe from old room
+        if (currentRoom != null && currentRoom.Pressure != null)
+        {
+            currentRoom.Pressure.OnPressureChanged -= UpdatePressureUI;
+        }
+        
+        currentRoom = room;
+        
+        // Subscribe to new room
+        if (currentRoom != null && currentRoom.Pressure != null)
+        {
+            currentRoom.Pressure.OnPressureChanged += UpdatePressureUI;
+            UpdatePressureUI(currentRoom.Pressure.currentPressure / currentRoom.Pressure.maxPressure);
+            
+            // Show slider
+            if (pressureSlider != null) pressureSlider.gameObject.SetActive(true);
+        }
+        else
+        {
+            // Hide slider if no pressure system (e.g. start room?)
+            if (pressureSlider != null) pressureSlider.gameObject.SetActive(false);
+        }
+    }
+    
+    private void UpdatePressureUI(float percent)
+    {
+        if (pressureSlider != null)
+        {
+            pressureSlider.value = percent;
+            
+            // Optional: Color Change based on pressure
+            if (fillImage != null)
+            {
+                fillImage.color = Color.Lerp(Color.blue, Color.red, percent);
+            }
+        }
+    }
+
     private void CheckWinCondition(Room room)
     {
         // Check if ALL rooms in Room.AllRooms are cleared
@@ -143,6 +194,56 @@ public class GameHUD : MonoBehaviour
         healthRect.pivot = Vector2.one;
         // Positioned under coin text
         healthRect.anchoredPosition = new Vector2(coinPosition.x, coinPosition.y - 30); 
+        
+        // Pressure Slider
+        GameObject sliderObj = new GameObject("PressureSlider");
+        sliderObj.transform.SetParent(canvasObj.transform, false);
+        pressureSlider = sliderObj.AddComponent<Slider>();
+        
+        RectTransform sliderRect = sliderObj.GetComponent<RectTransform>();
+        sliderRect.anchorMin = Vector2.one;
+        sliderRect.anchorMax = Vector2.one;
+        sliderRect.pivot = Vector2.one;
+        sliderRect.sizeDelta = new Vector2(200, 20);
+        sliderRect.anchoredPosition = new Vector2(coinPosition.x, coinPosition.y - 60);
+
+        // Background
+        GameObject bgObj = new GameObject("Background");
+        bgObj.transform.SetParent(sliderObj.transform, false);
+        Image bgImg = bgObj.AddComponent<Image>();
+        bgImg.color = new Color(0.2f, 0.2f, 0.2f, 0.5f);
+        RectTransform bgRect = bgObj.GetComponent<RectTransform>();
+        bgRect.anchorMin = Vector2.zero;
+        bgRect.anchorMax = Vector2.one;
+        bgRect.offsetMin = Vector2.zero;
+        bgRect.offsetMax = Vector2.zero;
+
+        // Fill Area
+        GameObject fillArea = new GameObject("Fill Area");
+        fillArea.transform.SetParent(sliderObj.transform, false);
+        RectTransform fillAreaRect = fillArea.AddComponent<RectTransform>();
+        fillAreaRect.anchorMin = Vector2.zero;
+        fillAreaRect.anchorMax = Vector2.one;
+        fillAreaRect.offsetMin = new Vector2(5, 0); // Padding?
+        fillAreaRect.offsetMax = new Vector2(-5, 0);
+        
+        // Fill
+        GameObject fillObj = new GameObject("Fill");
+        fillObj.transform.SetParent(fillArea.transform, false);
+        fillImage = fillObj.AddComponent<Image>();
+        fillImage.color = Color.blue;
+        RectTransform fillRect = fillObj.GetComponent<RectTransform>();
+        fillRect.anchorMin = Vector2.zero;
+        fillRect.anchorMax = Vector2.one;
+        fillRect.offsetMin = Vector2.zero;
+        fillRect.offsetMax = Vector2.zero;
+        
+        pressureSlider.targetGraphic = bgImg;
+        pressureSlider.fillRect = fillRect;
+        pressureSlider.direction = Slider.Direction.LeftToRight;
+        pressureSlider.minValue = 0;
+        pressureSlider.maxValue = 1;
+        pressureSlider.value = 0;
         
         // Win Text
         GameObject winObj = new GameObject("WinText");

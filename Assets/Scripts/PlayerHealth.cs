@@ -44,6 +44,13 @@ public class PlayerHealth : MonoBehaviour
             playerMovement.ApplyKnockback(knockbackDirection * knockbackForce, 0.2f);
         }
 
+        // Notify Room of damage (Pressure System)
+        Room currentRoom = Room.GetRoomContaining(transform.position);
+        if (currentRoom != null)
+        {
+            currentRoom.OnPlayerDamaged();
+        }
+
         if (CurrentHealth <= 0)
         {
             Die();

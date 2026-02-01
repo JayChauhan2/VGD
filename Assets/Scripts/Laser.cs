@@ -127,6 +127,9 @@ public class Laser : MonoBehaviour
         if (m_lineRenderer != null) m_lineRenderer.enabled = false;
     }
     
+    [Header("Pressure Settings")]
+    public float missPressureRate = 5f; // Pressure increase per second of missing
+
     void ShootLaser()
     {
         if (m_lineRenderer != null) m_lineRenderer.enabled = true;
@@ -134,6 +137,7 @@ public class Laser : MonoBehaviour
         RaycastHit2D _hit = Physics2D.Raycast(m_transform.position, transform.right);
         
         Vector2 endPos;
+        bool isHitEnemy = false;
 
         if (_hit.collider != null) // Hit something
         {
@@ -144,11 +148,32 @@ public class Laser : MonoBehaviour
             if (enemy != null)
             {
                 enemy.TakeDamage(damagePerSecond * Time.deltaTime);
+                isHitEnemy = true;
+            }
+            // Check for Projectile
+            EnemyProjectile proj = _hit.collider.GetComponent<EnemyProjectile>();
+            if (proj != null)
+            {
+                Destroy(proj.gameObject);
+                // We hit a bullet, so it's not a "Miss" (no penalty), but also didn't hit enemy.
+                // Just return or let it draw the ray to the bullet impact point.
+                // We'll set isHitEnemy = true purely to skip the "Miss" penalty below.
+                isHitEnemy = true; 
             }
         }
         else
         {
             endPos = (Vector2)laserFirePoint.position + (Vector2)transform.right * defDistanceRay;
+        }
+        
+        // Miss Logic
+        if (!isHitEnemy)
+        {
+            Room room = Room.GetRoomContaining(transform.position);
+            if (room != null && room.Pressure != null)
+            {
+                room.Pressure.OnMissed(missPressureRate * Time.deltaTime);
+            }
         }
 
         Draw2DRay(laserFirePoint.position, endPos);

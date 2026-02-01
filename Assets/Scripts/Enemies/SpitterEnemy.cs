@@ -17,7 +17,7 @@ public class SpitterEnemy : EnemyAI
     {
         maxHealth = 35f;
         currentHealth = maxHealth;
-        speed = 6f;
+        speed = 3f;
         shootTimer = shootInterval;
         
         // Use a smaller size for the Spitter

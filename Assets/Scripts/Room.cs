@@ -17,6 +17,13 @@ public class Room : MonoBehaviour
     // Approximate size (should match RoomManager)
     public Vector2 roomSize = new Vector2(20, 12); 
 
+    // Components
+    public PressureController Pressure { get; private set; }
+    public RoomEffectsController Effects { get; private set; }
+    
+    // Spawners list
+    private List<EnemySpawner> activeSpawners = new List<EnemySpawner>();
+
     private void Awake()
     {
         if (!AllRooms.Contains(this)) AllRooms.Add(this);
@@ -31,11 +38,22 @@ public class Room : MonoBehaviour
         if (bottomDoorObj == null) { bottomDoorObj = doorsParent.Find("BottomDoor")?.gameObject; if (bottomDoorObj == null) Debug.LogError($"Room {name}: 'BottomDoor' object is missing! Assign in Inspector or place under 'Doors'."); }
         if (leftDoorObj == null) { leftDoorObj = doorsParent.Find("LeftDoor")?.gameObject; if (leftDoorObj == null) Debug.LogError($"Room {name}: 'LeftDoor' object is missing! Assign in Inspector or place under 'Doors'."); }
         if (rightDoorObj == null) { rightDoorObj = doorsParent.Find("RightDoor")?.gameObject; if (rightDoorObj == null) Debug.LogError($"Room {name}: 'RightDoor' object is missing! Assign in Inspector or place under 'Doors'."); }
+    
+        // Initialize Pressure System
+        Pressure = GetComponent<PressureController>();
+        if (Pressure == null) Pressure = gameObject.AddComponent<PressureController>();
+        Pressure.Initialize(this);
+        Pressure.OnPressureChanged += OnPressureChanged;
+
+        Effects = GetComponent<RoomEffectsController>();
+        if (Effects == null) Effects = gameObject.AddComponent<RoomEffectsController>();
+        Effects.Initialize();
     }
     
     private void OnDestroy()
     {
         if (AllRooms.Contains(this)) AllRooms.Remove(this);
+        if (Pressure != null) Pressure.OnPressureChanged -= OnPressureChanged;
     }
 
     public static Room GetRoomContaining(Vector3 position)
@@ -138,10 +156,20 @@ public class Room : MonoBehaviour
 
     private bool hasSpawners = false;
 
+    public void RegisterSpawner(EnemySpawner spawner)
+    {
+        hasSpawners = true;
+        if (!activeSpawners.Contains(spawner))
+        {
+            activeSpawners.Add(spawner);
+        }
+        Debug.Log($"Room {name}: Registered Spawner {spawner.name}.");
+    }
+    
+    // Fallback for old calls
     public void RegisterSpawner()
     {
         hasSpawners = true;
-        Debug.Log($"Room {name}: Registered Spawner.");
     }
 
     public void OnPlayerEnter()
@@ -166,6 +194,8 @@ public class Room : MonoBehaviour
             {
                 if (enemy != null) enemy.SetActive(true);
             }
+            
+            if (Pressure != null) Pressure.Activate();
         }
         else if (!IsCleared) // No enemies, no spawners -> Auto Clear Logic?
         {
@@ -196,47 +226,58 @@ public class Room : MonoBehaviour
             Debug.LogWarning("Room: Enemy died but was not in my active list!");
         }
 
-        // Check clearance
-        // If we have a spawner, we technically rely on the Spawner to STOP spawning 
-        // effectively, but the room itself just checks "Are there active enemies?".
-        // IF there is a spawner, it might spawn MORE active enemies later.
-        // However, the Spawner stops spawning if the room is cleared.
-        // So we need a condition: 
-        // If activeEnemies == 0
-        // AND (Spawner is done? Spawner doesn't tell us it's done).
-        // Actually, if activeEnemies hits 0, and we have a spawner, it might immediately spawn more?
-        // But Spawner spawns periodically.
+        // Notify Pressure
+        if (Pressure != null) Pressure.OnEnemyKilled();
+
+        // Check for clearance ONLY if no spawners exist
+        // If spawners exist, we rely on Stabilization (or maybe killing them all fast enough?)
+        // If hasSpawners is true, we generally wait for StabilizeRoom() via Pressure.
+        // BUT, if the user manages to clear the room and spawners are done/empty?
+        // Current Spawner logic spawns forever (or until limit). 
+        // So with spawners, we MUST use Stabilization.
         
-        // ISSUE: If I kill the last enemy, activeEnemies is 0.
-        // Spawner timer might not be ready.
-        // Room thinks it's cleared -> Unlocks doors -> Spawner sees Room.IsCleared -> Stops spawning.
-        // This effectively means "You cleared the current WAVE".
-        // If we want "Kill X enemies total", we need more logic.
-        // Assuming current logic is "Target Active".
-        // Since `EnemySpawner` spawns based on `maxActiveEnemies`, if the user kills them faster than they spawn, the count hits 0.
-        // But the spawner might still want to spawn more?
-        // The user implementation of EnemySpawner just spawns infinitely until room is cleared?
-        // No, `activeSpawns.Count < maxActiveEnemies`. It doesn't have a "Total Waves" count.
-        // So effectively, "Clear Room" = "Kill all currently extant enemies".
-        // If the Spawner hasn't spawned any yet (very start), count is 0.
-        // But we locked doors on Entry if `hasSpawners` is true.
-        // So if I enter, doors lock. Spawner spawns 1.
-        // I kill 1. Count 0. Room Clears?
-        // Yes, ensuring the spawner spawning interval isn't super fast relative to my kill?
-        // Or essentially, "You only need to kill the current set".
-        // This seems to be the current design. We'll stick to it.
-        
-        if (activeEnemies.Count == 0)
+        if (!hasSpawners && activeEnemies.Count == 0)
         {
-            Debug.Log("Room: All active enemies defeated. Unlocking doors.");
-            IsCleared = true;
-            UnlockDoors();
-            OnRoomCleared?.Invoke(this);
+            Debug.Log("Room: All active enemies defeated (No Spawners). Unlocking doors.");
+            // If no spawners, traditional clear
+            StabilizeRoom();
         }
     }
     
-    // Call this logic if you have enemies separate from hierarchy but within bounds
-    // (Optional implementation detail depending on how User spawns enemies)
+    public void OnPlayerDamaged()
+    {
+        if (Pressure != null) Pressure.OnPlayerDamaged();
+    }
+    
+    private void OnPressureChanged(float pressurePercent)
+    {
+        // Update Spawners
+        foreach(var spawner in activeSpawners)
+        {
+            if (spawner != null) spawner.AdjustSpawnRate(pressurePercent);
+        }
+        
+        // Update Effects
+        if (Effects != null) Effects.UpdateEffects(pressurePercent);
+    }
+    
+    public void StabilizeRoom()
+    {
+        if (IsCleared) return;
+        
+        IsCleared = true;
+        Debug.Log($"Room {name}: Room Stabilized! Unlocking Exits.");
+        UnlockDoors();
+        
+        // Disable spawners
+        foreach(var spawner in activeSpawners)
+        {
+            if (spawner != null) spawner.enabled = false;
+        }
+        
+        if (Pressure != null) Pressure.Deactivate();
+        OnRoomCleared?.Invoke(this);
+    }
 
     private void LockDoors()
     {

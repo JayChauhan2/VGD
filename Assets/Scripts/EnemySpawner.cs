@@ -10,6 +10,11 @@ public class EnemySpawner : MonoBehaviour
     [Tooltip("Time in seconds between spawns")]
     public float spawnInterval = 3f;
     
+    [Header("Pressure Integration")]
+    [Tooltip("Fastest spawn rate at Max Pressure")]
+    public float minSpawnInterval = 1f;
+    private float maxSpawnInterval; // Will capture initial spawnInterval as max
+
     [Tooltip("Maximum number of active enemies from this spawner")]
     public int maxActiveEnemies = 5;
     
@@ -25,6 +30,7 @@ public class EnemySpawner : MonoBehaviour
     private void Start()
     {
         timer = spawnInterval;
+        maxSpawnInterval = spawnInterval; // Default to current setting
         
         // Try to find the room this spawner is in
         currentRoom = Room.GetRoomContaining(transform.position);
@@ -35,10 +41,16 @@ public class EnemySpawner : MonoBehaviour
         
         if (currentRoom != null)
         {
-             currentRoom.RegisterSpawner();
+             currentRoom.RegisterSpawner(this);
         }
         
         Debug.Log($"EnemySpawner: Initialized in Room {(currentRoom != null ? currentRoom.name : "None")}");
+    }
+
+    public void AdjustSpawnRate(float pressurePercent)
+    {
+        // pressurePercent 0 -> maxInterval (slow), 1 -> minInterval (fast)
+        spawnInterval = Mathf.Lerp(maxSpawnInterval, minSpawnInterval, pressurePercent);
     }
 
     private void Update()
@@ -63,44 +75,58 @@ public class EnemySpawner : MonoBehaviour
 
     public void Spawn()
     {
-        Vector3 spawnPos = transform.position;
-        GameObject newEnemyObj = null;
-        EnemyAI enemyScript = null;
+        // Spawn 3 enemies at once
+        for (int i = 0; i < 3; i++)
+        {
+            if (activeSpawns.Count >= maxActiveEnemies) return;
 
-        if (enemyPrefab != null)
-        {
-            newEnemyObj = Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
-            enemyScript = newEnemyObj.GetComponent<EnemyAI>();
-        }
-        else
-        {
-            // Procedurally generate generic Spitter
-            newEnemyObj = CreateProceduralSpitter(spawnPos);
-            enemyScript = newEnemyObj.GetComponent<EnemyAI>();
-        }
-
-        if (enemyScript != null)
-        {
-            activeSpawns.Add(enemyScript);
+            // Small offset for each so they don't stack perfectly
+            Vector3 offset = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), 0);
+            Vector3 spawnPos = transform.position + offset;
             
-            // Register with Room if possible so it counts towards clearing the room
-            if (currentRoom != null)
+            GameObject newEnemyObj = null;
+            EnemyAI enemyScript = null;
+
+            if (enemyPrefab != null)
             {
-                currentRoom.RegisterEnemy(enemyScript);
-                
-                // Explicitly tell the enemy about the room so it knows who to notify when it dies
-                enemyScript.AssignRoom(currentRoom);
-                
-                // If the room is already active (player is there), ensure enemy wakes up
-                if (currentRoom.PlayerHasEntered && !currentRoom.IsCleared)
-                {
-                    enemyScript.SetActive(true);
-                }
+                newEnemyObj = Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
+                // Also reduce scale of prefabs if needed? User asked: "size is smaller".
+                // Prefer procedural scale for now, assuming user relies on procedural given the context.
+                // But let's safely downscale the prefab instances too.
+                newEnemyObj.transform.localScale = Vector3.one * 0.5f; 
+                enemyScript = newEnemyObj.GetComponent<EnemyAI>();
             }
             else
             {
-                // If no room, just activate immediately
-                enemyScript.SetActive(true);
+                // Procedurally generate generic Spitter
+                newEnemyObj = CreateProceduralSpitter(spawnPos);
+                // Size handled in creation method
+                enemyScript = newEnemyObj.GetComponent<EnemyAI>();
+            }
+
+            if (enemyScript != null)
+            {
+                activeSpawns.Add(enemyScript);
+                
+                // Register with Room if possible so it counts towards clearing the room
+                if (currentRoom != null)
+                {
+                    currentRoom.RegisterEnemy(enemyScript);
+                    
+                    // Explicitly tell the enemy about the room so it knows who to notify when it dies
+                    enemyScript.AssignRoom(currentRoom);
+                    
+                    // If the room is already active (player is there), ensure enemy wakes up
+                    if (currentRoom.PlayerHasEntered && !currentRoom.IsCleared)
+                    {
+                        enemyScript.SetActive(true);
+                    }
+                }
+                else
+                {
+                    // If no room, just activate immediately
+                    enemyScript.SetActive(true);
+                }
             }
         }
     }
@@ -118,12 +144,9 @@ public class EnemySpawner : MonoBehaviour
         if (cachedWalkerSprite == null) cachedWalkerSprite = CreateCircleSprite();
         sr.sprite = cachedWalkerSprite;
         sr.color = new Color(0.9f, 0.9f, 0.2f); // Bright Yellow
-        obj.transform.localScale = Vector3.one * 0.7f;
+        obj.transform.localScale = Vector3.one * 0.5f;
 
-        // Physics
-        Rigidbody2D rb = obj.AddComponent<Rigidbody2D>();
-        rb.gravityScale = 0;
-        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+
 
         CircleCollider2D col = obj.AddComponent<CircleCollider2D>();
         col.radius = 0.5f;
@@ -147,12 +170,9 @@ public class EnemySpawner : MonoBehaviour
         if (cachedSpitterSprite == null) cachedSpitterSprite = CreateCircleSprite();
         sr.sprite = cachedSpitterSprite;
         sr.color = Color.green; // Green for Spitter
-        obj.transform.localScale = Vector3.one * 0.7f;
+        obj.transform.localScale = Vector3.one * 0.5f;
 
-        // Physics
-        Rigidbody2D rb = obj.AddComponent<Rigidbody2D>();
-        rb.gravityScale = 0;
-        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+
 
         CircleCollider2D col = obj.AddComponent<CircleCollider2D>();
         col.radius = 0.5f;

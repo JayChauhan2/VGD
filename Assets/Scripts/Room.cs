@@ -236,11 +236,15 @@ public class Room : MonoBehaviour
         // Current Spawner logic spawns forever (or until limit). 
         // So with spawners, we MUST use Stabilization.
         
-        if (!hasSpawners && activeEnemies.Count == 0)
+        if (!hasSpawners)
         {
-            Debug.Log("Room: All active enemies defeated (No Spawners). Unlocking doors.");
-            // If no spawners, traditional clear
-            StabilizeRoom();
+             // If no spawners, we can check for clear immediately
+             CheckClearCondition();
+        }
+        else
+        {
+             // If we have spawners, we check if they are disabled yet
+             CheckClearCondition();
         }
     }
     
@@ -261,22 +265,41 @@ public class Room : MonoBehaviour
         if (Effects != null) Effects.UpdateEffects(pressurePercent);
     }
     
+    private bool areSpawnersDisabled = false;
+
     public void StabilizeRoom()
     {
         if (IsCleared) return;
         
-        IsCleared = true;
-        Debug.Log($"Room {name}: Room Stabilized! Unlocking Exits.");
-        UnlockDoors();
+        Debug.Log($"Room {name}: Room Stabilized! Disabling Spawners.");
         
         // Disable spawners
         foreach(var spawner in activeSpawners)
         {
             if (spawner != null) spawner.enabled = false;
         }
+        areSpawnersDisabled = true;
         
         if (Pressure != null) Pressure.Deactivate();
-        OnRoomCleared?.Invoke(this);
+        
+        // Check if we can unlock immediately (if no enemies left)
+        CheckClearCondition();
+    }
+    
+    private void CheckClearCondition()
+    {
+        if (IsCleared) return;
+        
+        // Condition: No active enemies AND (Spawners disabled OR No spawners to begin with)
+        bool spawnersDone = !hasSpawners || areSpawnersDisabled;
+        
+        if (activeEnemies.Count == 0 && spawnersDone)
+        {
+             IsCleared = true;
+             Debug.Log($"Room {name}: Room Cleared! Unlocking Exits.");
+             UnlockDoors();
+             OnRoomCleared?.Invoke(this);
+        }
     }
 
     private void LockDoors()

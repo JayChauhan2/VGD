@@ -24,7 +24,7 @@ public class PressureController : MonoBehaviour
     private PlayerMovement player;
     private float stableTimer = 0f;
     [Header("Stabilization")]
-    public float stabilizationTime = 25f; // Increased default to prevent auto-win
+    public float stabilizationTime = 15f; // Increased default to prevent auto-win
 
 
     public enum PressureState { Low, Mid, High }

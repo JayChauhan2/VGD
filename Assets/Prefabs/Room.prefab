@@ -471,7 +471,7 @@ MonoBehaviour:
   currentPressure: 0
   maxPressure: 100
   passiveIncreaseRate: 2
-  killReduction: 2
+  killReduction: 8
   damageIncrease: 12
   idleIncreaseMultiplier: 1.5
   lowThreshold: 30

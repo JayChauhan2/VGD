@@ -1384,9 +1384,9 @@ MonoBehaviour:
   expandSpeed: 7.7
   maxRadius: 311.1
   pingInterval: 2
-  edgeWidth: 1.66
+  edgeWidth: 6.4
   rippleColor: {r: 0, g: 1, b: 1, a: 1}
-  worldDarkness: 0.928
+  worldDarkness: 0.987
   fadeOutDuration: 0.5
 --- !u!1 &1234879616
 GameObject:

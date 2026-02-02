@@ -107,60 +107,37 @@ Shader "Hidden/Echolocation"
                 float lowerBound = _Radius - halfWidth;
                 float upperBound = _Radius + halfWidth;
                 
-                if (dist > lowerBound && dist < upperBound)
+                if (dist < lowerBound)
                 {
-                    // Inside the Ring:
+                    // Inside the Inner Circle (Behind the wave):
+                    // User wants "20% brighter" -> 20% revealed.
+                    // If _Darkness is 1.0 (Black) and 0.0 is Visible.
+                    // 20% visible = lerp(_Darkness, 0.0, 0.2).
+                    // This creates a dim trail behind the wave.
+                    finalAlpha = lerp(_Darkness, 0.0, 0.2); 
+                }
+                else if (dist < upperBound)
+                {
+                    // Inside the Ring (The Wave Front):
                     
-                    // A. Calculate Ring Gradient (0 at edges, 1 at center of ring)
+                    // A. Calculate Ring Gradient
                     float distFromCenterOfRing = abs(dist - _Radius);
                     float ringGradient = 1.0 - (distFromCenterOfRing / halfWidth);
-                    ringGradient = pow(ringGradient, 2); // Smooth falloff
+                    // Use sqrt (power 0.5) to make the curve "fat" (plateau-like) instead of "peaky"
+                    // This creates a wider clear area in the middle of the band.
+                    ringGradient = pow(ringGradient, 0.5); 
                     
                     // B. Reveal Logic:
-                    // Make transparent based on ring strength. 
-                    // Stronger ring = More transparency (lower alpha).
-                    // If ringGradient is 1, alpha becomes 0 (Fully Revealed).
-                    // If ringGradient is 0, alpha stays at _Darkness.
+                    // Ring is fully revealed at peak intensity
+                    // But we want to transition from Outside (Dark) to Ring (Visible) to Inside (Dim).
+                    // The simple gradient logic might pop if we don't match edges.
                     
+                    // Let's keep it simple: Ring cuts a hole.
                     float targetAlpha = 0.0;
                     finalAlpha = lerp(_Darkness, targetAlpha, ringGradient);
                     
-                    // C. Add Ring Color (Scanner Glow)
-                    // We add the color on top.
+                    // C. Color Overlay
                     finalColor = _Color.rgb;
-                    
-                    // Ensure color visibility over darkness?
-                    // Actually, since we are transparent, we see the game.
-                    // But we also want the Cyan tint.
-                    
-                    // If we want to Tint the game world Cyan:
-                    // finalColor is added to the scene? 
-                    // Current Blend Mode is: SrcAlpha OneMinusSrcAlpha.
-                    // So output (FinalColor, FinalAlpha) is blended onto Scene.
-                    // Result = FinalColor * FinalAlpha + Scene * (1 - FinalAlpha).
-                    
-                    // But wait, if FinalAlpha is small (Revealed), Scene dominates.
-                    // If FinalAlpha is 0, we see pure Scene.
-                    // How do we ADD color if Alpha is 0? We can't with this blend mode easily.
-                    
-                    // Adjusting Logic:
-                    // We want to REVEAL the scene (Low Alpha) but also TINT it (Color).
-                    // Standard Alpha Blending can't do "Add Color but keep Background" if Alpha is 0.
-                    
-                    // Compromise:
-                    // We let the Reveal happen (Alpha -> 0).
-                    // But if we want the "Cyan Line" to be visible, we need proper Alpha.
-                    // Actually, let's keep it simple: Just Reveal.
-                    // The "Ring Color" was creating the Cyan tint before because Alpha was high.
-                    
-                    // If user wants "Brief view of the world", seeing the sprites is most important.
-                    // Let's stick to pure Reveal for now.
-                    // To add a glow, we would ideally change Blend Mode or have 2 passes.
-                    
-                    // Let's try adding color by keeping a bit of opacity?
-                    // No, transparent is clearest.
-                    
-                    // Let's strictly set Alpha based on gradient.
                 }
 
                 return float4(finalColor, finalAlpha);

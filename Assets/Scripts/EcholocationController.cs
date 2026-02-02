@@ -10,13 +10,14 @@ public class EcholocationController : MonoBehaviour
     public float pingInterval = 2f;
     
     [Header("Visuals")]
-    public float edgeWidth = 2f;
+    public float edgeWidth = 4f;
     public Color rippleColor = Color.cyan;
     [Range(0f, 1f)]
     public float worldDarkness = 0.9f;
     public float fadeOutDuration = 0.5f; // Time for ripple to fade after reaching max radius
     
     private Transform centerTransform; // The actual transform to use for position
+    private Vector3 pulseOrigin; // The fixed position where the current pulse started
 
     private float currentRadius;
     private bool isExpanding = false;
@@ -42,7 +43,8 @@ public class EcholocationController : MonoBehaviour
         if (echolocationMaterial != null)
         {
             echolocationMaterial.SetFloat("_Radius", -1.0f); // Hide initially
-            echolocationMaterial.SetVector("_Center", centerTransform.position);
+            pulseOrigin = centerTransform.position;
+            echolocationMaterial.SetVector("_Center", pulseOrigin);
             echolocationMaterial.SetFloat("_EdgeWidth", edgeWidth);
             echolocationMaterial.SetColor("_Color", rippleColor);
         }
@@ -82,13 +84,10 @@ public class EcholocationController : MonoBehaviour
             }
         }
 
-        // Get the center position
-        Vector3 centerPos = centerTransform.position;
-        
-        // Update Shader - Set properties directly on the material
+        // Update Shader - Use fixed pulseOrigin instead of moving centerTransform
         if (echolocationMaterial != null)
         {
-            echolocationMaterial.SetVector("_Center", centerPos);
+            echolocationMaterial.SetVector("_Center", pulseOrigin);
             echolocationMaterial.SetFloat("_Darkness", worldDarkness);
             
             // Only show ripple if expanding or fading out
@@ -128,13 +127,15 @@ public class EcholocationController : MonoBehaviour
         currentAlpha = 1f;
         fadeTimer = 0f;
         
+        // Capture the spawn position
+        pulseOrigin = centerTransform.position;
+        
         // Debug logging
-        Debug.Log($"[Echolocation] Ping started at position: {centerTransform.position}");
+        Debug.Log($"[Echolocation] Ping started at fixed position: {pulseOrigin}");
         
         if (echolocationMaterial != null)
         {
-            echolocationMaterial.SetVector("_Center", centerTransform.position);
-            Debug.Log($"[Echolocation] Material center set to: {centerTransform.position}");
+            echolocationMaterial.SetVector("_Center", pulseOrigin);
         }
         else
         {

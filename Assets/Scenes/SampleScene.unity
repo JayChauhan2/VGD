@@ -1383,7 +1383,7 @@ MonoBehaviour:
   echolocationMaterial: {fileID: 2100000, guid: fbc3f06df41d70146adb37466ca210b0, type: 2}
   expandSpeed: 7.7
   maxRadius: 311.1
-  pingInterval: 2
+  pingInterval: 4.37
   edgeWidth: 6.4
   rippleColor: {r: 0, g: 1, b: 1, a: 1}
   worldDarkness: 0.987
@@ -1418,6 +1418,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   roomPrefab: {fileID: 1299928572387882687, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+  coinPrefab: {fileID: 647404748746910150, guid: c6a79f4b667838842b3d835bebdf5f81, type: 3}
   pathfindingGrid: {fileID: 1986833165}
   maxRooms: 2
   minRooms: 2

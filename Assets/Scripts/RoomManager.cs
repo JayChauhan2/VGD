@@ -6,6 +6,7 @@ public class RoomManager : MonoBehaviour
     public static RoomManager Instance;
 
     [SerializeField] GameObject roomPrefab;
+    public GameObject coinPrefab;
     [SerializeField] PathfindingGrid pathfindingGrid;
 
     [SerializeField] private int maxRooms = 15; 

@@ -29,6 +29,9 @@ public class EcholocationController : MonoBehaviour
     // Event for Shadow Stalker enemy visibility
     public static event System.Action OnEcholocationPulse;
     
+    // Tracking hit enemies per ping
+    private System.Collections.Generic.HashSet<int> hitEnemies = new System.Collections.Generic.HashSet<int>();
+
     // Jammer tracking
     private static System.Collections.Generic.List<EcholocationJammerEnemy> activeJammers = new System.Collections.Generic.List<EcholocationJammerEnemy>();
 
@@ -71,6 +74,8 @@ public class EcholocationController : MonoBehaviour
                 isFadingOut = true;
                 fadeTimer = 0f;
             }
+
+            DetectEnemies();
         }
         else if (isFadingOut)
         {
@@ -141,6 +146,9 @@ public class EcholocationController : MonoBehaviour
         {
             Debug.LogError("[Echolocation] Material is NULL!");
         }
+
+        // Clear hit list for new ping
+        hitEnemies.Clear();
         
         // Trigger event for Shadow Stalker enemies
         OnEcholocationPulse?.Invoke();
@@ -194,6 +202,32 @@ public class EcholocationController : MonoBehaviour
             float totalEffectTime = travelTime + fadeOutDuration;
             if (pingInterval < totalEffectTime) {
                 Debug.LogWarning($"[Echolocation] Ping Interval ({pingInterval}s) is shorter than Total Effect Time ({totalEffectTime}s = {travelTime}s travel + {fadeOutDuration}s fade). The ripple will reset before completing.");
+            }
+        }
+    }
+
+    void DetectEnemies()
+    {
+        // Debugging: Check detection
+        // cast on ALL layers to ensure we don't miss enemies due to missing "Enemy" layer
+        Collider2D[] hits = Physics2D.OverlapCircleAll(pulseOrigin, currentRadius);
+        
+        foreach (var hit in hits)
+        {
+            EnemyAI enemy = hit.GetComponent<EnemyAI>();
+            if (enemy != null)
+            {
+                int id = enemy.GetInstanceID();
+                if (!hitEnemies.Contains(id))
+                {
+                    float dist = Vector2.Distance(pulseOrigin, enemy.transform.position);
+                    if (dist <= currentRadius)
+                    {
+                        hitEnemies.Add(id);
+                        Debug.Log($"[Echolocation] Hit Enemy: {enemy.name} at dist {dist}");
+                        enemy.MarkAsDetected();
+                    }
+                }
             }
         }
     }

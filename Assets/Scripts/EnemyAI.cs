@@ -7,6 +7,9 @@ public class EnemyAI : MonoBehaviour
     public Transform target;
     public float speed = 3f;
     public float pathUpdateDelay = 0.2f;
+    
+    [Header("Loot Settings")]
+    public GameObject coinPrefab;
 
     protected Pathfinding pathfinding;
     protected List<Node> path;
@@ -112,6 +115,7 @@ public class EnemyAI : MonoBehaviour
 
     protected virtual void Die()
     {
+        DropLoot();
         // Virtual hook for subclasses (called before room notification)
         OnEnemyDeath();
         
@@ -339,5 +343,100 @@ public class EnemyAI : MonoBehaviour
                 transform.position += direction * Mathf.Min(distance, safeDistance);
             }
         }
+    }
+
+    protected void DropLoot()
+    {
+        // Fallback: Try to load from RoomManager if not locally assigned
+        if (coinPrefab == null && RoomManager.Instance != null)
+        {
+            coinPrefab = RoomManager.Instance.coinPrefab;
+        }
+
+        if (coinPrefab == null) 
+        {
+             Debug.LogWarning("EnemyAI: coinPrefab is missing! Please assign it in RoomManager or on the Enemy.");
+             return;
+        }
+
+        float roll = Random.value;
+        int coinCount = 0;
+
+        // Loot Table
+        // 3 Coins: 2% Chance (Roll < 0.02)
+        // 2 Coins: 5% Chance (Roll < 0.07)
+        // 1 Coin: 20% Chance (Roll < 0.27)
+        // Nothing: ~73% Chance (Roll >= 0.27)
+
+        if (roll < 0.02f) coinCount = 3;
+        else if (roll < 0.07f) coinCount = 2;
+        else if (roll < 0.27f) coinCount = 1;
+        
+        for(int i=0; i<coinCount; i++)
+        {
+            Vector2 offset = Random.insideUnitCircle * 0.5f;
+            GameObject coin = Instantiate(coinPrefab, transform.position + (Vector3)offset, Quaternion.identity);
+            
+            // Optional: Add a little "pop" force if the coin has a rigidbody
+            // Rigidbody2D rb = coin.GetComponent<Rigidbody2D>();
+            // if (rb != null) rb.AddForce(offset.normalized * 2f, ForceMode2D.Impulse);
+        }
+        
+        if (coinCount > 0) Debug.Log($"EnemyAI: Dropped {coinCount} coins (Roll: {roll:F3})");
+    }
+
+    // --- Red Dot Marker Logic ---
+    private GameObject redDotInstance;
+    private Coroutine redDotCoroutine;
+
+    public void MarkAsDetected()
+    {
+        Debug.Log($"EnemyAI: MarkAsDetected called on {gameObject.name}");
+        // 1. Create Red Dot if missing
+        if (redDotInstance == null)
+        {
+            redDotInstance = new GameObject("RedDotMarker");
+            redDotInstance.transform.SetParent(transform);
+            redDotInstance.transform.localPosition = new Vector3(0, 1.0f, 0); // Higher up
+            
+            SpriteRenderer sr = redDotInstance.AddComponent<SpriteRenderer>();
+            
+            // Try explicit load first
+            Sprite dotSprite = Resources.Load<Sprite>("Sprites/Circle"); 
+            if (dotSprite == null)
+            {
+                // Fallback: Create a explicit red texture
+                // Make it 32x32 so it's visible even without point filtering
+                int size = 32;
+                Texture2D texture = new Texture2D(size, size);
+                Color[] colors = new Color[size*size];
+                for(int i=0; i<colors.Length; i++) colors[i] = Color.white;
+                
+                texture.SetPixels(colors);
+                texture.Apply();
+                dotSprite = Sprite.Create(texture, new Rect(0,0,size,size), new Vector2(0.5f, 0.5f), 100f); 
+            }
+            sr.sprite = dotSprite;
+            sr.color = Color.red; 
+            sr.sortingOrder = 999; // Extreme sorting order to be on top of everything
+            redDotInstance.transform.localScale = new Vector3(0.5f, 0.5f, 1f); // Bigger
+        }
+
+        // 2. Show it
+        if (redDotInstance != null)
+        {
+            redDotInstance.SetActive(true);
+            // Debug.Log($"EnemyAI: Red Dot Activated for {gameObject.name}");
+        }
+
+        // 3. Restart Hide timer
+        if (redDotCoroutine != null) StopCoroutine(redDotCoroutine);
+        redDotCoroutine = StartCoroutine(HideRedDotAfterDelay(2.0f));
+    }
+
+    private IEnumerator HideRedDotAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (redDotInstance != null) redDotInstance.SetActive(false);
     }
 }

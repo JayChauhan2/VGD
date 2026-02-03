@@ -227,7 +227,8 @@ public class EcholocationController : MonoBehaviour
         
         foreach (var hit in hits)
         {
-            EnemyAI enemy = hit.GetComponent<EnemyAI>();
+            // Use GetComponentInParent in case the collider is on a child object
+            EnemyAI enemy = hit.GetComponentInParent<EnemyAI>();
             if (enemy != null)
             {
                 int id = enemy.GetInstanceID();

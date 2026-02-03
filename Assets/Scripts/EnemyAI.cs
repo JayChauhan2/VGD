@@ -385,58 +385,15 @@ public class EnemyAI : MonoBehaviour
         if (coinCount > 0) Debug.Log($"EnemyAI: Dropped {coinCount} coins (Roll: {roll:F3})");
     }
 
-    // --- Red Dot Marker Logic ---
-    private GameObject redDotInstance;
-    private Coroutine redDotCoroutine;
-
     public void MarkAsDetected()
     {
-        Debug.Log($"EnemyAI: MarkAsDetected called on {gameObject.name}");
-        // 1. Create Red Dot if missing
-        if (redDotInstance == null)
+        // Debug.Log($"EnemyAI: MarkAsDetected called on {gameObject.name}");
+        
+        if (GameHUD.Instance != null)
         {
-            redDotInstance = new GameObject("RedDotMarker");
-            redDotInstance.transform.SetParent(transform);
-            redDotInstance.transform.localPosition = new Vector3(0, 1.0f, 0); // Higher up
-            
-            SpriteRenderer sr = redDotInstance.AddComponent<SpriteRenderer>();
-            
-            // Try explicit load first
-            Sprite dotSprite = Resources.Load<Sprite>("Sprites/Circle"); 
-            if (dotSprite == null)
-            {
-                // Fallback: Create a explicit red texture
-                // Make it 32x32 so it's visible even without point filtering
-                int size = 32;
-                Texture2D texture = new Texture2D(size, size);
-                Color[] colors = new Color[size*size];
-                for(int i=0; i<colors.Length; i++) colors[i] = Color.white;
-                
-                texture.SetPixels(colors);
-                texture.Apply();
-                dotSprite = Sprite.Create(texture, new Rect(0,0,size,size), new Vector2(0.5f, 0.5f), 100f); 
-            }
-            sr.sprite = dotSprite;
-            sr.color = Color.red; 
-            sr.sortingOrder = 999; // Extreme sorting order to be on top of everything
-            redDotInstance.transform.localScale = new Vector3(0.5f, 0.5f, 1f); // Bigger
+            // Request UI marker (always visible on top of darkness)
+            // Offset roughly 1.0 unit up
+            GameHUD.Instance.ShowEnemyMarker(transform, new Vector3(0, 1.0f, 0), 2.0f);
         }
-
-        // 2. Show it
-        if (redDotInstance != null)
-        {
-            redDotInstance.SetActive(true);
-            // Debug.Log($"EnemyAI: Red Dot Activated for {gameObject.name}");
-        }
-
-        // 3. Restart Hide timer
-        if (redDotCoroutine != null) StopCoroutine(redDotCoroutine);
-        redDotCoroutine = StartCoroutine(HideRedDotAfterDelay(2.0f));
-    }
-
-    private IEnumerator HideRedDotAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        if (redDotInstance != null) redDotInstance.SetActive(false);
     }
 }

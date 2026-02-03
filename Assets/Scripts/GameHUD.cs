@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class GameHUD : MonoBehaviour
 {
@@ -149,11 +150,148 @@ public class GameHUD : MonoBehaviour
     {
         UpdateHealthDisplay();
         UpdateBombDisplay();
+        UpdateMarkers();
+    }
+
+    // --- Marker System ---
+    private class Marker
+    {
+        public RectTransform rect;
+        public Transform target;
+        public Vector3 offset;
+        public float timer;
+        public float duration;
+    }
+    
+    private List<Marker> activeMarkers = new List<Marker>();
+    private GameObject hudCanvasObj; // Reference to our specific canvas
+
+    public void ShowEnemyMarker(Transform target, Vector3 offset, float duration)
+    {
+        // Check if marker already exists for this target
+        Marker existing = activeMarkers.Find(m => m.target == target);
+        if (existing != null)
+        {
+            existing.timer = 0; // Reset timer
+            existing.duration = duration;
+            return;
+        }
+
+        // Validate Canvas
+        if (hudCanvasObj == null)
+        {
+             Debug.LogError("[GameHUD] HUD Canvas is missing! Cannot create marker.");
+             return;
+        }
+        
+        GameObject markerObj = new GameObject("EnemyMarker_UI");
+        markerObj.transform.SetParent(hudCanvasObj.transform, false);
+        
+        Image img = markerObj.AddComponent<Image>();
+        img.color = Color.red;
+        
+        Sprite circle = Resources.Load<Sprite>("Sprites/Circle");
+        if (circle == null)
+        {
+            // Fallback: Generate a simple circle texture
+            int size = 32;
+            Texture2D tex = new Texture2D(size, size);
+            Color[] colors = new Color[size*size];
+            Vector2 center = new Vector2(size/2f, size/2f);
+            float radius = size/2f;
+            
+            for(int y=0; y<size; y++)
+            {
+                for(int x=0; x<size; x++)
+                {
+                    float dist = Vector2.Distance(new Vector2(x,y), center);
+                    if (dist <= radius) colors[y*size + x] = Color.white;
+                    else colors[y*size + x] = Color.clear;
+                }
+            }
+            tex.SetPixels(colors);
+            tex.Apply();
+            circle = Sprite.Create(tex, new Rect(0,0,size,size), new Vector2(0.5f, 0.5f));
+        }
+        img.sprite = circle;
+
+        RectTransform rt = markerObj.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(25, 25); 
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.zero;
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        
+        Marker m = new Marker();
+        m.rect = rt;
+        m.target = target;
+        m.offset = offset;
+        m.duration = duration;
+        m.timer = 0;
+        
+        activeMarkers.Add(m);
+        // Debug.Log($"[GameHUD] Created marker for {target.name}");
+    }
+
+    private void UpdateMarkers()
+    {
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        for (int i = activeMarkers.Count - 1; i >= 0; i--)
+        {
+            Marker m = activeMarkers[i];
+            
+            // Validation
+            if (m.target == null)
+            {
+                if (m.rect != null) Destroy(m.rect.gameObject);
+                activeMarkers.RemoveAt(i);
+                continue;
+            }
+            
+            // Timer
+            m.timer += Time.deltaTime;
+            if (m.timer >= m.duration)
+            {
+                if (m.rect != null) Destroy(m.rect.gameObject);
+                activeMarkers.RemoveAt(i);
+                continue;
+            }
+            
+            // Position
+            // Use offset only for world calc
+            Vector3 worldPos = m.target.position + m.offset;
+            Vector3 screenPos = cam.WorldToScreenPoint(worldPos);
+            
+            // Hide if behind camera
+            if (screenPos.z < 0)
+            {
+                 m.rect.gameObject.SetActive(false);
+            }
+            else
+            {
+                 // Check if actually on screen (optional, but good for optimization)
+                 if (screenPos.x > 0 && screenPos.x < Screen.width && screenPos.y > 0 && screenPos.y < Screen.height)
+                 {
+                     m.rect.gameObject.SetActive(true);
+                     m.rect.anchoredPosition = new Vector2(screenPos.x, screenPos.y);
+                 }
+                 else
+                 {
+                     // Off-screen clamp? Or just hide?
+                     // For now, let it be clipped by canvas or just stay there.
+                     m.rect.gameObject.SetActive(true);
+                     m.rect.anchoredPosition = new Vector2(screenPos.x, screenPos.y);
+                 }
+            }
+        }
     }
 
     private void CreateUI()
     {
         GameObject canvasObj = new GameObject("GameHUDCanvas");
+        hudCanvasObj = canvasObj; // Assign reference for markers
+        
         Canvas canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 101; // Above Minimap

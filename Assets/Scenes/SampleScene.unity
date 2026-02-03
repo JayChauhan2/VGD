@@ -1389,13 +1389,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerTransform: {fileID: 1106899276}
   echolocationMaterial: {fileID: 2100000, guid: fbc3f06df41d70146adb37466ca210b0, type: 2}
-  expandSpeed: 7.7
-  maxRadius: 311.1
+  expandSpeed: 9.35
+  maxRadius: 224.7
   pingInterval: 4.37
-  edgeWidth: 6.4
+  edgeWidth: 12.82
   rippleColor: {r: 0, g: 1, b: 1, a: 1}
   worldDarkness: 1
-  fadeOutDuration: 0.5
+  fadeOutDuration: 2.3
   playerRadius: 2.5
 --- !u!1 &1234879616
 GameObject:

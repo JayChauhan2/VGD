@@ -137,7 +137,9 @@ public class EcholocationController : MonoBehaviour
 
     void StartPing()
     {
-        currentRadius = 0;
+        // Start radius at negative half-width so the outer edge starts at 0 and expands
+        currentRadius = -edgeWidth / 2f;
+        
         isExpanding = true;
         isFadingOut = false;
         currentAlpha = 1f;

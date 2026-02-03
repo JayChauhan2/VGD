@@ -70,6 +70,9 @@ Shader "Hidden/Echolocation"
                 return output;
             }
 
+            float4 _PlayerPos;
+            float _PlayerRadius;
+
             float4 frag (Varyings input) : SV_Target
             {
                 float3 worldPos;
@@ -102,6 +105,20 @@ Shader "Hidden/Echolocation"
                 float3 finalColor = float3(0, 0, 0);
                 float finalAlpha = _Darkness; 
                 
+                // --- Player Permanent Light Logic ---
+                float distPlayer = distance(worldPos.xy, _PlayerPos.xy);
+                // Simple reveal circle with slight soft edge
+                if (distPlayer < _PlayerRadius)
+                {
+                     // Soft edge math - Vision-like fade
+                     // Start fading at 30% of radius, fully dark at 100%
+                     float alphaFactor = smoothstep(_PlayerRadius * 0.3, _PlayerRadius, distPlayer);
+                     
+                     // We want center = Visible (Alpha 0), Outside = Dark
+                     // So mix current Alpha with 0 based on Factor
+                     finalAlpha = min(finalAlpha, lerp(0.0, _Darkness, alphaFactor));
+                }
+
                 // 3. Ring Logic (Reveal + Color)
                 float halfWidth = _EdgeWidth * 0.5;
                 float lowerBound = _Radius - halfWidth;
@@ -110,11 +127,8 @@ Shader "Hidden/Echolocation"
                 if (dist < lowerBound)
                 {
                     // Inside the Inner Circle (Behind the wave):
-                    // User wants "20% brighter" -> 20% revealed.
-                    // If _Darkness is 1.0 (Black) and 0.0 is Visible.
-                    // 20% visible = lerp(_Darkness, 0.0, 0.2).
-                    // This creates a dim trail behind the wave.
-                    finalAlpha = lerp(_Darkness, 0.0, 0.2); 
+                    // User wants this to remain dark (no trail).
+                    // So we keep finalAlpha as determined by Base State + Player Logic.
                 }
                 else if (dist < upperBound)
                 {
@@ -124,19 +138,17 @@ Shader "Hidden/Echolocation"
                     float distFromCenterOfRing = abs(dist - _Radius);
                     float ringGradient = 1.0 - (distFromCenterOfRing / halfWidth);
                     // Use sqrt (power 0.5) to make the curve "fat" (plateau-like) instead of "peaky"
-                    // This creates a wider clear area in the middle of the band.
                     ringGradient = pow(ringGradient, 0.5); 
                     
                     // B. Reveal Logic:
-                    // Ring is fully revealed at peak intensity
-                    // But we want to transition from Outside (Dark) to Ring (Visible) to Inside (Dim).
-                    // The simple gradient logic might pop if we don't match edges.
-                    
-                    // Let's keep it simple: Ring cuts a hole.
                     float targetAlpha = 0.0;
-                    finalAlpha = lerp(_Darkness, targetAlpha, ringGradient);
+                    float ringAlpha = lerp(_Darkness, targetAlpha, ringGradient);
                     
-                    // C. Color Overlay
+                    finalAlpha = min(finalAlpha, ringAlpha);
+                    
+                    // C. Color Overlay (Only apply color if Ring is dominant source of visibility?)
+                    // If we are close to player, maybe don't tint?
+                    // For now, tint if inside ring band.
                     finalColor = _Color.rgb;
                 }
 

@@ -53,6 +53,9 @@ public class EcholocationController : MonoBehaviour
         }
     }
 
+    [Header("Permanent Visibility")]
+    public float playerRadius = 0.5f;
+
     void Update()
     {
         timer += Time.deltaTime;
@@ -94,6 +97,14 @@ public class EcholocationController : MonoBehaviour
         {
             echolocationMaterial.SetVector("_Center", pulseOrigin);
             echolocationMaterial.SetFloat("_Darkness", worldDarkness);
+            
+            // --- Player Visibility Update ---
+            if (centerTransform != null)
+            {
+                echolocationMaterial.SetVector("_PlayerPos", centerTransform.position);
+                echolocationMaterial.SetFloat("_PlayerRadius", playerRadius);
+            }
+            // --------------------------------
             
             // Only show ripple if expanding or fading out
             if (isExpanding || isFadingOut)

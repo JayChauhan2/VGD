@@ -7,6 +7,7 @@ public class Coin : MonoBehaviour
     public float collectionRadius = 0.8f; // Slightly larger for easier pickup
     public float smoothTime = 0.005f;
     public float maxSpeed = 40f;
+    public float lifetime = 5f;
     
     [Header("References")]
     public Transform playerTransform;
@@ -14,8 +15,13 @@ public class Coin : MonoBehaviour
     private Vector3 velocity = Vector3.zero;
     private bool isMagnetized = false;
 
+    private float age = 0f;
+
     private void Start()
     {
+        // Manual timer handles destruction now
+        // Destroy(gameObject, lifetime); 
+
         if (playerTransform == null)
         {
             GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -33,7 +39,11 @@ public class Coin : MonoBehaviour
             // Try to find player if not found yet (e.g. if spawned dynamically)
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player != null) playerTransform = player.transform;
-            else return;
+            
+            // Increment age while waiting, destruction is still valid if no player found
+            age += Time.deltaTime;
+            if (age >= lifetime) Destroy(gameObject);
+            return;
         }
 
         float distance = Vector3.Distance(transform.position, playerTransform.position);
@@ -44,10 +54,20 @@ public class Coin : MonoBehaviour
             isMagnetized = true;
         }
 
-        if (isMagnetized)
+        // Only count down lifetime if NOT magnetized (not being pulled)
+        if (!isMagnetized)
         {
+            age += Time.deltaTime;
+            if (age >= lifetime)
+            {
+                Destroy(gameObject);
+                return;
+            }
+        }
+        else
+        {
+            // Magnetized behavior
             // Move towards player "reluctantly" then speeding up
-            // SmoothDamp is perfect for this "spring-like" behavior
             transform.position = Vector3.SmoothDamp(transform.position, playerTransform.position, ref velocity, smoothTime, maxSpeed);
 
             // Check for collection

@@ -45,7 +45,7 @@ public class EcholocationController : MonoBehaviour
         // Initialize shader with default values
         if (echolocationMaterial != null)
         {
-            echolocationMaterial.SetFloat("_Radius", -1.0f); // Hide initially
+            echolocationMaterial.SetFloat("_Radius", -100.0f); // Hide initially
             pulseOrigin = centerTransform.position;
             echolocationMaterial.SetVector("_Center", pulseOrigin);
             echolocationMaterial.SetFloat("_EdgeWidth", edgeWidth);
@@ -120,7 +120,8 @@ public class EcholocationController : MonoBehaviour
             else
             {
                 // Hide the ripple when not active
-                echolocationMaterial.SetFloat("_Radius", -1);
+                // Must be safely negative (lower than -edgeWidth/2) to avoid drawing a small circle at center
+                echolocationMaterial.SetFloat("_Radius", -100f);
             }
             
             // Pass Camera Properties for 2D Reconstruction

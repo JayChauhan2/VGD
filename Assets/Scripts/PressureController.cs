@@ -23,8 +23,7 @@ public class PressureController : MonoBehaviour
     private Room room;
     private PlayerMovement player;
     private float stableTimer = 0f;
-    [Header("Stabilization")]
-    public float stabilizationTime = 15f; // Increased default to prevent auto-win
+
 
 
     public enum PressureState { Low, Mid, High }
@@ -47,9 +46,9 @@ public class PressureController : MonoBehaviour
     public void Activate()
     {
         isStressActive = true;
-        currentPressure = 0f; // Start fresh or keep? "Each room owns a system", assumes resets or persistent? 
-        // User said: "Pressure: Increases automatically over time". 
-        // Likely starts at 0 for each new room encounter.
+        currentPressure = 0f; 
+        stableTimer = 0f;
+        timeActive = 0f;
     }
 
     public void Deactivate()
@@ -129,8 +128,18 @@ public class PressureController : MonoBehaviour
         }
     }
 
+    [Header("Stabilization")]
+    public float stabilizationTime = 5f; // Time required to HOLD low pressure
+    public float minimumSurvivalTime = 15f; // Absolute minimum time the room must be active
+    
+    private float timeActive = 0f;
+
+
+
     void CheckStabilization()
     {
+        timeActive += Time.deltaTime;
+    
         // Option A: Stabilization Window
         if (currentPressure < midThreshold)
         {
@@ -141,7 +150,10 @@ public class PressureController : MonoBehaviour
             stableTimer = 0f;
         }
 
-        if (stableTimer >= stabilizationTime)
+        // We only stabilize if:
+        // 1. We have held low pressure for 'stabilizationTime' (Performance)
+        // 2. We have survived for at least 'minimumSurvivalTime' (Duration)
+        if (stableTimer >= stabilizationTime && timeActive >= minimumSurvivalTime)
         {
             Stabilize();
         }

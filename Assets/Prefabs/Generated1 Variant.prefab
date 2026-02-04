@@ -983,7 +983,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8410271049769413041, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: stabilizationTime
-      value: 1.3
+      value: 25
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -271,14 +271,19 @@ public class Room : MonoBehaviour
     {
         if (IsCleared) return;
         
-        Debug.Log($"Room {name}: Room Stabilized! (Spawners remain active)");
+        Debug.Log($"Room {name}: Room Stabilized! Disabling spawners...");
         
-        // Spawners remain active - enemies will keep spawning!
-        // areSpawnersDisabled is NOT set, so room won't auto-clear
+        // Disable spawners so no new enemies appear
+        areSpawnersDisabled = true;
+        foreach(var spawner in activeSpawners)
+        {
+            if (spawner != null) spawner.gameObject.SetActive(false);
+        }
         
         if (Pressure != null) Pressure.Deactivate();
         
-        // Don't check clear condition - spawners are still active
+        // Now that spawners are disabled, we can check if the room is clear
+        CheckClearCondition();
     }
     
     private void CheckClearCondition()

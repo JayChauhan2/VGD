@@ -194,7 +194,7 @@ public class GameHUD : MonoBehaviour
         if (circle == null)
         {
             // Fallback: Generate a simple circle texture
-            int size = 32;
+            int size = 8;
             Texture2D tex = new Texture2D(size, size);
             Color[] colors = new Color[size*size];
             Vector2 center = new Vector2(size/2f, size/2f);

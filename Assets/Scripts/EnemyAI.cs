@@ -392,8 +392,8 @@ public class EnemyAI : MonoBehaviour
         if (GameHUD.Instance != null)
         {
             // Request UI marker (always visible on top of darkness)
-            // Offset roughly 1.0 unit up
-            GameHUD.Instance.ShowEnemyMarker(transform, new Vector3(0, 1.0f, 0), 2.0f);
+            // Offset 0 so it's ON the enemy
+            GameHUD.Instance.ShowEnemyMarker(transform, Vector3.zero, 2.0f);
         }
     }
 }

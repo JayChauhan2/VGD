@@ -193,19 +193,24 @@ public class GameHUD : MonoBehaviour
         Sprite circle = Resources.Load<Sprite>("Sprites/Circle");
         if (circle == null)
         {
-            // Fallback: Generate a simple circle texture
-            int size = 8;
+            // Fallback: Generate a high-res circle texture
+            int size = 64; // Higher res for smooth edges
             Texture2D tex = new Texture2D(size, size);
+            tex.filterMode = FilterMode.Bilinear; // Ensure smooth scaling
+            
             Color[] colors = new Color[size*size];
             Vector2 center = new Vector2(size/2f, size/2f);
-            float radius = size/2f;
+            float radius = (size/2f) - 1; // Slight padding
             
             for(int y=0; y<size; y++)
             {
                 for(int x=0; x<size; x++)
                 {
                     float dist = Vector2.Distance(new Vector2(x,y), center);
-                    if (dist <= radius) colors[y*size + x] = Color.white;
+                    // Anti-aliased edge roughly
+                    float alpha = 1f - Mathf.Clamp01(dist - radius + 0.5f);
+                    
+                    if (dist <= radius) colors[y*size + x] = new Color(1, 1, 1, alpha); // White with alpha
                     else colors[y*size + x] = Color.clear;
                 }
             }
@@ -216,7 +221,7 @@ public class GameHUD : MonoBehaviour
         img.sprite = circle;
 
         RectTransform rt = markerObj.GetComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(25, 25); 
+        rt.sizeDelta = new Vector2(10, 10); // Much smaller (was 25, user said too big)
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.zero;
         rt.pivot = new Vector2(0.5f, 0.5f);

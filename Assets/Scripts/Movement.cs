@@ -11,6 +11,7 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask wallLayer; // Assign in Inspector to detect walls/obstacles
 
     public Rigidbody2D rb;
+    public Animator animator;
     private Vector2 moveInput;
 
     public float smoothTime = 0.5f;
@@ -60,6 +61,16 @@ public class PlayerMovement : MonoBehaviour
         {
             originalLocalPos = modelTransform.localPosition;
         }
+
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+        
+        if (rb != null)
+        {
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        }
     }
 
     void Update()
@@ -75,22 +86,17 @@ public class PlayerMovement : MonoBehaviour
         // strictly checking isDashing helps if we change that approach)
         if (!isDashing) 
         {
-            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector3 direction = mousePos - transform.position;
-
-            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-
-            float smoothAngle = Mathf.SmoothDampAngle(
-                transform.eulerAngles.z,
-                angle,
-                ref angleVelocity,
-                smoothTime
-            );
-
-            transform.rotation = Quaternion.Euler(0, 0, smoothAngle);
+            // Rotation removed per user request (human sprite)
+            // transform.rotation = ...
 
             moveInput.x = Input.GetAxisRaw("Horizontal");
             moveInput.y = Input.GetAxisRaw("Vertical");
+
+            if (animator != null)
+            {
+                animator.SetFloat("horizontal", moveInput.x);
+                animator.SetFloat("vertical", moveInput.y);
+            }
 
             // Dash Input
             if (Input.GetKeyDown(KeyCode.Space) && IsDashReady && moveInput != Vector2.zero)

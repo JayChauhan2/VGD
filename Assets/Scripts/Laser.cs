@@ -99,6 +99,17 @@ public class Laser : MonoBehaviour
         
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0, 0, angle);
+
+        // Flip gun when facing left
+        float scaleY = Mathf.Abs(transform.localScale.y);
+        if (Mathf.Abs(angle) > 90)
+        {
+            transform.localScale = new Vector3(transform.localScale.x, -scaleY, transform.localScale.z);
+        }
+        else
+        {
+            transform.localScale = new Vector3(transform.localScale.x, scaleY, transform.localScale.z);
+        }
         
         // Apply Orbit Position
         float radians = angle * Mathf.Deg2Rad;

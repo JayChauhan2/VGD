@@ -5,12 +5,13 @@ public class FlashBomb : MonoBehaviour
 {
     [Header("Explosion Settings")]
     public float explosionDelay = 1.5f;
-    public float explosionRadius = 5f;
+
+    public float explosionRadius = 2f; // Matched to visual (Radius 2)
     public float damagePercent = 0.5f; // 50% of enemy max health
     
     [Header("Visual Settings")]
     public float flashDuration = 0.3f;
-    public float maxFlashScale = 10f;
+    public float maxFlashScale = 6.25f; // Scale 6.25 * 0.64(unit) = 4.0 diameter = 2.0 radius
     
     [Header("Camera Shake")]
     public float shakeIntensity = 1.0f;
@@ -63,6 +64,7 @@ public class FlashBomb : MonoBehaviour
         }
         
         // Deal damage and knockback to all enemies AND player in radius
+        // Use logic radius matching visual
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, explosionRadius);
         Debug.Log($"FlashBomb: Found {hits.Length} objects in blast radius");
         
@@ -88,17 +90,10 @@ public class FlashBomb : MonoBehaviour
                     // Reset velocity first to ensure knockback is applied cleanly
                     enemyRb.linearVelocity = Vector2.zero;
                     
-                    float knockbackForce = 10f * distancePercent; // Max 10 force when at center
+                    // Increased base force from 10 to 30
+                    float knockbackForce = 30f * distancePercent; 
                     enemyRb.AddForce(direction * knockbackForce, ForceMode2D.Impulse);
-                    
-                    Debug.Log($"FlashBomb: Applied {knockbackForce} knockback force to {enemy.name} at distance {distance:F2}");
                 }
-                else
-                {
-                    Debug.LogWarning($"FlashBomb: Enemy {enemy.name} has no Rigidbody2D!");
-                }
-                
-                Debug.Log($"FlashBomb: Dealt {damage} damage to {enemy.name} with {distancePercent:F2} knockback percent");
             }
             
             // Check for player
@@ -106,10 +101,11 @@ public class FlashBomb : MonoBehaviour
             if (player != null)
             {
                 // Player takes exactly 1 heart (2 health units) of damage
-                // PlayerHealth.TakeDamage applies its own knockbackForce multiplier (10f)
-                // So we just pass the direction, not a pre-scaled force
+                // PlayerHealth applies its own force multiplier (5f).
+                // Let's rely on that but arguably we want bomb to be stronger?
+                // If we want stronger, we might need to push RB here or increase PlayerHealth.knockbackForce temporarily.
+                // For now, let's just pass direction. Logic relies on PlayerHealth.
                 player.TakeDamage(2f, direction);
-                Debug.Log($"FlashBomb: Hit player at distance {distance:F2}");
             }
         }
         

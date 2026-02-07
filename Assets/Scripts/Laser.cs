@@ -5,6 +5,7 @@ public class Laser : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private float defDistanceRay = 100;
     public float damagePerSecond = 30f;
+    public float orbitRadius = 0.5f;
     
     [Header("Energy Settings")]
     [SerializeField] private float maxEnergy = 100f;
@@ -43,19 +44,18 @@ public class Laser : MonoBehaviour
             chargeTimer = chargeDuration;
         }
 
+        // Orphaning Fix: Continue Update logic here
+        
         // Handle Camera Effect - PUSH away from aim direction
         if (tryingToShoot && currentEnergy > 0 && !isOverheated)
         {
             if (CameraController.Instance != null)
             {
-                // Push camera BACK (negative right)
-                // Magnitude reduced to 0.125f (1/4 of previous 0.5f) as per user request
                 CameraController.Instance.SetRecoilOffset(-transform.right * 0.125f);
             }
         }
         else
         {
-            // Reset to center
             if (CameraController.Instance != null)
             {
                 CameraController.Instance.SetRecoilOffset(Vector3.zero);
@@ -66,7 +66,6 @@ public class Laser : MonoBehaviour
         {
             if (isCharging)
             {
-                // Wait for charge to finish
                 chargeTimer -= Time.deltaTime;
                 if (chargeTimer <= 0)
                 {
@@ -77,17 +76,48 @@ public class Laser : MonoBehaviour
             }
             else
             {
-                // Already charged, just shoot
                 ShootLaser();
                 DrainEnergy();
             }
         }
         else
         {
-            // Stopped shooting or ran out/overheated
             isCharging = false;
             DisableLaser();
             RechargeEnergy();
+        }
+    }
+
+    private void LateUpdate()
+    {
+        if (Camera.main == null) return;
+
+        // Look At Mouse & Orbit (Moved to LateUpdate to override potential Animation control)
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector3 centerPos = transform.parent != null ? transform.parent.position : transform.position;
+        Vector2 direction = (Vector2)mousePos - (Vector2)centerPos;
+        
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        transform.rotation = Quaternion.Euler(0, 0, angle);
+        
+        // Apply Orbit Position
+        float radians = angle * Mathf.Deg2Rad;
+        Vector3 offset = new Vector3(Mathf.Cos(radians) * orbitRadius, Mathf.Sin(radians) * orbitRadius, 0);
+
+        if (transform.parent != null)
+        {
+            // Use World Space to avoid Parent Rotation/Scale issues
+            transform.position = centerPos + offset;
+        }
+        else
+        {
+            transform.localPosition = offset;
+        }
+
+        // Debug output to verify values
+        if (Time.frameCount % 60 == 0)
+        {
+             Debug.Log($"[LaserDebug] Radius: {orbitRadius}, Parent: {transform.parent?.name}, Pos: {transform.position}, Offset: {offset}");
         }
     }
 

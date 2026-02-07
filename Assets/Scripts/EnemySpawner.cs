@@ -4,8 +4,8 @@ using System.Collections.Generic;
 public class EnemySpawner : MonoBehaviour
 {
     [Header("Spawner Configuration")]
-    [Tooltip("The enemy prefab to spawn. If empty, spawns a default Walker.")]
-    public GameObject enemyPrefab;
+    [Tooltip("The enemy prefabs to spawn. If empty, spawns a default Walker.")]
+    public List<GameObject> enemyPrefabs; // Changed text to list
     
     [Tooltip("Time in seconds between spawns")]
     public float spawnInterval = 3f;
@@ -86,16 +86,25 @@ public class EnemySpawner : MonoBehaviour
             GameObject newEnemyObj = null;
             EnemyAI enemyScript = null;
 
-            if (enemyPrefab != null)
+            if (enemyPrefabs != null && enemyPrefabs.Count > 0)
             {
-                newEnemyObj = Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
-                // Also reduce scale of prefabs if needed? User asked: "size is smaller".
-                // Prefer procedural scale for now, assuming user relies on procedural given the context.
-                // But let's safely downscale the prefab instances too.
-                newEnemyObj.transform.localScale = Vector3.one * 0.5f; 
-                enemyScript = newEnemyObj.GetComponent<EnemyAI>();
+                // Pick random prefab
+                int randomIndex = Random.Range(0, enemyPrefabs.Count);
+                GameObject selectedPrefab = enemyPrefabs[randomIndex];
+
+                if (selectedPrefab != null)
+                {
+                    newEnemyObj = Instantiate(selectedPrefab, spawnPos, Quaternion.identity);
+                    // Also reduce scale of prefabs if needed? User asked: "size is smaller".
+                    // Prefer procedural scale for now, assuming user relies on procedural given the context.
+                    // But let's safely downscale the prefab instances too.
+                    newEnemyObj.transform.localScale = Vector3.one * 0.5f; 
+                    enemyScript = newEnemyObj.GetComponent<EnemyAI>();
+                }
             }
-            else
+            
+            // Fallback if list is empty or selected prefab was null
+            if (newEnemyObj == null)
             {
                 // Procedurally generate generic Spitter
                 newEnemyObj = CreateProceduralSpitter(spawnPos);

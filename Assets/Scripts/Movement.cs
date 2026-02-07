@@ -96,6 +96,19 @@ public class PlayerMovement : MonoBehaviour
             {
                 animator.SetFloat("horizontal", moveInput.x);
                 animator.SetFloat("vertical", moveInput.y);
+                animator.SetFloat("speed", moveInput.sqrMagnitude);
+            }
+
+            // Sprite Flipping
+            if (moveInput.x < 0)
+            {
+                SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
+                if (sr != null) sr.flipX = true;
+            }
+            else if (moveInput.x > 0)
+            {
+                SpriteRenderer sr = GetComponentInChildren<SpriteRenderer>();
+                if (sr != null) sr.flipX = false;
             }
 
             // Dash Input

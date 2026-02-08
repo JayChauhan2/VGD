@@ -54,6 +54,7 @@ public class SpitterEnemy : EnemyAI
         SpriteRenderer sr = prefab.AddComponent<SpriteRenderer>();
         sr.sprite = CreateCircleSprite();
         sr.color = Color.red;
+        sr.sortingLayerName = "Object"; // Set sorting layer
         sr.sortingOrder = 10; // Ensure it renders on top
         prefab.transform.localScale = Vector3.one * 0.3f;
         

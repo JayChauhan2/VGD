@@ -52,6 +52,8 @@ public class EnemyHealthBar : MonoBehaviour
 
         healthCanvas = canvasGO.AddComponent<Canvas>();
         healthCanvas.renderMode = RenderMode.WorldSpace;
+        healthCanvas.sortingLayerName = "Object"; // Set sorting layer as requested
+        healthCanvas.sortingOrder = 6; // Draw on top of enemy (order 5)
         
         CanvasScaler scaler = canvasGO.AddComponent<CanvasScaler>();
         scaler.dynamicPixelsPerUnit = 100;

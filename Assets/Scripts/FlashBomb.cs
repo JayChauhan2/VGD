@@ -26,6 +26,8 @@ public class FlashBomb : MonoBehaviour
         spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
         spriteRenderer.sprite = CreateCircleSprite();
         spriteRenderer.color = new Color(1f, 1f, 1f, 0.3f); // White, semi-transparent
+        spriteRenderer.sortingLayerName = "Object"; // Set sorting layer as requested
+        spriteRenderer.sortingOrder = 10; // Ensure it draws on TOP of other obstacles
         transform.localScale = Vector3.one * 0.5f;
         
         // Start explosion countdown
@@ -110,8 +112,9 @@ public class FlashBomb : MonoBehaviour
                 PlayerMovement pm = player.GetComponent<PlayerMovement>();
                 if (pm != null)
                 {
-                    float playerKnockbackForce = 20f * distancePercent; // Slightly less than enemies
-                    pm.ApplyKnockback(direction * playerKnockbackForce, 0.5f);
+                    // Reduced from 20f to 8f per user request ("way too strong")
+                    float playerKnockbackForce = 8f * distancePercent; 
+                    pm.ApplyKnockback(direction * playerKnockbackForce, 0.3f); // Reduced duration slightly too
                 }
             }
         }

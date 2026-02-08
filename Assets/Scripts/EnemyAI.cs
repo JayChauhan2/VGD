@@ -46,6 +46,15 @@ public class EnemyAI : MonoBehaviour
         currentHealth = maxHealth;
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         
+        // Ensure visibility by forcing the sorting layer
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr == null) sr = GetComponentInChildren<SpriteRenderer>();
+        if (sr != null)
+        {
+            sr.sortingLayerName = "Object";
+            sr.sortingOrder = 5; // Default enemy order, slightly below projectile/bomb
+        }
+        
         // If room not already assigned (e.g. by Spawner), try to find it
         if (parentRoom == null)
         {

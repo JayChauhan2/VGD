@@ -76,24 +76,26 @@ public class FlashBomb : MonoBehaviour
             float distancePercent = 1f - Mathf.Clamp01(distance / explosionRadius);
             
             // Check for enemy
+            // Check for enemy
             EnemyAI enemy = hit.GetComponent<EnemyAI>();
+            if (enemy == null) enemy = hit.GetComponentInParent<EnemyAI>();
+            
             if (enemy != null)
             {
+                Debug.Log($"FlashBomb: Hit enemy {enemy.name}");
+                
                 // Deal damage (50% of max health)
                 float damage = enemy.maxHealth * damagePercent;
                 enemy.TakeDamage(damage);
                 
                 // Apply knockback (stronger when closer)
-                Rigidbody2D enemyRb = enemy.GetComponent<Rigidbody2D>();
-                if (enemyRb != null)
-                {
-                    // Reset velocity first to ensure knockback is applied cleanly
-                    enemyRb.linearVelocity = Vector2.zero;
-                    
-                    // Increased base force from 10 to 30
-                    float knockbackForce = 30f * distancePercent; 
-                    enemyRb.AddForce(direction * knockbackForce, ForceMode2D.Impulse);
-                }
+                // Increased base force from 10 to 30
+                // Since we switched to Direct Velocity in EnemyAI, 30 is a speed of 30 units/s.
+                // That's very fast. Let's keep it but maybe dampen distance factor less?
+                float knockbackForce = 20f * distancePercent; // Tuned for velocity mode
+                
+                // Use the new method to pause AI and apply force
+                enemy.ApplyKnockback(direction * knockbackForce, 0.4f);
             }
             
             // Check for player
@@ -101,11 +103,16 @@ public class FlashBomb : MonoBehaviour
             if (player != null)
             {
                 // Player takes exactly 1 heart (2 health units) of damage
-                // PlayerHealth applies its own force multiplier (5f).
-                // Let's rely on that but arguably we want bomb to be stronger?
-                // If we want stronger, we might need to push RB here or increase PlayerHealth.knockbackForce temporarily.
-                // For now, let's just pass direction. Logic relies on PlayerHealth.
+                // We pass direction for the damage visual
                 player.TakeDamage(2f, direction);
+                
+                // Explicitly apply strong bomb knockback to player
+                PlayerMovement pm = player.GetComponent<PlayerMovement>();
+                if (pm != null)
+                {
+                    float playerKnockbackForce = 20f * distancePercent; // Slightly less than enemies
+                    pm.ApplyKnockback(direction * playerKnockbackForce, 0.5f);
+                }
             }
         }
         

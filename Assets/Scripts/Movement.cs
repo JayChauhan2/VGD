@@ -185,6 +185,8 @@ public class PlayerMovement : MonoBehaviour
         currentDashCoroutine = null;
     }
 
+    private Coroutine knockbackCoroutine;
+
     public void ApplyKnockback(Vector2 force, float duration)
     {
         // Cancel dash if knocked back
@@ -194,7 +196,14 @@ public class PlayerMovement : MonoBehaviour
             isDashing = false;
             currentDashCoroutine = null;
         }
-        StartCoroutine(KnockbackRoutine(force, duration));
+
+        // Cancel existing knockback to prevent conflict (e.g. Damage + Bomb combined)
+        if (knockbackCoroutine != null)
+        {
+             StopCoroutine(knockbackCoroutine);
+        }
+        
+        knockbackCoroutine = StartCoroutine(KnockbackRoutine(force, duration));
     }
 
     System.Collections.IEnumerator KnockbackRoutine(Vector2 force, float duration)
@@ -213,6 +222,8 @@ public class PlayerMovement : MonoBehaviour
         enabled = true;
         rb.linearVelocity = Vector2.zero; // Stop sliding after knockback
         rb.isKinematic = wasKinematic;
+        
+        knockbackCoroutine = null;
     }
 
     void FixedUpdate()

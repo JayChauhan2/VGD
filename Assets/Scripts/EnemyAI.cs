@@ -16,6 +16,7 @@ public class EnemyAI : MonoBehaviour
     protected int targetIndex;
 
     public bool IsActive { get; private set; } = false;
+    public bool IsKnockedBack { get; private set; } = false; // New flag for knockback state
 
     public float maxHealth = 100f;
     protected float currentHealth;
@@ -144,7 +145,7 @@ public class EnemyAI : MonoBehaviour
 
         while (true)
         {
-            if (!IsActive)
+            if (!IsActive || IsKnockedBack) // Pause path updates if knocked back
             {
                 yield return new WaitForSeconds(pathUpdateDelay);
                 continue;
@@ -175,6 +176,9 @@ public class EnemyAI : MonoBehaviour
     void Update()
     {
         if (!IsActive) return;
+        
+        // suspend movement logic while knocked back so physics can work
+        if (IsKnockedBack) return; 
         
         // Virtual hook for subclasses to add custom update logic
         OnEnemyUpdate();
@@ -395,5 +399,54 @@ public class EnemyAI : MonoBehaviour
             // Offset 0 so it's ON the enemy
             GameHUD.Instance.ShowEnemyMarker(transform, Vector3.zero, 2.0f);
         }
+    }
+
+    public void ApplyKnockback(Vector2 force, float duration)
+    {
+        // Allow knockback even if not active (e.g. idle enemy gets hit)
+        // We rely on IsKnockedBack flag to pause AI, which works even if not active yet.
+        
+        // Don't call StopCoroutine(UpdatePath()) because checking the flag in the loop is cleaner
+        // and StopCoroutine(Method()) doesn't work as intended here anyway.
+        
+        StartCoroutine(KnockbackRoutine(force, duration));
+    }
+
+    private IEnumerator KnockbackRoutine(Vector2 force, float duration)
+    {
+        IsKnockedBack = true;
+        Debug.Log($"EnemyAI: Knockback started. Force: {force}");
+        
+        float originalDrag = 0f;
+        if (rb != null)
+        {
+            rb.isKinematic = false; // Ensure physics simulation is ON
+            originalDrag = rb.linearDamping;
+            rb.linearDamping = 0; // Remove drag so they fly freely for the duration
+            
+            // Apply velocity directly. 
+            // Note: If 'force' is actually a force vector (N), we should use AddForce.
+            // But if we want instant predictable speed, we set velocity.
+            // The previous code passed "30 * distancePercent", which is a scalar speed if treated as velocity.
+            // Let's rely on setting velocity for arcade responsiveness.
+            rb.linearVelocity = force; 
+        }
+        
+        yield return new WaitForSeconds(duration);
+        
+        Debug.Log("EnemyAI: Knockback ended.");
+        
+        // Recovery
+        if (rb != null)
+        {
+             rb.linearVelocity = Vector2.zero; 
+             rb.linearDamping = originalDrag;
+        }
+        
+        IsKnockedBack = false;
+        
+        // Reset path to ensure we recalculate immediately after recovery
+        targetIndex = 0; 
+        path = null; 
     }
 }

@@ -14,7 +14,7 @@ public class PathfindingGrid : MonoBehaviour
     public bool IsInitialized => grid != null;
 
     // Optional: Draw gizmos to see the grid
-    public bool displayGridGizmos = true;
+    public bool displayGridGizmos = false;
 
     void Awake()
     {
@@ -130,7 +130,10 @@ public class PathfindingGrid : MonoBehaviour
     void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(transform.position, new Vector3(gridWorldSize.x, gridWorldSize.y, 1));
+    }
 
+    void OnDrawGizmosSelected()
+    {
         if (grid != null && displayGridGizmos)
         {
             foreach (Node n in grid)

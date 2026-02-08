@@ -9,8 +9,12 @@ public class RoomManager : MonoBehaviour
     public GameObject coinPrefab;
     [SerializeField] PathfindingGrid pathfindingGrid;
 
+    [Header("Room Prefabs")]
+    public GameObject firstRoomPrefab;
+    public GameObject shopRoomPrefab;
+
     [SerializeField] private int maxRooms = 15; 
-    [SerializeField] private int minRooms = 10;
+
     public int roomWidth = 20; 
     public int roomHeight = 12;
 
@@ -116,23 +120,48 @@ public class RoomManager : MonoBehaviour
         }
         else if (!generationComplete && roomQueue.Count == 0)
         {
-            // Check if we met the minimum room requirement
-            if (roomCount < minRooms && roomObjects.Count > 0)
-            {
-                Debug.Log($"Generation stalled at {roomCount} rooms (Min: {minRooms}). Restarting from random room.");
-                // Pick a random existing room to continue generation from
-                GameObject randomRoom = roomObjects[Random.Range(0, roomObjects.Count)];
-                Room r = randomRoom.GetComponent<Room>();
-                if (r != null)
-                {
-                   roomQueue.Enqueue(r.RoomIndex);
-                }
-                return; // Continue next frame
-            }
+
 
             // Generation Finished
             Debug.Log($"GenerationComplete, {roomCount} rooms created");
             generationComplete = true;
+
+            // --- PLACEMENT OF SHOP ROOM ---
+            if (shopRoomPrefab != null && roomObjects.Count > 1)
+            {
+                // We want to replace one existing room with the Shop Room.
+                // We should avoid the First Room (assumed to be at index 0 or checked explicitly).
+                
+                // Filter out the start room (center of grid)
+                Vector2Int startRoomIndex = new Vector2Int(gridSizeX / 2, gridSizeY / 2);
+                List<GameObject> candidates = new List<GameObject>();
+                
+                foreach(var obj in roomObjects)
+                {
+                    Room r = obj.GetComponent<Room>();
+                    if (r != null && r.RoomIndex != startRoomIndex)
+                    {
+                        candidates.Add(obj);
+                    }
+                }
+
+                if (candidates.Count > 0)
+                {
+                    GameObject roomToReplace = candidates[Random.Range(0, candidates.Count)];
+                    Room oldRoom = roomToReplace.GetComponent<Room>();
+                    Vector2Int idx = oldRoom.RoomIndex;
+
+                    // Remove old room
+                    roomObjects.Remove(roomToReplace);
+                    Destroy(roomToReplace);
+
+                    // Create Shop Room
+                    CreateRoomObject(idx, shopRoomPrefab);
+                    
+                    Debug.Log($"Replaced Room at {idx} with ShopRoom");
+                }
+            }
+            // -----------------------------
 
             if (pathfindingGrid != null)
             {
@@ -245,7 +274,8 @@ public class RoomManager : MonoBehaviour
         roomGrid[x, y] = 1;
         roomCount++;
         
-        CreateRoomObject(roomIndex);
+        GameObject prefabToUse = (firstRoomPrefab != null) ? firstRoomPrefab : roomPrefab;
+        CreateRoomObject(roomIndex, prefabToUse);
     }
 
     private bool TryGenerateRoom(Vector2Int roomIndex)
@@ -263,14 +293,14 @@ public class RoomManager : MonoBehaviour
         roomGrid[x, y] = 1;
         roomCount++;
 
-        CreateRoomObject(roomIndex);
+        CreateRoomObject(roomIndex, roomPrefab);
 
         return true;
     }
 
-    private void CreateRoomObject(Vector2Int roomIndex)
+    private void CreateRoomObject(Vector2Int roomIndex, GameObject prefab)
     {
-        var newRoomObj = Instantiate(roomPrefab, GetPositionFromGridIndex(roomIndex), Quaternion.identity);
+        var newRoomObj = Instantiate(prefab, GetPositionFromGridIndex(roomIndex), Quaternion.identity);
         newRoomObj.name = $"Room-{roomIndex.x}-{roomIndex.y}";
         
         Room r = newRoomObj.GetComponent<Room>();

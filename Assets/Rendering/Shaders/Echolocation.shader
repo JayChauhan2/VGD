@@ -136,9 +136,14 @@ Shader "Hidden/Echolocation"
                     
                     // A. Calculate Ring Gradient
                     float distFromCenterOfRing = abs(dist - _Radius);
-                    float ringGradient = 1.0 - (distFromCenterOfRing / halfWidth);
-                    // Use sqrt (power 0.5) to make the curve "fat" (plateau-like) instead of "peaky"
-                    ringGradient = pow(ringGradient, 0.5); 
+                    // Use smoothstep for soft edges (S-curve falloff)
+                    // smoothstep(fullWidth, 0, x) creates a smooth transition from 0 to 1 as x goes from fullWidth to 0
+                    // But we want 1 at center (dist=0) and 0 at edge (dist=halfWidth).
+                    // So let's normalize distance first:
+                    float normalizedDist = distFromCenterOfRing / halfWidth;
+                    // smoothstep(0, 1, normalizedDist) goes 0->1.
+                    // 1.0 - smoothstep(...) goes 1->0.
+                    float ringGradient = 1.0 - smoothstep(0.0, 1.0, normalizedDist); 
                     
                     // B. Reveal Logic:
                     float targetAlpha = 0.0;

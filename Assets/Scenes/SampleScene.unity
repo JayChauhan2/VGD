@@ -1455,7 +1455,14 @@ MonoBehaviour:
   pathfindingGrid: {fileID: 1986833165}
   firstRoomPrefab: {fileID: 3685405747248696002, guid: 3577f038527225f4a905c2cc9346544c, type: 3}
   shopRoomPrefab: {fileID: 1299928572387882687, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
-  generatedRoomPrefabs: []
+  generatedRoomPrefabs:
+  - {fileID: 2167945867662251604, guid: ad0ee1855b9e3c54bbee740bd3fac092, type: 3}
+  - {fileID: 6742139636335007028, guid: c1ecaded9b96ec543a133a766231e151, type: 3}
+  - {fileID: 5436328670248218251, guid: 510363677f75d924399dd068fcb49f18, type: 3}
+  - {fileID: 2589234175579720975, guid: 173050ba4316b1b44bd6e47121dde579, type: 3}
+  - {fileID: 3279371813678766083, guid: 5c2dc12fd8add1f478e1cb23e574c761, type: 3}
+  - {fileID: 995838340202045091, guid: 98b35fd4e193990488a863ce6fcc8883, type: 3}
+  - {fileID: 8833156095104678799, guid: 546f02e7ede81cb42bfbb97abe007f39, type: 3}
   maxRooms: 7
   roomWidth: 20
   roomHeight: 12

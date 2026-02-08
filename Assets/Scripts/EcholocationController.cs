@@ -215,7 +215,7 @@ public class EcholocationController : MonoBehaviour
             float travelTime = maxRadius / expandSpeed;
             float totalEffectTime = travelTime + fadeOutDuration;
             if (pingInterval < totalEffectTime) {
-                Debug.LogWarning($"[Echolocation] Ping Interval ({pingInterval}s) is shorter than Total Effect Time ({totalEffectTime}s = {travelTime}s travel + {fadeOutDuration}s fade). The ripple will reset before completing.");
+                //Debug.LogWarning($"[Echolocation] Ping Interval ({pingInterval}s) is shorter than Total Effect Time ({totalEffectTime}s = {travelTime}s travel + {fadeOutDuration}s fade). The ripple will reset before completing.");
             }
         }
     }

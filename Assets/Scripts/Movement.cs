@@ -94,8 +94,15 @@ public class PlayerMovement : MonoBehaviour
 
             if (animator != null)
             {
-                animator.SetFloat("horizontal", moveInput.x);
-                animator.SetFloat("vertical", moveInput.y);
+                // Only update direction parameters if we are actually moving
+                // This allows the "Idle" Blend Tree to use the last known direction
+                if (moveInput.sqrMagnitude > 0.01f)
+                {
+                    animator.SetFloat("horizontal", moveInput.x);
+                    animator.SetFloat("vertical", moveInput.y);
+                }
+                
+                // Always update speed so transitions work
                 animator.SetFloat("speed", moveInput.sqrMagnitude);
             }
 

@@ -13,7 +13,7 @@ public class RoomManager : MonoBehaviour
     public GameObject shopRoomPrefab;
     public GameObject[] generatedRoomPrefabs;
 
-    [SerializeField] private int maxRooms = 15; 
+
 
     public int roomWidth = 20; 
     public int roomHeight = 12;
@@ -22,7 +22,7 @@ public class RoomManager : MonoBehaviour
     int gridSizeY = 10;
 
     private List<GameObject> roomObjects = new List<GameObject>();
-    private Queue<Vector2Int> roomQueue = new Queue<Vector2Int>();
+
     private int[,] roomGrid;
     private int roomCount;
     private Room[,] roomComponentGrid; // Store Room references for quick lookup
@@ -33,7 +33,7 @@ public class RoomManager : MonoBehaviour
 
     public Room[,] GetRoomGrid() => roomComponentGrid;
 
-    [SerializeField] private float generationChance = 0.5f;
+
 
     // Movement after entering door
     public float doorExitOffset = 3f; 
@@ -49,23 +49,18 @@ public class RoomManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    private bool hasStarted = false;
+
 
     private void Start()
     {
-        hasStarted = true;
         roomGrid = new int[gridSizeX, gridSizeY];
-
         roomComponentGrid = new Room[gridSizeX, gridSizeY];
-        roomQueue = new Queue<Vector2Int>();
 
         if (pathfindingGrid == null)
         {
             pathfindingGrid = FindFirstObjectByType<PathfindingGrid>();
             if (pathfindingGrid == null) Debug.LogWarning("RoomManager: PathfindingGrid still not found after auto-search.");
         }
-
-
 
         // Ensure RoomDecorator exists
         if (RoomDecorator.Instance == null)
@@ -74,116 +69,102 @@ public class RoomManager : MonoBehaviour
             decoratorObj.AddComponent<RoomDecorator>();
         }
 
-        Vector2Int initialRoomIndex = new Vector2Int(gridSizeX / 2, gridSizeY / 2);
-        StartRoomGenerationFromRoom(initialRoomIndex);
+        GenerateLevel();
     }
 
-    private void Update()
+    private void GenerateLevel()
     {
-        if (!hasStarted) return;
+        // 1. Helpers
+        int centerX = gridSizeX / 2;
+        int centerY = gridSizeY / 2;
+        Vector2Int center = new Vector2Int(centerX, centerY);
 
-        if(roomQueue.Count > 0 && !generationComplete)
+        // 2. Place Start Room
+        roomGrid[centerX, centerY] = 1;
+        roomCount++;
+        CreateRoomObject(center, firstRoomPrefab);
+
+        // 3. Prepare Deck
+        List<GameObject> deck = new List<GameObject>();
+        if (shopRoomPrefab != null) deck.Add(shopRoomPrefab);
+        if (generatedRoomPrefabs != null) deck.AddRange(generatedRoomPrefabs);
+
+        // Shuffle Deck
+        for (int i = 0; i < deck.Count; i++)
         {
-            Vector2Int roomIndex = roomQueue.Dequeue();
-
-            if (roomCount < maxRooms)
-            {
-                int gridX = roomIndex.x;
-                int gridY = roomIndex.y;
-
-                // Randomize directions
-                List<Vector2Int> directions = new List<Vector2Int> 
-                { 
-                    Vector2Int.up, 
-                    Vector2Int.down, 
-                    Vector2Int.left, 
-                    Vector2Int.right 
-                };
-                
-                // Fisher-Yates shuffle
-                for (int i = 0; i < directions.Count; i++)
-                {
-                    Vector2Int temp = directions[i];
-                    int randomIndex = Random.Range(i, directions.Count);
-                    directions[i] = directions[randomIndex];
-                    directions[randomIndex] = temp;
-                }
-
-                foreach(var dir in directions)
-                {
-                    if (Random.value < generationChance)
-                    {
-                         TryGenerateRoom(new Vector2Int(gridX + dir.x, gridY + dir.y));
-                    }
-                }
-            }
+            GameObject temp = deck[i];
+            int r = Random.Range(i, deck.Count);
+            deck[i] = deck[r];
+            deck[r] = temp;
         }
-        else if (!generationComplete && roomQueue.Count == 0)
+
+        // 4. Available Spots
+        List<Vector2Int> availableSpots = new List<Vector2Int>();
+        AddNeighborsToAvailable(center, availableSpots);
+
+        // 5. Place Rooms
+        foreach (GameObject prefab in deck)
         {
-
-
-            // Generation Finished
-            Debug.Log($"GenerationComplete, {roomCount} rooms created");
-            generationComplete = true;
-
-            // --- PLACEMENT OF SHOP ROOM ---
-            if (shopRoomPrefab != null && roomObjects.Count > 1)
+            if (availableSpots.Count == 0)
             {
-                // We want to replace one existing room with the Shop Room.
-                // We should avoid the First Room (assumed to be at index 0 or checked explicitly).
-                
-                // Filter out the start room (center of grid)
-                Vector2Int startRoomIndex = new Vector2Int(gridSizeX / 2, gridSizeY / 2);
-                List<GameObject> candidates = new List<GameObject>();
-                
-                foreach(var obj in roomObjects)
+                Debug.LogWarning("RoomManager: No space left for rooms! Grid might be too small.");
+                break;
+            }
+
+            // Pick random spot from available
+            int index = Random.Range(0, availableSpots.Count);
+            Vector2Int spot = availableSpots[index];
+            availableSpots.RemoveAt(index);
+
+            // Mark occupied
+            roomGrid[spot.x, spot.y] = 1;
+            roomCount++;
+
+            // Create
+            CreateRoomObject(spot, prefab);
+
+            // Add new neighbors
+            AddNeighborsToAvailable(spot, availableSpots);
+        }
+
+        // 6. Finish
+        generationComplete = true;
+        Debug.Log($"Generation Complete. Rooms: {roomCount}");
+
+        if (pathfindingGrid != null)
+        {
+            Vector2 mapSize = new Vector2(gridSizeX * roomWidth, gridSizeY * roomHeight);
+            pathfindingGrid.CreateGrid(Vector2.zero, mapSize);
+        }
+        else
+        {
+            Debug.LogError("RoomManager: Cannot creating PathfindingGrid because reference is null!");
+        }
+
+        LinkRooms();
+
+        Room startRoom = roomComponentGrid[centerX, centerY];
+        if (startRoom != null)
+        {
+            startRoom.OnPlayerEnter();
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null) player.transform.position = startRoom.transform.position;
+        }
+    }
+
+    private void AddNeighborsToAvailable(Vector2Int pos, List<Vector2Int> list)
+    {
+        Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+        foreach (var d in dirs)
+        {
+            Vector2Int n = pos + d;
+            if (n.x >= 0 && n.x < gridSizeX && n.y >= 0 && n.y < gridSizeY)
+            {
+                // Must not be occupied and not already in list
+                if (roomGrid[n.x, n.y] == 0 && !list.Contains(n))
                 {
-                    Room r = obj.GetComponent<Room>();
-                    if (r != null && r.RoomIndex != startRoomIndex)
-                    {
-                        candidates.Add(obj);
-                    }
+                    list.Add(n);
                 }
-
-                if (candidates.Count > 0)
-                {
-                    GameObject roomToReplace = candidates[Random.Range(0, candidates.Count)];
-                    Room oldRoom = roomToReplace.GetComponent<Room>();
-                    Vector2Int idx = oldRoom.RoomIndex;
-
-                    // Remove old room
-                    roomObjects.Remove(roomToReplace);
-                    Destroy(roomToReplace);
-
-                    // Create Shop Room
-                    CreateRoomObject(idx, shopRoomPrefab);
-                    
-                    Debug.Log($"Replaced Room at {idx} with ShopRoom");
-                }
-            }
-            // -----------------------------
-
-            if (pathfindingGrid != null)
-            {
-                Vector2 mapSize = new Vector2(gridSizeX * roomWidth, gridSizeY * roomHeight);
-                pathfindingGrid.CreateGrid(Vector2.zero, mapSize);
-            }
-            else
-            {
-                Debug.LogError("RoomManager: Cannot creating PathfindingGrid because reference is null!");
-            }
-
-            // Link Rooms
-            LinkRooms();
-            
-            // Enter First Room (Start Room)
-            Room startRoom = roomComponentGrid[gridSizeX / 2, gridSizeY / 2];
-            if (startRoom != null)
-            {
-                startRoom.OnPlayerEnter();
-                // Optionally move player to center of start room
-                GameObject player = GameObject.FindGameObjectWithTag("Player");
-                if (player != null) player.transform.position = startRoom.transform.position;
             }
         }
     }
@@ -266,46 +247,7 @@ public class RoomManager : MonoBehaviour
         }
     }
 
-    private void StartRoomGenerationFromRoom(Vector2Int roomIndex)
-    {
-        roomQueue.Enqueue(roomIndex);
-        int x = roomIndex.x;
-        int y = roomIndex.y;
-        roomGrid[x, y] = 1;
-        roomCount++;
-        
-        GameObject prefabToUse = (firstRoomPrefab != null) ? firstRoomPrefab : GetRandomRoomPrefab();
-        CreateRoomObject(roomIndex, prefabToUse);
-    }
 
-    private bool TryGenerateRoom(Vector2Int roomIndex)
-    {
-        int x = roomIndex.x;
-        int y = roomIndex.y;
-
-        if (x < 0 || x >= gridSizeX || y < 0 || y >= gridSizeY) return false;
-        if (roomGrid[x, y] != 0) return false;
-        if (roomCount >= maxRooms) return false;
-        
-        // Removed old forced randomness logic since we handle it in Update now
-        
-        roomQueue.Enqueue(roomIndex);
-        roomGrid[x, y] = 1;
-        roomCount++;
-
-        CreateRoomObject(roomIndex, GetRandomRoomPrefab());
-
-        return true;
-    }
-
-    private GameObject GetRandomRoomPrefab()
-    {
-        if (generatedRoomPrefabs != null && generatedRoomPrefabs.Length > 0)
-        {
-            return generatedRoomPrefabs[Random.Range(0, generatedRoomPrefabs.Length)];
-        }
-        return null; // Should handle null downstream or assign a default
-    }
 
     private void CreateRoomObject(Vector2Int roomIndex, GameObject prefab)
     {

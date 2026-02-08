@@ -1160,7 +1160,7 @@ GameObject:
   - component: {fileID: 1106899284}
   - component: {fileID: 1106899286}
   m_Layer: 0
-  m_Name: Square
+  m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1305,7 +1305,7 @@ MonoBehaviour:
   pingInterval: 4.37
   edgeWidth: 12.82
   rippleColor: {r: 0, g: 1, b: 1, a: 1}
-  worldDarkness: 0
+  worldDarkness: 1
   fadeOutDuration: 2.3
   playerRadius: 2.5
 --- !u!212 &1106899284
@@ -1451,13 +1451,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38e212fd5484bf24d9a3f81cae0c9f81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roomPrefab: {fileID: 1299928572387882687, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
   coinPrefab: {fileID: 647404748746910150, guid: c6a79f4b667838842b3d835bebdf5f81, type: 3}
   pathfindingGrid: {fileID: 1986833165}
   firstRoomPrefab: {fileID: 3685405747248696002, guid: 3577f038527225f4a905c2cc9346544c, type: 3}
   shopRoomPrefab: {fileID: 1299928572387882687, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+  generatedRoomPrefabs: []
   maxRooms: 7
-  minRooms: 7
   roomWidth: 20
   roomHeight: 12
   generationChance: 0.5

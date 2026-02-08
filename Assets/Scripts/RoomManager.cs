@@ -5,13 +5,13 @@ public class RoomManager : MonoBehaviour
 {
     public static RoomManager Instance;
 
-    [SerializeField] GameObject roomPrefab;
     public GameObject coinPrefab;
     [SerializeField] PathfindingGrid pathfindingGrid;
 
     [Header("Room Prefabs")]
     public GameObject firstRoomPrefab;
     public GameObject shopRoomPrefab;
+    public GameObject[] generatedRoomPrefabs;
 
     [SerializeField] private int maxRooms = 15; 
 
@@ -274,7 +274,7 @@ public class RoomManager : MonoBehaviour
         roomGrid[x, y] = 1;
         roomCount++;
         
-        GameObject prefabToUse = (firstRoomPrefab != null) ? firstRoomPrefab : roomPrefab;
+        GameObject prefabToUse = (firstRoomPrefab != null) ? firstRoomPrefab : GetRandomRoomPrefab();
         CreateRoomObject(roomIndex, prefabToUse);
     }
 
@@ -288,18 +288,33 @@ public class RoomManager : MonoBehaviour
         if (roomCount >= maxRooms) return false;
         
         // Removed old forced randomness logic since we handle it in Update now
-
+        
         roomQueue.Enqueue(roomIndex);
         roomGrid[x, y] = 1;
         roomCount++;
 
-        CreateRoomObject(roomIndex, roomPrefab);
+        CreateRoomObject(roomIndex, GetRandomRoomPrefab());
 
         return true;
     }
 
+    private GameObject GetRandomRoomPrefab()
+    {
+        if (generatedRoomPrefabs != null && generatedRoomPrefabs.Length > 0)
+        {
+            return generatedRoomPrefabs[Random.Range(0, generatedRoomPrefabs.Length)];
+        }
+        return null; // Should handle null downstream or assign a default
+    }
+
     private void CreateRoomObject(Vector2Int roomIndex, GameObject prefab)
     {
+        if (prefab == null)
+        {
+             Debug.LogError($"RoomManager: Trying to create room at {roomIndex} but Prefab is NULL!");
+             return;
+        }
+
         var newRoomObj = Instantiate(prefab, GetPositionFromGridIndex(roomIndex), Quaternion.identity);
         newRoomObj.name = $"Room-{roomIndex.x}-{roomIndex.y}";
         

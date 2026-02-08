@@ -1305,9 +1305,12 @@ MonoBehaviour:
   pingInterval: 4.37
   edgeWidth: 12.82
   rippleColor: {r: 0, g: 1, b: 1, a: 1}
-  worldDarkness: 1
+  worldDarkness: 0
   fadeOutDuration: 2.3
   playerRadius: 2.5
+  enemyLayerMask:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!212 &1106899284
 SpriteRenderer:
   m_ObjectHideFlags: 0

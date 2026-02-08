@@ -220,29 +220,53 @@ public class EcholocationController : MonoBehaviour
         }
     }
 
+    [Header("Detection Settings")]
+    public LayerMask enemyLayerMask; // Layer mask to filter enemy detection
+    private Collider2D[] hitBuffer = new Collider2D[50]; // Pre-allocated buffer for NonAlloc physics
+
     void DetectEnemies()
     {
-        // Debugging: Check detection
-        // cast on ALL layers to ensure we don't miss enemies due to missing "Enemy" layer
-        Collider2D[] hits = Physics2D.OverlapCircleAll(pulseOrigin, currentRadius);
+        // Optimization: Use NonAlloc to avoid garbage collection
+        int hitCount = Physics2D.OverlapCircleNonAlloc(pulseOrigin, currentRadius, hitBuffer, enemyLayerMask);
         
-        foreach (var hit in hits)
+        for (int i = 0; i < hitCount; i++)
         {
-            // Use GetComponentInParent in case the collider is on a child object
-            EnemyAI enemy = hit.GetComponentInParent<EnemyAI>();
-            if (enemy != null)
+            Collider2D hit = hitBuffer[i];
+            
+            // Check if the object is actually an enemy (double check in case layer mask includes other things)
+            // Use TryGetComponent to avoid allocation if not found
+            if (hit.TryGetComponent<EnemyAI>(out EnemyAI enemy))
             {
                 int id = enemy.GetInstanceID();
                 if (!hitEnemies.Contains(id))
                 {
                     float dist = Vector2.Distance(pulseOrigin, enemy.transform.position);
+                    // Check if the enemy is within the current ripple radius
                     if (dist <= currentRadius)
                     {
                         hitEnemies.Add(id);
-                        Debug.Log($"[Echolocation] Hit Enemy: {enemy.name} at dist {dist}");
+                        //Debug.Log($"[Echolocation] Hit Enemy: {enemy.name} at dist {dist}");
                         enemy.MarkAsDetected();
                     }
                 }
+            }
+            // Fallback for parent components if the collider is on a child
+            else 
+            {
+                 EnemyAI parentEnemy = hit.GetComponentInParent<EnemyAI>();
+                 if (parentEnemy != null)
+                 {
+                    int id = parentEnemy.GetInstanceID();
+                    if (!hitEnemies.Contains(id))
+                    {
+                        float dist = Vector2.Distance(pulseOrigin, parentEnemy.transform.position);
+                        if (dist <= currentRadius)
+                        {
+                            hitEnemies.Add(id);
+                            parentEnemy.MarkAsDetected();
+                        }
+                    }
+                 }
             }
         }
     }

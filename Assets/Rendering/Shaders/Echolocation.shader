@@ -140,7 +140,7 @@ Shader "Hidden/Echolocation"
                     // smoothstep(fullWidth, 0, x) creates a smooth transition from 0 to 1 as x goes from fullWidth to 0
                     // But we want 1 at center (dist=0) and 0 at edge (dist=halfWidth).
                     // So let's normalize distance first:
-                    float normalizedDist = distFromCenterOfRing / halfWidth;
+                    float normalizedDist = distFromCenterOfRing / max(halfWidth, 0.0001);
                     // smoothstep(0, 1, normalizedDist) goes 0->1.
                     // 1.0 - smoothstep(...) goes 1->0.
                     float ringGradient = 1.0 - smoothstep(0.0, 1.0, normalizedDist); 

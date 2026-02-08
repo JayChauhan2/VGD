@@ -548,6 +548,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: First Room Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 1304653686867121899, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4447846011013126511, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: m_LocalScale.y
       value: 2

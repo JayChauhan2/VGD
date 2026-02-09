@@ -73,8 +73,17 @@ public class FlashBomb : MonoBehaviour
         foreach (Collider2D hit in hits)
         {
             // Calculate knockback direction and distance-based force
-            Vector2 direction = (hit.transform.position - transform.position).normalized;
-            float distance = Vector2.Distance(transform.position, hit.transform.position);
+            Vector2 diff = hit.transform.position - transform.position;
+            Vector2 direction = diff.normalized;
+            
+            // Handle case where bomb creates exactly on top of entity (prevent 0 direction)
+            if (direction == Vector2.zero)
+            {
+                 direction = Random.insideUnitCircle.normalized;
+                 if (direction == Vector2.zero) direction = Vector2.right;
+            }
+            
+            float distance = diff.magnitude;
             float distancePercent = 1f - Mathf.Clamp01(distance / explosionRadius);
             
             // Check for enemy

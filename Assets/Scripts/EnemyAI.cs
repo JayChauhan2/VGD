@@ -429,7 +429,9 @@ public class EnemyAI : MonoBehaviour
         float originalDrag = 0f;
         if (rb != null)
         {
-            rb.isKinematic = false; // Ensure physics simulation is ON
+            rb.bodyType = RigidbodyType2D.Dynamic; // Explicitly set Dynamic (isKinematic = false is same but this is clearer)
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation; // Allow X/Y movement, freeze rotation
+            
             originalDrag = rb.linearDamping;
             rb.linearDamping = 0; // Remove drag so they fly freely for the duration
             
@@ -439,6 +441,8 @@ public class EnemyAI : MonoBehaviour
             // The previous code passed "30 * distancePercent", which is a scalar speed if treated as velocity.
             // Let's rely on setting velocity for arcade responsiveness.
             rb.linearVelocity = force; 
+            
+            Debug.Log($"EnemyAI: Applied Velocity {rb.linearVelocity} | Constraints: {rb.constraints} | BodyType: {rb.bodyType}");
         }
         
         yield return new WaitForSeconds(duration);

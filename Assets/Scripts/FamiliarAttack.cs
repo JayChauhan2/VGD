@@ -32,6 +32,15 @@ public class FamiliarAttack : MonoBehaviour
             // Optionally make it thinner
             lr.startWidth = playerLaser.m_lineRenderer.startWidth * 0.5f;
             lr.endWidth = playerLaser.m_lineRenderer.endWidth * 0.5f;
+            // Ensure sorting layer is correct
+            lr.sortingLayerName = "Object";
+            lr.sortingOrder = 10; // Optional: Ensure it renders on top of floor/walls
+        }
+        else
+        {
+            // Fallback if no player laser found
+             lr.sortingLayerName = "Object";
+             lr.sortingOrder = 10;
         }
     }
 

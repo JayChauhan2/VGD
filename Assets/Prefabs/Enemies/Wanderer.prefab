@@ -162,7 +162,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
-  speed: 2.19
+  speed: 3
   pathUpdateDelay: 0.2
   coinPrefab: {fileID: 0}
   maxHealth: 100

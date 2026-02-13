@@ -27,7 +27,7 @@ public class EnemySpawner : MonoBehaviour
     private static Sprite cachedWalkerSprite;
     private static Sprite cachedSpitterSprite;
 
-    private void Start()
+    private void Awake()
     {
         timer = spawnInterval;
         maxSpawnInterval = spawnInterval; // Default to current setting

@@ -47,6 +47,7 @@ public class PlayerDashUI : MonoBehaviour
         canvas.renderMode = RenderMode.WorldSpace;
         
         // Ensure it draws on top of sprites
+        canvas.sortingLayerName = "Object";
         canvas.sortingOrder = 10; 
 
         CanvasScaler scaler = canvasGO.AddComponent<CanvasScaler>();

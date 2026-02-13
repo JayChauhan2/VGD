@@ -10,7 +10,7 @@ public class WandererEnemy : EnemyAI
         // Set Wanderer-specific stats
         maxHealth = 40f;
         currentHealth = maxHealth;
-        speed = 4.5f;
+        // speed = 4.5f; // Removed to allow Inspector value
         
         Debug.Log("WandererEnemy: Initialized with low health, moderate speed");
     }

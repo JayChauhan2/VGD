@@ -13,6 +13,10 @@ public class RoomManager : MonoBehaviour
     public GameObject shopRoomPrefab;
     public GameObject[] generatedRoomPrefabs;
 
+    [Header("Testing Mode")]
+    public bool isTestingMode;
+    public GameObject testingRoomPrefab;
+
 
 
     public int roomWidth = 20; 
@@ -82,49 +86,58 @@ public class RoomManager : MonoBehaviour
         // 2. Place Start Room
         roomGrid[centerX, centerY] = 1;
         roomCount++;
-        CreateRoomObject(center, firstRoomPrefab);
 
-        // 3. Prepare Deck
-        List<GameObject> deck = new List<GameObject>();
-        if (shopRoomPrefab != null) deck.Add(shopRoomPrefab);
-        if (generatedRoomPrefabs != null) deck.AddRange(generatedRoomPrefabs);
-
-        // Shuffle Deck
-        for (int i = 0; i < deck.Count; i++)
+        if (isTestingMode && testingRoomPrefab != null)
         {
-            GameObject temp = deck[i];
-            int r = Random.Range(i, deck.Count);
-            deck[i] = deck[r];
-            deck[r] = temp;
+            CreateRoomObject(center, testingRoomPrefab);
+            Debug.Log("RoomManager: Testing Mode Enabled. Spawning only testing room.");
         }
-
-        // 4. Available Spots
-        List<Vector2Int> availableSpots = new List<Vector2Int>();
-        AddNeighborsToAvailable(center, availableSpots);
-
-        // 5. Place Rooms
-        foreach (GameObject prefab in deck)
+        else
         {
-            if (availableSpots.Count == 0)
+            CreateRoomObject(center, firstRoomPrefab);
+
+            // 3. Prepare Deck
+            List<GameObject> deck = new List<GameObject>();
+            if (shopRoomPrefab != null) deck.Add(shopRoomPrefab);
+            if (generatedRoomPrefabs != null) deck.AddRange(generatedRoomPrefabs);
+
+            // Shuffle Deck
+            for (int i = 0; i < deck.Count; i++)
             {
-                Debug.LogWarning("RoomManager: No space left for rooms! Grid might be too small.");
-                break;
+                GameObject temp = deck[i];
+                int r = Random.Range(i, deck.Count);
+                deck[i] = deck[r];
+                deck[r] = temp;
             }
 
-            // Pick random spot from available
-            int index = Random.Range(0, availableSpots.Count);
-            Vector2Int spot = availableSpots[index];
-            availableSpots.RemoveAt(index);
+            // 4. Available Spots
+            List<Vector2Int> availableSpots = new List<Vector2Int>();
+            AddNeighborsToAvailable(center, availableSpots);
 
-            // Mark occupied
-            roomGrid[spot.x, spot.y] = 1;
-            roomCount++;
+            // 5. Place Rooms
+            foreach (GameObject prefab in deck)
+            {
+                if (availableSpots.Count == 0)
+                {
+                    Debug.LogWarning("RoomManager: No space left for rooms! Grid might be too small.");
+                    break;
+                }
 
-            // Create
-            CreateRoomObject(spot, prefab);
+                // Pick random spot from available
+                int index = Random.Range(0, availableSpots.Count);
+                Vector2Int spot = availableSpots[index];
+                availableSpots.RemoveAt(index);
 
-            // Add new neighbors
-            AddNeighborsToAvailable(spot, availableSpots);
+                // Mark occupied
+                roomGrid[spot.x, spot.y] = 1;
+                roomCount++;
+
+                // Create
+                CreateRoomObject(spot, prefab);
+
+                // Add new neighbors
+                AddNeighborsToAvailable(spot, availableSpots);
+            }
         }
 
         // 6. Finish

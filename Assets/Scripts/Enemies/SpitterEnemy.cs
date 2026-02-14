@@ -3,11 +3,12 @@ using UnityEngine;
 public class SpitterEnemy : EnemyAI
 {
     [Header("Spitter Settings")]
-    public float shootRange = 8f;
+    public float shootRange = 5f; // Shortened range
     public float shootInterval = 2f;
     public float projectileSpeed = 6f;
     public float projectileDamage = 8f;
-    
+    public float contactDamage = 5f; // Damage on touch
+
     [Header("Projectile Prefab")]
     public GameObject projectilePrefab;
     
@@ -16,16 +17,9 @@ public class SpitterEnemy : EnemyAI
     [Header("Aiming Settings")]
     public float aimDuration = 1.1f; // Slightly longer than animation (0.85s) to ensure it finishes
     
-    // ... rest of variables ...
     private bool isAiming = false;
     private float aimTimer;
     private float baseSpeed; // Store the movement speed
-
-    // ... OnEnemyStart ...
-
-    // ... CreateProjectilePrefab ...
-
-    // ... CreateCircleSprite ...
 
     protected override void OnEnemyUpdate()
     {
@@ -66,23 +60,27 @@ public class SpitterEnemy : EnemyAI
         {
             // --- Moving Behavior ---
             
-            // Check if we are within stopping distance
-            // We want to stop a bit closer than max range so we don't jitter at the edge
-            float stopDistance = shootRange - 2f; 
+            // Check Line of Sight (LOS)
+            bool hasLineOfSight = CheckLineOfSight();
 
-            if (distanceToPlayer <= stopDistance)
+            // Check if we are within stopping distance AND have LOS
+            // We want to stop a bit closer than max range so we don't jitter at the edge
+            float stopDistance = shootRange - 1f; 
+
+            if (hasLineOfSight && distanceToPlayer <= stopDistance)
             {
-               // Stop moving if close enough
+               // Stop moving if close enough AND we can see the player
                speed = 0f;
             }
             else
             {
-               // Move if too far
+               // Move if too far OR if we can't see the player (need to reposition)
                speed = baseSpeed > 0 ? baseSpeed : 4f; // Fallback to 4 if baseSpeed is lost
             }
 
             // Check if ready to aim/shoot
-            if (distanceToPlayer <= shootRange)
+            // Only aim if we have LOS
+            if (hasLineOfSight && distanceToPlayer <= shootRange)
             {
                 shootTimer -= Time.deltaTime;
                 
@@ -94,6 +92,79 @@ public class SpitterEnemy : EnemyAI
             }
         }
     }    
+    
+    // Check if there are obstacles between us and the player
+    bool CheckLineOfSight()
+    {
+        if (target == null) return false;
+
+        Vector2 direction = (target.position - transform.position).normalized;
+        float distance = Vector2.Distance(transform.position, target.position);
+
+        // Mask for Obstacles (usually "Default" or "Obstacle" layer)
+        // Adjust layer mask as needed. Here we check Default and Obstacle.
+        int layerMask = LayerMask.GetMask("Default", "Obstacle"); 
+        
+        // RaycastAll to ignore ourselves
+        RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, direction, distance, layerMask);
+
+        foreach (var hit in hits)
+        {
+            if (hit.collider.transform == transform) continue; // Ignore our own collider
+            if (hit.collider.isTrigger) continue; // Ignore triggers
+
+            if (hit.collider.transform == target) return true; // We see the player!
+            
+            // If we hit something else (that isn't us, isn't a trigger, and isn't the player)
+            // It must be a wall or obstacle.
+            return false; 
+        }
+
+        // If we found nothing passing the filters, assume clear (or player is out of range/layer)
+        // Check distance again to be sure? Actually if we didn't hit player in the loop, we probably didn't see them.
+        // But RaycastAll order is not guaranteed to be sorted by distance!
+        // We MUST sort by distance or check closest.
+        
+        // Revised Approach: RaycastNonAlloc or just simple Raycast with offset.
+        // Offset is easiest and cheapest.
+        
+        // Start ray slightly outside our own collider (approx radius 0.5)
+        Vector2 startPos = (Vector2)transform.position + (direction * 0.6f);
+        float remainingDist = distance - 0.6f;
+        
+        if (remainingDist <= 0) return true; // Already there?
+
+        RaycastHit2D offsetHit = Physics2D.Raycast(startPos, direction, remainingDist, layerMask);
+        
+        if (offsetHit.collider != null)
+        {
+             if (offsetHit.collider.transform == target) return true;
+             return false;
+        }
+        
+        // If we hit nothing starting from outside our body, and the player is within 'distance',
+        // it means the path is clear.
+        return true;
+
+        // If we hit nothing, it means clear path (or player is on a layer we didn't check, assuming clear)
+        return true;
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        // Deal contact damage to player
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            PlayerHealth playerHealth = collision.gameObject.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                Vector2 knockbackDir = (collision.transform.position - transform.position).normalized;
+                playerHealth.TakeDamage(contactDamage, knockbackDir);
+            }
+        }
+    }
+
+    // ... (StartAiming and ShootProjectile remain)    
     
     void StartAiming()
     {

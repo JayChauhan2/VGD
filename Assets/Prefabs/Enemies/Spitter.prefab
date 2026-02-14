@@ -199,4 +199,5 @@ MonoBehaviour:
   shootInterval: 2
   projectileSpeed: 6
   projectileDamage: 8
-  projectilePrefab: {fileID: 0}
+  projectilePrefab: {fileID: 5280232475391161418, guid: 0d7935bddd81e91459fc38480d1a3686, type: 3}
+  aimDuration: 0.5

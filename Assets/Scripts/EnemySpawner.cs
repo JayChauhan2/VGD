@@ -21,6 +21,9 @@ public class EnemySpawner : MonoBehaviour
     [Tooltip("Radius around the spawner to place enemies")]
     public float spawnRadius = 2f;
     
+    [Tooltip("Number of enemies to spawn per interval")]
+    public int enemiesPerSpawn = 3;
+
     private float timer;
     private List<EnemyAI> activeSpawns = new List<EnemyAI>();
     private Room currentRoom;
@@ -75,11 +78,11 @@ public class EnemySpawner : MonoBehaviour
 
     public void Spawn()
     {
-        // Check if we have room for 3 more enemies before spawning
+        // Check if we have room for more enemies before spawning
         if (activeSpawns.Count >= maxActiveEnemies) return;
         
-        // Spawn 3 enemies at once
-        for (int i = 0; i < 3; i++)
+        // Spawn enemies based on configuration
+        for (int i = 0; i < enemiesPerSpawn; i++)
         {
             Vector3 spawnPos = transform.position;
             

@@ -6954,6 +6954,7 @@ MonoBehaviour:
   minSpawnInterval: 1
   maxActiveEnemies: 5
   spawnRadius: 2
+  enemiesPerSpawn: 1
 --- !u!1 &8168806169360940641
 GameObject:
   m_ObjectHideFlags: 0
@@ -7328,6 +7329,7 @@ MonoBehaviour:
   minSpawnInterval: 1
   maxActiveEnemies: 5
   spawnRadius: 2
+  enemiesPerSpawn: 1
 --- !u!1001 &872661908896325867
 PrefabInstance:
   m_ObjectHideFlags: 0

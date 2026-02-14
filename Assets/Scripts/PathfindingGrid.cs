@@ -53,8 +53,10 @@ public class PathfindingGrid : MonoBehaviour
             {
                 Vector3 worldPoint = worldBottomLeft + Vector3.right * (x * nodeDiameter + nodeRadius) + Vector3.up * (y * nodeDiameter + nodeRadius);
                 // Check if walkable
-                float checkRadius = (obstacleCheckRadius > 0) ? obstacleCheckRadius : nodeRadius;
-                // strict check, no -0.1f buffer by default unless specified
+                // If obstacleCheckRadius is not set, use nodeRadius + small buffer (0.1f) to prevent grazing walls
+                float checkRadius = (obstacleCheckRadius > 0) ? obstacleCheckRadius : (nodeRadius + 0.1f);
+                
+                // strict check
                 bool walkable = !(Physics2D.OverlapCircle(worldPoint, checkRadius, unwalkableMask));
                 grid[x, y] = new Node(walkable, worldPoint, x, y);
             }

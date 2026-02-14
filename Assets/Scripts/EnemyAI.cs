@@ -43,6 +43,14 @@ public class EnemyAI : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
+        // Ensure physics settings are correct for collision
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous; // Helps with getting stuck
+        }
+
         // Auto-add health bar if missing
         if (GetComponent<EnemyHealthBar>() == null)
         {
@@ -56,7 +64,7 @@ public class EnemyAI : MonoBehaviour
         if (spriteRenderer != null)
         {
             spriteRenderer.sortingLayerName = "Object";
-            spriteRenderer.sortingOrder = 5; // Default enemy order, slightly below projectile/bomb
+            // Removed hardcoded sortingOrder = 5 to allow dynamic depth sorting
         }
         
         // If room not already assigned (e.g. by Spawner), try to find it
@@ -237,10 +245,17 @@ public class EnemyAI : MonoBehaviour
             animator.SetFloat("Speed", velocity.magnitude);
         }
 
-        if (spriteRenderer != null && velocity.sqrMagnitude > 0.01f)
+        if (spriteRenderer != null)
         {
-            if (velocity.x < -0.01f) spriteRenderer.flipX = true;
-            else if (velocity.x > 0.01f) spriteRenderer.flipX = false;
+             // Dynamic Depth Sorting
+             // Multiply Y by -100 to give lower objects higher order (draw on top)
+             spriteRenderer.sortingOrder = Mathf.RoundToInt(transform.position.y * -100);
+
+            if (velocity.sqrMagnitude > 0.01f)
+            {
+                if (velocity.x < -0.01f) spriteRenderer.flipX = true;
+                else if (velocity.x > 0.01f) spriteRenderer.flipX = false;
+            }
         }
     }
     

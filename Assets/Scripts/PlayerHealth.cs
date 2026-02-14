@@ -58,6 +58,8 @@ public class PlayerHealth : MonoBehaviour
         lr.material = new Material(Shader.Find("Sprites/Default"));
         lr.startColor = new Color(0, 1, 1, 0.5f); // Cyan transparent
         lr.endColor = new Color(0, 0, 1, 0.5f);   // Blue transparent
+        lr.sortingLayerName = "Object";
+        lr.sortingOrder = 10;
 
         float radius = 0.8f; // Adjust based on player size
         for (int i = 0; i < 50; i++)

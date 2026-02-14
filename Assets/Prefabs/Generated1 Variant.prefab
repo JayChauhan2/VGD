@@ -7323,7 +7323,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyPrefabs:
-  - {fileID: 7363493471067815230, guid: 8f859e02ba15b304ba2d25410617bfce, type: 3}
+  - {fileID: 7541073774401616530, guid: 4f566d1292110014394511de38b4d60e, type: 3}
   spawnInterval: 3
   minSpawnInterval: 1
   maxActiveEnemies: 5

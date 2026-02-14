@@ -75,7 +75,7 @@ public class SpitterEnemy : EnemyAI
             else
             {
                // Move if too far OR if we can't see the player (need to reposition)
-               speed = baseSpeed > 0 ? baseSpeed : 4f; // Fallback to 4 if baseSpeed is lost
+               speed = baseSpeed > 0 ? baseSpeed : 2.5f; // Fallback to 2.5f (slower) if baseSpeed is lost
             }
 
             // Check if ready to aim/shoot

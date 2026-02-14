@@ -89,30 +89,37 @@ public class EnemySpawner : MonoBehaviour
             GameObject newEnemyObj = null;
             EnemyAI enemyScript = null;
 
-            if (enemyPrefabs != null && enemyPrefabs.Count > 0)
+            if (enemyPrefabs == null || enemyPrefabs.Count == 0)
             {
-                // Pick random prefab
-                int randomIndex = Random.Range(0, enemyPrefabs.Count);
-                GameObject selectedPrefab = enemyPrefabs[randomIndex];
+                // No prefabs assigned, spawn nothing (per user request)
+                return;
+            }
+            
+            // Pick random prefab
+            int randomIndex = Random.Range(0, enemyPrefabs.Count);
+            GameObject selectedPrefab = enemyPrefabs[randomIndex];
 
-                if (selectedPrefab != null)
-                {
-                    newEnemyObj = Instantiate(selectedPrefab, spawnPos, Quaternion.identity);
-                    // Also reduce scale of prefabs if needed? User asked: "size is smaller".
-                    // Prefer procedural scale for now, assuming user relies on procedural given the context.
-                    // But let's safely downscale the prefab instances too.
-                    newEnemyObj.transform.localScale = Vector3.one * 0.5f; 
-                    enemyScript = newEnemyObj.GetComponent<EnemyAI>();
-                }
+            if (selectedPrefab != null)
+            {
+                newEnemyObj = Instantiate(selectedPrefab, spawnPos, Quaternion.identity);
+                // Also reduce scale of prefabs if needed? User asked: "size is smaller".
+                // Prefer procedural scale for now, assuming user relies on procedural given the context.
+                // But let's safely downscale the prefab instances too.
+                newEnemyObj.transform.localScale = Vector3.one * 0.5f; 
+                enemyScript = newEnemyObj.GetComponent<EnemyAI>();
             }
             
             // Fallback if list is empty or selected prefab was null
+            // We return early now for empty lists, so this only runs if Instantiate failed
             if (newEnemyObj == null)
             {
-                // Procedurally generate generic Spitter
-                newEnemyObj = CreateProceduralSpitter(spawnPos);
-                // Size handled in creation method
-                enemyScript = newEnemyObj.GetComponent<EnemyAI>();
+                // Procedurally generate generic Spitter (Only if prefabs existed but were null)
+                // Actually, let's keep it strict: If instantiation failed, don't spawn.
+                // Or maybe keep fallback ONLY for broken prefabs?
+                // User said "if the list is empty", implying if they don't assign anything.
+                // So if list is NOT empty but prefab is null, maybe fallback is okay?
+                // Let's stick to simple: If empty, return. If instantiation fails, return.
+                return; 
             }
 
             if (enemyScript != null)

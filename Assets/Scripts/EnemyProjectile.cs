@@ -7,6 +7,7 @@ public class EnemyProjectile : MonoBehaviour
     public float damage = 10f;
     public float lifetime = 5f;
     
+    private Rigidbody2D rb;
     private Vector2 direction;
     private float spawnTime;
 
@@ -16,12 +17,23 @@ public class EnemyProjectile : MonoBehaviour
         speed = projectileSpeed;
         damage = projectileDamage;
         spawnTime = Time.time;
+        
+        rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+             // Use physics for movement to ensure reliable collision detection
+             rb.linearVelocity = direction * speed;
+        }
     }
 
     void Update()
     {
-        // Move projectile
-        transform.position += (Vector3)direction * speed * Time.deltaTime;
+        // If we have a RB, we let physics handle movement.
+        // If not, we do manual movement (fallback).
+        if (rb == null)
+        {
+            transform.position += (Vector3)direction * speed * Time.deltaTime;
+        }
         
         // Destroy after lifetime
         if (Time.time - spawnTime > lifetime)
@@ -33,6 +45,8 @@ public class EnemyProjectile : MonoBehaviour
     void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision == null) return;
+        
+        // Debug.Log($"EnemyProjectile hit: {collision.gameObject.name} (Layer: {LayerMask.LayerToName(collision.gameObject.layer)})");
 
         // Damage player
         if (collision.CompareTag("Player"))
@@ -44,12 +58,23 @@ public class EnemyProjectile : MonoBehaviour
                 playerHealth.TakeDamage(damage, knockbackDir);
             }
             Destroy(gameObject);
+            return;
         }
         
         // Destroy on walls (Obstacle Layer)
         if (collision.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
         {
             Destroy(gameObject);
+            return;
+        }
+        
+        // Explicitly check for "Default" layer if that's what walls are on (just in case)
+        if (collision.gameObject.layer == 0) // Default
+        {
+             // Optional: Destroy on default layer objects that aren't the enemy itself?
+             // But the enemy itself might be on Default. 
+             // We configured IgnoreCollision in SpitterEnemy, so we should be safe.
+             // Let's not destroy on Default indiscriminately yet.
         }
     }
 }

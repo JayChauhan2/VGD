@@ -26,6 +26,9 @@ public class EnemyAI : MonoBehaviour
 
     protected Rigidbody2D rb;
 
+    protected Animator animator;
+    protected SpriteRenderer spriteRenderer;
+
     // Public method to explicitly assign room (e.g. from Spawner)
     public void AssignRoom(Room room)
     {
@@ -36,7 +39,10 @@ public class EnemyAI : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        
+        animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+
         // Auto-add health bar if missing
         if (GetComponent<EnemyHealthBar>() == null)
         {
@@ -47,12 +53,10 @@ public class EnemyAI : MonoBehaviour
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         
         // Ensure visibility by forcing the sorting layer
-        SpriteRenderer sr = GetComponent<SpriteRenderer>();
-        if (sr == null) sr = GetComponentInChildren<SpriteRenderer>();
-        if (sr != null)
+        if (spriteRenderer != null)
         {
-            sr.sortingLayerName = "Object";
-            sr.sortingOrder = 5; // Default enemy order, slightly below projectile/bomb
+            spriteRenderer.sortingLayerName = "Object";
+            spriteRenderer.sortingOrder = 5; // Default enemy order, slightly below projectile/bomb
         }
         
         // If room not already assigned (e.g. by Spawner), try to find it
@@ -192,30 +196,51 @@ public class EnemyAI : MonoBehaviour
         // Virtual hook for subclasses to add custom update logic
         OnEnemyUpdate();
         
+        Vector2 velocity = Vector2.zero;
+
         if (path == null || targetIndex >= path.Count) 
         {
             if (rb != null) rb.linearVelocity = Vector2.zero;
-            return;
-        }
-
-        Vector3 currentWaypoint = path[targetIndex].worldPosition;
-        
-        // Move towards waypoint using Physics if available
-        if (rb != null)
-        {
-            Vector2 dir = (currentWaypoint - transform.position).normalized;
-            rb.linearVelocity = dir * speed;
         }
         else
         {
-            Vector3 nextPosition = Vector3.MoveTowards(transform.position, currentWaypoint, speed * Time.deltaTime);
-            transform.position = nextPosition;
+            Vector3 currentWaypoint = path[targetIndex].worldPosition;
+            
+            // Move towards waypoint using Physics if available
+            if (rb != null)
+            {
+                Vector2 dir = (currentWaypoint - transform.position).normalized;
+                velocity = dir * speed;
+                rb.linearVelocity = velocity;
+            }
+            else
+            {
+                Vector3 nextPosition = Vector3.MoveTowards(transform.position, currentWaypoint, speed * Time.deltaTime);
+                velocity = (nextPosition - transform.position) / Time.deltaTime;
+                transform.position = nextPosition;
+            }
+
+            // Check if close to waypoint
+            if (Vector3.Distance(transform.position, currentWaypoint) < 0.1f)
+            {
+                targetIndex++;
+            }
+        }
+        
+        UpdateAnimation(velocity);
+    }
+    
+    protected virtual void UpdateAnimation(Vector2 velocity)
+    {
+        if (animator != null)
+        {
+            animator.SetFloat("Speed", velocity.magnitude);
         }
 
-        // Check if close to waypoint
-        if (Vector3.Distance(transform.position, currentWaypoint) < 0.1f)
+        if (spriteRenderer != null && velocity.sqrMagnitude > 0.01f)
         {
-            targetIndex++;
+            if (velocity.x < -0.01f) spriteRenderer.flipX = true;
+            else if (velocity.x > 0.01f) spriteRenderer.flipX = false;
         }
     }
     

@@ -47,11 +47,11 @@ Material:
     - _EnableExternalAlpha: 0
     - _IsOrtho: 1
     - _OrthographicSize: 5
-    - _Radius: 4.5599813
+    - _Radius: 29.271059
     - _ZWrite: 0
     m_Colors:
     - _CameraPos: {r: 0, g: 0, b: -12.89, a: 0}
-    - _Center: {r: -1.3997221, g: 3.8219419, b: 0, a: 0}
+    - _Center: {r: 0, g: 0, b: 0, a: 0}
     - _Color: {r: 0, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

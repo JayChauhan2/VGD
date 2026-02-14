@@ -13,11 +13,18 @@ public class SpitterEnemy : EnemyAI
     
     private float shootTimer;
 
+    [Header("Aiming Settings")]
+    public float aimDuration = 0.5f;
+    private bool isAiming = false;
+    private float aimTimer;
+    private float baseSpeed; // Store the movement speed
+
     protected override void OnEnemyStart()
     {
         maxHealth = 35f;
         currentHealth = maxHealth;
         speed = 3f;
+        baseSpeed = speed; // Initialize baseSpeed
         shootTimer = shootInterval;
         
         // Use a smaller size for the Spitter
@@ -108,19 +115,67 @@ public class SpitterEnemy : EnemyAI
         
         float distanceToPlayer = Vector2.Distance(transform.position, target.position);
         
-        // Maintain standard AI movement (chase behavior from base class) happens in base.Update() which calls this.
-        // We just need to handle shooting here.
-        
-        // Shoot if in range
-        if (distanceToPlayer <= shootRange)
+        if (isAiming)
         {
-            shootTimer -= Time.deltaTime;
-            if (shootTimer <= 0)
+            // --- Aiming Behavior ---
+            
+            // 1. Ensure we stay stopped
+            speed = 0f; 
+            
+            // 2. Face the player explicitly while standing still
+            Vector2 direction = (target.position - transform.position).normalized;
+            if (spriteRenderer != null)
             {
+                if (direction.x < -0.01f) spriteRenderer.flipX = true;
+                else if (direction.x > 0.01f) spriteRenderer.flipX = false;
+            }
+
+            // 3. Count down aim timer
+            aimTimer -= Time.deltaTime;
+            
+            if (aimTimer <= 0)
+            {
+                // Visual feedback? (Maybe flash or something, but movement stop is enough for now)
                 ShootProjectile();
+                
+                // Return to moving
+                isAiming = false;
+                speed = baseSpeed; // Restore speed
                 shootTimer = shootInterval;
             }
         }
+        else
+        {
+            // --- Moving Behavior ---
+            
+            // Ensure speed is normal (in case we got stuck at 0 somehow)
+            // But we don't want to override if something else (like a slow effect) changed it.
+            // For now, if it's 0, restore base.
+            if (speed == 0) speed = baseSpeed;
+
+            // Check if ready to aim/shoot
+            if (distanceToPlayer <= shootRange)
+            {
+                shootTimer -= Time.deltaTime;
+                if (shootTimer <= 0)
+                {
+                    StartAiming();
+                }
+            }
+        }
+    }
+
+    void StartAiming()
+    {
+        isAiming = true;
+        aimTimer = aimDuration;
+        
+        // Capture current speed if it's valid, otherwise keep existing baseSpeed
+        if (speed > 0.1f) baseSpeed = speed;
+        
+        speed = 0f; // Stop moving
+        
+        Debug.Log("SpitterEnemy: Stopping to aim...");
     }
 
     void ShootProjectile()
@@ -149,6 +204,6 @@ public class SpitterEnemy : EnemyAI
             projectile.Initialize(direction, projectileSpeed, projectileDamage);
         }
         
-        Debug.Log("SpitterEnemy: Fired projectile!");
+        Debug.Log("SpitterEnemy: Fired!");
     }
 }

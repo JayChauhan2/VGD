@@ -92,8 +92,29 @@ public class MimicEnemy : EnemyAI
         {
             healthBar.SetVisibility(true);
         }
+
+        // Animate Scale: 0.3 -> 0.5
+        StartCoroutine(AnimateScale(new Vector3(0.5f, 0.5f, 0.5f), 0.5f));
         
         Debug.Log("MimicEnemy: REVEALED! Attacking player!");
+    }
+
+    System.Collections.IEnumerator AnimateScale(Vector3 targetScale, float duration)
+    {
+        Vector3 startScale = transform.localScale;
+        float elapsed = 0f;
+        
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            // Ease out elastic or simple smoothstep
+            t = Mathf.SmoothStep(0, 1, t); 
+            
+            transform.localScale = Vector3.Lerp(startScale, targetScale, t);
+            yield return null;
+        }
+        transform.localScale = targetScale;
     }
 
     public override void TakeDamage(float damage)
@@ -105,5 +126,21 @@ public class MimicEnemy : EnemyAI
         }
         
         base.TakeDamage(damage);
+    }
+    protected override void UpdateAnimation(Vector2 velocity)
+    {
+        if (animator != null)
+        {
+            animator.SetFloat("Speed", velocity.magnitude);
+        }
+
+        if (spriteRenderer != null)
+        {
+             // Dynamic Depth Sorting
+             // Multiply Y by -100 to give lower objects higher order (draw on top)
+             spriteRenderer.sortingOrder = Mathf.RoundToInt(transform.position.y * -100);
+             
+             // Intentionally Removed flipX logic so it doesn't face movement direction
+        }
     }
 }

@@ -813,6 +813,9 @@ MonoBehaviour:
   maxHealth: 3
   _currentHealth: 0
   invincibilityDuration: 2
+  forceFieldPrefab: {fileID: 3639917087683709169, guid: f67373ff934d9464d814b59be4030ef6, type: 3}
+  forceFieldScale: 0.8
+  autoAdjustDuration: 1
   knockbackForce: 4
 --- !u!114 &1106899280
 MonoBehaviour:

@@ -144,10 +144,10 @@ TextureImporter:
       name: mimic-transform_0
       rect:
         serializedVersion: 2
-        x: 3
-        y: 3
-        width: 10
-        height: 10
+        x: 0
+        y: 0
+        width: 16
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -166,10 +166,10 @@ TextureImporter:
       name: mimic-transform_1
       rect:
         serializedVersion: 2
-        x: 19
-        y: 3
-        width: 10
-        height: 10
+        x: 16
+        y: 0
+        width: 16
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -188,10 +188,10 @@ TextureImporter:
       name: mimic-transform_2
       rect:
         serializedVersion: 2
-        x: 34
-        y: 2
-        width: 12
-        height: 12
+        x: 32
+        y: 0
+        width: 16
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -210,10 +210,10 @@ TextureImporter:
       name: mimic-transform_3
       rect:
         serializedVersion: 2
-        x: 49
-        y: 1
-        width: 14
-        height: 14
+        x: 48
+        y: 0
+        width: 16
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -233,9 +233,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 64
-        y: 1
+        y: 0
         width: 16
-        height: 14
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -255,9 +255,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 80
-        y: 1
+        y: 0
         width: 16
-        height: 14
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -276,7 +276,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 2b0af9dde4f98bb499bd9a38f79a5e26
     internalID: 0
     vertices: []
     indices: 
@@ -284,7 +284,9 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":16.0,"y":16.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
       mimic-transform_0: 2855287167987066156
       mimic-transform_1: 8852844062701008545

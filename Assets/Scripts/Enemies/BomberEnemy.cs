@@ -30,19 +30,8 @@ public class BomberEnemy : EnemyAI
         // To delay destruction, we must override Die().
     }
 
-    protected override void Die()
-    {
-        if (isExploding) return; // Already dying/exploding
-        
-        StartCoroutine(ExplodeSequence());
-    }
-    
-    // Override TakeDamage to ignore damage while exploding
-    public override void TakeDamage(float damage)
-    {
-        if (isExploding) return;
-        base.TakeDamage(damage);
-    }
+    // Removed Die() override: We want default behavior (Destroy on death)
+    // Removed TakeDamage() override: We want to take damage even while exploding so player can kill us to stop it.
 
     private IEnumerator ExplodeSequence()
     {
@@ -85,11 +74,11 @@ public class BomberEnemy : EnemyAI
         // --- Visual Effects Trigger ---
         StartCoroutine(PlayVisualEffects(0.3f)); // Duration for effects
 
-        // Wait for remainder
-        yield return new WaitForSeconds(waitTime - halfDuration);
-        
-        // BOOM
+        // BOOM (Damage happens here now, halfway through animation)
         Explode();
+
+        // Wait for remainder of animation (so visual can finish playing)
+        yield return new WaitForSeconds(waitTime - halfDuration);
         
         DropLoot();
         if (parentRoom != null) parentRoom.EnemyDefeated(this);

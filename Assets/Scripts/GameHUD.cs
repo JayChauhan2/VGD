@@ -319,15 +319,14 @@ public class GameHUD : MonoBehaviour
         layout.spacing = 5;
         layout.childControlWidth = false;
         layout.childControlHeight = false;
-        layout.childAlignment = TextAnchor.UpperRight;
+        layout.childAlignment = TextAnchor.UpperLeft; // Changed from UpperRight
         // layout.reverseArrangement = true; // Was causing Left-to-Right loss. Default is Left-to-Right layout.
-         // We want [0][1][2]. Damage starts at 2 (Rightmost). So we lose Right-to-Left. Default order is correct.
 
         RectTransform healthRect = healthObj.GetComponent<RectTransform>();
-        healthRect.anchorMin = Vector2.one; 
-        healthRect.anchorMax = Vector2.one;
-        healthRect.pivot = Vector2.one;
-        healthRect.anchoredPosition = new Vector2(coinPosition.x, coinPosition.y - 30);
+        healthRect.anchorMin = new Vector2(0, 1); // Top Left
+        healthRect.anchorMax = new Vector2(0, 1);
+        healthRect.pivot = new Vector2(0, 1);
+        healthRect.anchoredPosition = new Vector2(20, -20); // Top Left with padding
         float width = (heartSize.x * 3) + (layout.spacing * 2);
         healthRect.sizeDelta = new Vector2(width, heartSize.y);
 

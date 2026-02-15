@@ -638,7 +638,7 @@ MonoBehaviour:
   fullHeartSprite: {fileID: 1564688358316481467, guid: 6629f81ef3c6cf64c8e0112718a39b29, type: 3}
   halfHeartSprite: {fileID: 332659931, guid: 6629f81ef3c6cf64c8e0112718a39b29, type: 3}
   emptyHeartSprite: {fileID: -1642634638, guid: 6629f81ef3c6cf64c8e0112718a39b29, type: 3}
-  heartSize: {x: 32, y: 32}
+  heartSize: {x: 28, y: 28}
 --- !u!4 &649123536
 Transform:
   m_ObjectHideFlags: 0

@@ -201,4 +201,4 @@ MonoBehaviour:
   enemyDamage: 60
   explosionDelay: 0.5
   explosionTimingNormalized: 0.667
-  explosionFreezeDuration: 0.5
+  explosionFreezeDuration: 0.25

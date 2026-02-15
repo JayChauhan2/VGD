@@ -1,52 +1,52 @@
 fileFormatVersion: 2
-guid: a7933dbed82161544a9e3a85d225fc80
+guid: 391f5300707af6d49b074cee5b8c45a3
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -490370006327018391
-    second: laserframe_0
+      213: -8092295105046505211
+    second: explosion_0
   - first:
-      213: -3410814745792984150
-    second: laserframe_1
+      213: -5243772346084840235
+    second: explosion_1
   - first:
-      213: -7529223609677707435
-    second: laserframe_2
+      213: -4009157606203222040
+    second: explosion_2
   - first:
-      213: -7935887720514828157
-    second: laserframe_3
+      213: 3730887761424324059
+    second: explosion_3
   - first:
-      213: 637537703911905005
-    second: laserframe_4
+      213: -4927540249515241657
+    second: explosion_4
   - first:
-      213: -4682104412832522272
-    second: laserframe_5
+      213: 5684552838703836615
+    second: explosion_5
   - first:
-      213: -5347000306315611561
-    second: laserframe_6
+      213: -1000500801407918923
+    second: explosion_6
   - first:
-      213: -7455819653524845913
-    second: laserframe_7
+      213: -3556220708966662747
+    second: explosion_7
   - first:
-      213: -4533409830576009303
-    second: laserframe_8
+      213: 950242065716622878
+    second: explosion_8
   - first:
-      213: 4603897539116232141
-    second: laserframe_9
+      213: 1871906383385562927
+    second: explosion_9
   - first:
-      213: -3736338746093418121
-    second: laserframe_10
+      213: -5371098934410574880
+    second: explosion_10
   - first:
-      213: -5602352940728485540
-    second: laserframe_11
+      213: -1551774312519300948
+    second: explosion_11
   - first:
-      213: 8005064872070568256
-    second: laserframe_12
+      213: 8761117149865828687
+    second: explosion_12
   - first:
-      213: -1071514712419241626
-    second: laserframe_13
+      213: 2349602722129606322
+    second: explosion_13
   - first:
-      213: -2084669647855888366
-    second: laserframe_14
+      213: 7773491377804077996
+    second: explosion_14
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -93,7 +93,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 32
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -168,13 +168,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: laserframe_0
+      name: explosion_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 136
-        width: 65
-        height: 16
+        x: 32
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -183,20 +183,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 96c3f5cc31bd139f0800000000000000
-      internalID: -490370006327018391
+      spriteID: 509121e0a7462bf80800000000000000
+      internalID: -8092295105046505211
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: laserframe_1
+      name: explosion_1
       rect:
         serializedVersion: 2
-        x: 63
-        y: 136
-        width: 66
-        height: 16
+        x: 64
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -205,20 +205,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: aab485a5f0a5aa0d0800000000000000
-      internalID: -3410814745792984150
+      spriteID: 5dca89c75d06a37b0800000000000000
+      internalID: -5243772346084840235
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: laserframe_2
+      name: explosion_2
       rect:
         serializedVersion: 2
-        x: 127
-        y: 136
-        width: 65
-        height: 16
+        x: 96
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -227,20 +227,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5570daeb403d28790800000000000000
-      internalID: -7529223609677707435
+      spriteID: 8e793b9066c9c58c0800000000000000
+      internalID: -4009157606203222040
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: laserframe_3
+      name: explosion_3
       rect:
         serializedVersion: 2
-        x: 0
-        y: 104
-        width: 65
-        height: 16
+        x: 128
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -249,20 +249,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 38844511a201ed190800000000000000
-      internalID: -7935887720514828157
+      spriteID: bd59c84e6a6c6c330800000000000000
+      internalID: 3730887761424324059
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: laserframe_4
+      name: explosion_4
       rect:
         serializedVersion: 2
-        x: 63
-        y: 104
-        width: 66
-        height: 16
+        x: 160
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -271,20 +271,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: de65694f92df8d800800000000000000
-      internalID: 637537703911905005
+      spriteID: 74f4433104cdd9bb0800000000000000
+      internalID: -4927540249515241657
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: laserframe_5
+      name: explosion_5
       rect:
         serializedVersion: 2
-        x: 127
-        y: 104
-        width: 65
-        height: 16
+        x: 192
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -293,20 +293,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0ef14d7e7d2d50fb0800000000000000
-      internalID: -4682104412832522272
+      spriteID: 7cd61e150b693ee40800000000000000
+      internalID: 5684552838703836615
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: laserframe_6
+      name: explosion_6
       rect:
         serializedVersion: 2
-        x: 0
-        y: 72
-        width: 65
-        height: 16
+        x: 224
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -315,20 +315,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 75237201d83abc5b0800000000000000
-      internalID: -5347000306315611561
+      spriteID: 5bc569e62d18d12f0800000000000000
+      internalID: -1000500801407918923
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: laserframe_7
+      name: explosion_7
       rect:
         serializedVersion: 2
-        x: 63
-        y: 72
-        width: 66
-        height: 16
+        x: 256
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -337,20 +337,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7aa864a178b978890800000000000000
-      internalID: -7455819653524845913
+      spriteID: 5ad772b5b14c5aec0800000000000000
+      internalID: -3556220708966662747
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: laserframe_8
+      name: explosion_8
       rect:
         serializedVersion: 2
-        x: 127
-        y: 72
-        width: 65
-        height: 16
+        x: 288
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -359,20 +359,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 9afc04337c71611c0800000000000000
-      internalID: -4533409830576009303
+      spriteID: e163ca9cf10ff2d00800000000000000
+      internalID: 950242065716622878
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: laserframe_9
+      name: explosion_9
       rect:
         serializedVersion: 2
-        x: 0
-        y: 40
-        width: 65
-        height: 16
+        x: 320
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -381,20 +381,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: dcd61595b6454ef30800000000000000
-      internalID: 4603897539116232141
+      spriteID: f2f8b7a10f85af910800000000000000
+      internalID: 1871906383385562927
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: laserframe_10
+      name: explosion_10
       rect:
         serializedVersion: 2
-        x: 63
-        y: 40
-        width: 66
-        height: 16
+        x: 352
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -403,20 +403,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 779c296d4bbd52cc0800000000000000
-      internalID: -3736338746093418121
+      spriteID: 0e38af8f9f50675b0800000000000000
+      internalID: -5371098934410574880
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: laserframe_11
+      name: explosion_11
       rect:
         serializedVersion: 2
-        x: 127
-        y: 40
-        width: 65
-        height: 16
+        x: 384
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -425,20 +425,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: c597385dea17042b0800000000000000
-      internalID: -5602352940728485540
+      spriteID: ca806b20c7df67ae0800000000000000
+      internalID: -1551774312519300948
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: laserframe_12
+      name: explosion_12
       rect:
         serializedVersion: 2
-        x: 0
-        y: 8
-        width: 65
-        height: 16
+        x: 416
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -447,20 +447,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 04959b7a614b71f60800000000000000
-      internalID: 8005064872070568256
+      spriteID: f41e55121adb59970800000000000000
+      internalID: 8761117149865828687
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: laserframe_13
+      name: explosion_13
       rect:
         serializedVersion: 2
-        x: 63
-        y: 8
-        width: 66
-        height: 16
+        x: 448
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -469,20 +469,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 66175a2db073121f0800000000000000
-      internalID: -1071514712419241626
+      spriteID: 2b673df1a377b9020800000000000000
+      internalID: 2349602722129606322
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: laserframe_14
+      name: explosion_14
       rect:
         serializedVersion: 2
-        x: 127
-        y: 8
-        width: 65
-        height: 16
+        x: 480
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -491,8 +491,140 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 218d2851004c113e0800000000000000
-      internalID: -2084669647855888366
+      spriteID: cabe29ee83df0eb60800000000000000
+      internalID: 7773491377804077996
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: explosion_15
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 71371854781f6a742a6f1553fb55598a
+      internalID: 783680441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: explosion_16
+      rect:
+        serializedVersion: 2
+        x: 544
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f3e5d56ce6553db49a199e8bb9b77a14
+      internalID: 975105611
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: explosion_17
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a584f21a596c3dd4a9799fc9ca717cb4
+      internalID: -569968799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: explosion_18
+      rect:
+        serializedVersion: 2
+        x: 608
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 29f5c7d04eba9c6418077d740e3142c9
+      internalID: -1187473877
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: explosion_19
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b1c95b6dcabc0464196c1aed9cd963d6
+      internalID: -411974457
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: explosion_20
+      rect:
+        serializedVersion: 2
+        x: 672
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2d4539bbe8d42c34c8eff925e676f514
+      internalID: -508903914
       vertices: []
       indices: 
       edges: []
@@ -501,7 +633,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 9ccd2336c16d7ae44bfad19a7911872b
     internalID: 0
     vertices: []
     indices: 
@@ -509,23 +641,31 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":32.0,"y":32.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      laserframe_0: -490370006327018391
-      laserframe_1: -3410814745792984150
-      laserframe_10: -3736338746093418121
-      laserframe_11: -5602352940728485540
-      laserframe_12: 8005064872070568256
-      laserframe_13: -1071514712419241626
-      laserframe_14: -2084669647855888366
-      laserframe_2: -7529223609677707435
-      laserframe_3: -7935887720514828157
-      laserframe_4: 637537703911905005
-      laserframe_5: -4682104412832522272
-      laserframe_6: -5347000306315611561
-      laserframe_7: -7455819653524845913
-      laserframe_8: -4533409830576009303
-      laserframe_9: 4603897539116232141
+      explosion_0: -8092295105046505211
+      explosion_1: -5243772346084840235
+      explosion_10: -5371098934410574880
+      explosion_11: -1551774312519300948
+      explosion_12: 8761117149865828687
+      explosion_13: 2349602722129606322
+      explosion_14: 7773491377804077996
+      explosion_15: 783680441
+      explosion_16: 975105611
+      explosion_17: -569968799
+      explosion_18: -1187473877
+      explosion_19: -411974457
+      explosion_2: -4009157606203222040
+      explosion_20: -508903914
+      explosion_3: 3730887761424324059
+      explosion_4: -4927540249515241657
+      explosion_5: 5684552838703836615
+      explosion_6: -1000500801407918923
+      explosion_7: -3556220708966662747
+      explosion_8: 950242065716622878
+      explosion_9: 1871906383385562927
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

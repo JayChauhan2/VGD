@@ -4,112 +4,184 @@ public class ShielderEnemy : EnemyAI
 {
     [Header("Shielder Settings")]
     public float shieldArc = 180f; // Degrees of protection in front
+    public float maxShieldHealth = 100f; // Increased for continuous laser damage (approx 3-4 sec survival)
+    [SerializeField] private float damageFlashCooldown = 0.1f;
     
-    private SpriteRenderer shieldIndicator;
+    [Header("Visual References")]
+    [SerializeField] private Animator shieldAnimator;
+    
+    // Shield States
+    private enum ShieldState { Shielded, Vulnerable, Broken }
+    private ShieldState currentState = ShieldState.Shielded;
+    private float currentShieldHealth;
+    private float lastFlashTime;
+    
+    private Vector3 initialScale;
 
     protected override void OnEnemyStart()
     {
-        maxHealth = 110f;
-        currentHealth = maxHealth;
-        // speed = 2.5f; // Removed to allow Inspector value
+        // REMOVED: maxHealth = 110f; // This prevented Inspector changes
+        // REMOVED: currentHealth = maxHealth; // (Handled by base Start)
         
-        CreateShieldVisual();
+        currentShieldHealth = maxShieldHealth;
+        
+        // Capture initial scale just in case we need it, but we won't flip it anymore
+        initialScale = transform.localScale;
+        
+        // Ensure we find the components if user forgets to link
+        if (shieldAnimator == null)
+            shieldAnimator = GetComponentInChildren<Animator>();
+            
+        UpdateVisuals();
         
         Debug.Log("ShielderEnemy: Initialized");
     }
 
-    void CreateShieldVisual()
-    {
-        // Create a child object for shield visual
-        GameObject shieldObj = new GameObject("ShieldIndicator");
-        shieldObj.transform.SetParent(transform);
-        shieldObj.transform.localPosition = new Vector3(0.6f, 0, 0); // In front of enemy
-        shieldObj.transform.localScale = Vector3.one * 0.8f;
-        
-        // Add sprite renderer
-        shieldIndicator = shieldObj.AddComponent<SpriteRenderer>();
-        shieldIndicator.sprite = CreateShieldSprite();
-        shieldIndicator.color = new Color(0.5f, 0.5f, 1f, 0.7f); // Semi-transparent blue
-        shieldIndicator.sortingOrder = 1;
-    }
-
-    Sprite CreateShieldSprite()
-    {
-        // Create a simple rectangle for shield
-        int width = 16;
-        int height = 32;
-        Texture2D texture = new Texture2D(width, height);
-        Color[] pixels = new Color[width * height];
-        
-        for (int i = 0; i < pixels.Length; i++)
-        {
-            pixels[i] = Color.white;
-        }
-        
-        texture.SetPixels(pixels);
-        texture.Apply();
-        
-        return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f));
-    }
-
-    [Header("Rotation Settings")]
-    public float rotationSpeed = 200f; // Degrees per second
-
     protected override void OnEnemyUpdate()
     {
-        if (target == null) return;
+        RotateShieldToPlayer();
+    }
+
+    void UpdateVisuals()
+    {
+        if (shieldAnimator != null)
+        {
+            // If Broken, disable shield GameObject entirely
+            if (currentState == ShieldState.Broken)
+            {
+                shieldAnimator.gameObject.SetActive(false);
+                return;
+            }
+
+            shieldAnimator.SetBool("IsVulnerable", currentState == ShieldState.Vulnerable);
+        }
+    }
+
+    void RotateShieldToPlayer()
+    {
+        if (target == null)
+        {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null) target = player.transform;
+            else return;
+        }
         
-        // Calculate target angle
+        // 1. Handle Shield Rotation (Aiming)
         Vector2 direction = (target.position - transform.position).normalized;
         float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         
-        // Smoothly rotate towards target angle
-        float currentAngle = transform.rotation.eulerAngles.z;
-        float newAngle = Mathf.MoveTowardsAngle(currentAngle, targetAngle, rotationSpeed * Time.deltaTime);
+        // The Shield should rotate to face the player fully
+        if (shieldAnimator != null && shieldAnimator.gameObject.activeSelf)
+        {
+             // We set global rotation. 
+             // Aligning shield rotation with target angle (0 degree offset).
+             shieldAnimator.transform.rotation = Quaternion.Euler(0, 0, targetAngle);
+        }
         
-        transform.rotation = Quaternion.Euler(0, 0, newAngle);
+        // 2. Handle Body Facing (Discrete Left/Right) using SpriteRenderer.
+        // We do NOT modify transform.localScale to avoid messing up the Shield child relative rotation.
+        // Sprite is Left-Facing by default.
+        
+        if (spriteRenderer != null)
+        {
+            if (target.position.x < transform.position.x - 0.1f)
+            {
+                // Target is Left. Sprite is Left. No flip needed.
+                spriteRenderer.flipX = false;
+            }
+            else if (target.position.x > transform.position.x + 0.1f)
+            {
+                // Target is Right. Sprite is Left. Flip needed.
+                spriteRenderer.flipX = true;
+            }
+        }
+    }
+
+    // Override UpdateAnimation to prevent EnemyAI from overriding our Facing logic
+    protected override void UpdateAnimation(Vector2 velocity)
+    {
+        if (animator != null)
+        {
+            animator.SetFloat("Speed", velocity.magnitude);
+        }
+
+        if (spriteRenderer != null)
+        {
+             // Dynamic Depth Sorting (Keep this)
+             spriteRenderer.sortingOrder = Mathf.RoundToInt(transform.position.y * -100);
+             
+             // WE DO NOT FLIP HERE based on velocity. Facing is handled in RotateShieldToPlayer based on Target position.
+        }
     }
 
     public override void TakeDamage(float damage)
     {
+        // 1. If Shield Broken, take full body damage
+        if (currentState == ShieldState.Broken)
+        {
+            base.TakeDamage(damage);
+            return;
+        }
+
+        // 2. If Vulnerable, next hit breaks the shield
+        if (currentState == ShieldState.Vulnerable)
+        {
+             Debug.Log("ShielderEnemy: Shield Hit while Vulnerable! BREAKING SHIELD.");
+             currentState = ShieldState.Broken;
+             UpdateVisuals();
+             return;
+        }
+
+        // 3. If Shielded, check angle
         if (target == null)
         {
             base.TakeDamage(damage);
             return;
         }
         
-        // Calculate if damage is coming from the front (shielded side)
+        // Check angle (Optional, implemented for completeness)
         Vector2 directionToPlayer = (target.position - transform.position).normalized;
-        Vector2 forward = transform.right; // In 2D, right is forward when rotated
+        Vector2 shieldForward = Vector2.right; // Logic handled by rotation + 180 fix if needed, but here simple checking
+        if (shieldAnimator != null) shieldForward = shieldAnimator.transform.right;
+
+        float dotProduct = Vector2.Dot(shieldForward, directionToPlayer);
+        // dot > 0 means frontal roughly, but let's assume if it tracks player, it blocks.
         
-        float dotProduct = Vector2.Dot(forward, directionToPlayer);
-        float angleToPlayer = Mathf.Acos(dotProduct) * Mathf.Rad2Deg;
+        // Accumulate Damage
+        currentShieldHealth -= damage;
+        // Debug.Log($"ShielderEnemy: Shield HP: {currentShieldHealth}");
         
-        // If attack is from the front (within shield arc), block it
-        if (angleToPlayer < shieldArc / 2f)
+        // Visual Feedback: Flash Vulnerable sprite briefly (with cooldown)
+        if (Time.time > lastFlashTime + damageFlashCooldown)
         {
-            Debug.Log("ShielderEnemy: Blocked damage with shield!");
-            
-            // Visual feedback - flash shield
-            if (shieldIndicator != null)
+            if (shieldAnimator != null)
             {
-                shieldIndicator.color = Color.white;
-                Invoke(nameof(ResetShieldColor), 0.1f);
+                StartCoroutine(FlashVulnerableState());
+                lastFlashTime = Time.time;
             }
-            
-            return; // Damage blocked
         }
-        
-        // Damage from side or back - take full damage
-        Debug.Log("ShielderEnemy: Hit from side/back!");
-        base.TakeDamage(damage);
+
+        if (currentShieldHealth <= 0)
+        {
+            Debug.Log("ShielderEnemy: Shield health depleted! Becoming Vulnerable.");
+            currentState = ShieldState.Vulnerable;
+            UpdateVisuals();
+        }
+    }
+    
+    private System.Collections.IEnumerator FlashVulnerableState()
+    {
+        if (shieldAnimator != null)
+        {
+            shieldAnimator.SetBool("IsVulnerable", true);
+            yield return new WaitForSeconds(0.05f); // Very short flash
+            if (currentState == ShieldState.Shielded) // Only revert if still shielded
+                shieldAnimator.SetBool("IsVulnerable", false);
+        }
     }
 
     void ResetShieldColor()
     {
-        if (shieldIndicator != null)
-        {
-            shieldIndicator.color = new Color(0.5f, 0.5f, 1f, 0.7f);
-        }
+        // Deprecated by Animator flash
     }
 }

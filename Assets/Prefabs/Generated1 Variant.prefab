@@ -7384,13 +7384,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2de122f030cc2b45bba981170cf3ef9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyPrefabs:
-  - {fileID: 7028453128543359274, guid: 62d2575ace768b747af5cb58f2bcbc94, type: 3}
-  spawnInterval: 1
+  enemyPrefabs: []
+  spawnInterval: 3
   minSpawnInterval: 1
   maxActiveEnemies: 5
   spawnRadius: 2
-  enemiesPerSpawn: 1
+  enemiesPerSpawn: 3
 --- !u!1001 &872661908896325867
 PrefabInstance:
   m_ObjectHideFlags: 0

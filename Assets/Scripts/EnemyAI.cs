@@ -464,30 +464,23 @@ public class EnemyAI : MonoBehaviour
         int coinCount = 0;
 
         // Loot Table
-        // 3 Coins: 2% Chance (Roll < 0.02)
-        // 2 Coins: 5% Chance (Roll < 0.07)
-        // 1 Coin: 20% Chance (Roll < 0.27)
-        // Nothing: ~73% Chance (Roll >= 0.27)
+        // 3 Coins: 5% Chance (Roll < 0.05) - "Half of 2 coins chance"
+        // 2 Coins: 10% Chance (Roll < 0.15) - "Half of 1 coin chance"
+        // 1 Coin: 20% Chance (Roll < 0.35) - "1/5 chance"
+        // Nothing: 65% Chance (Roll >= 0.35)
 
-        if (roll < 0.02f) coinCount = 3;
-        else if (roll < 0.07f) coinCount = 2;
-        else if (roll < 0.27f) coinCount = 1;
+        if (roll < 0.05f) coinCount = 3;
+        else if (roll < 0.15f) coinCount = 2; // 0.05 + 0.10
+        else if (roll < 0.35f) coinCount = 1; // 0.15 + 0.20
         
-        // TEMP: Force 3 coins for testing Mimic spawns
-        coinCount = 3;
+        // Removed TEMP 100% drop code
 
-        // 1/5 chance to drop a Mimic instead of a coin (if coinCount > 0)
-        // Note: The prompt asked for "each coin has a 1/5 chance", 
-        // but spawning multiple mimics from one enemy might be too chaotic.
-        // Let's implement: If we are dropping coins, replace ONE with a mimic if chance hits.
-        // Or should we evaluate per coin? "Each coin has a 1/5 chance" implies per coin.
-        
         for(int i=0; i<coinCount; i++)
         {
             float mimicRoll = Random.value;
             GameObject prefabToSpawn = coinPrefab;
             
-            // 20% Chance to be a Mimic, IF functionality is available and valid
+            // Each coin has a 1/5 (20%) chance to be a Mimic
             if (mimicRoll < 0.2f && RoomManager.Instance != null && RoomManager.Instance.mimicPrefab != null)
             {
                 prefabToSpawn = RoomManager.Instance.mimicPrefab;

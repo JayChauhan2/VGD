@@ -60,6 +60,15 @@ public class EnemyProjectile : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
+        // Damage other enemies (Friendly Fire)
+        EnemyAI enemy = collision.GetComponent<EnemyAI>();
+        if (enemy != null)
+        {
+            enemy.TakeDamage(damage);
+            Destroy(gameObject); // Destroy bullet on impact
+            return;
+        }
         
         // Destroy on walls (Obstacle Layer)
         if (collision.gameObject.layer == LayerMask.NameToLayer("Obstacle"))

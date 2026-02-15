@@ -195,7 +195,10 @@ MonoBehaviour:
   coinPrefab: {fileID: 0}
   maxHealth: 100
   damageCooldown: 1
+  touchDamageRange: 0.8
   explosionRadius: 3
   playerDamage: 30
   enemyDamage: 60
   explosionDelay: 0.5
+  explosionTimingNormalized: 0.667
+  explosionFreezeDuration: 0.5

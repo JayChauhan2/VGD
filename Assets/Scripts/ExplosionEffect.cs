@@ -9,6 +9,7 @@ public class ExplosionEffect : MonoBehaviour
     public float enemyDamage = 50f;
     public float visualDuration = 0.5f;
     public bool ignoreBombers = false; // New flag
+    public GameObject sourceToIgnore; // Entity to NOT damage (e.g. the bomber that exploded)
     
     private LineRenderer circleRenderer;
     private float spawnTime;
@@ -80,6 +81,8 @@ public class ExplosionEffect : MonoBehaviour
             if (hitCollider.CompareTag("Player"))
             {
                 if (processedEntities.Contains(hitCollider.gameObject)) continue;
+                if (sourceToIgnore != null && hitCollider.gameObject == sourceToIgnore) continue;
+
                 processedEntities.Add(hitCollider.gameObject);
 
                 PlayerHealth playerHealth = hitCollider.GetComponent<PlayerHealth>();
@@ -96,6 +99,8 @@ public class ExplosionEffect : MonoBehaviour
             if (enemy != null)
             {
                 if (processedEntities.Contains(enemy.gameObject)) continue;
+                if (sourceToIgnore != null && enemy.gameObject == sourceToIgnore) continue;
+
                 processedEntities.Add(enemy.gameObject);
 
                 // Skip if this is a Bomber and we should ignore them
@@ -104,7 +109,14 @@ public class ExplosionEffect : MonoBehaviour
                     continue;
                 }
                 
-                enemy.TakeDamage(enemyDamage);
+                // Reduce damage for Bombers to prevent chain reaction wipes
+                float finalDamage = enemyDamage;
+                if (enemy is BomberEnemy)
+                {
+                    finalDamage *= 0.5f; 
+                }
+
+                enemy.TakeDamage(finalDamage);
             }
         }
         
@@ -112,7 +124,7 @@ public class ExplosionEffect : MonoBehaviour
     }
 
     // Static helper method to create explosion
-    public static void CreateExplosion(Vector3 position, float radius = 3f, float playerDmg = 25f, float enemyDmg = 50f, bool ignoreBombers = false)
+    public static void CreateExplosion(Vector3 position, float radius = 3f, float playerDmg = 25f, float enemyDmg = 50f, bool ignoreBombers = false, GameObject source = null)
     {
         GameObject explosionObj = new GameObject("Explosion");
         explosionObj.transform.position = position;
@@ -122,5 +134,6 @@ public class ExplosionEffect : MonoBehaviour
         explosion.playerDamage = playerDmg;
         explosion.enemyDamage = enemyDmg;
         explosion.ignoreBombers = ignoreBombers;
+        explosion.sourceToIgnore = source;
     }
 }

@@ -64,6 +64,10 @@ public class SpitterEnemy : EnemyAI
                 isAiming = false;
                 speed = baseSpeed; // Restore speed
                 shootTimer = shootInterval;
+                
+                // Re-enable collisions with other enemies
+                ToggleEnemyCollisions(false);
+                
                 Debug.Log("SpitterEnemy: Fired and Returning to Moving State");
             }
         }
@@ -190,6 +194,9 @@ public class SpitterEnemy : EnemyAI
         
         speed = 0f; // Stop moving
         
+        // Disable collisions with other enemies so we don't get pushed
+        ToggleEnemyCollisions(true);
+        
         // Trigger Animation
         if (animator != null)
         {
@@ -197,6 +204,31 @@ public class SpitterEnemy : EnemyAI
         }
         
         Debug.Log("SpitterEnemy: Stopping to aim...");
+    }
+    
+    // Helper to ignore/restore collisions with other enemies
+    void ToggleEnemyCollisions(bool ignore)
+    {
+        Collider2D myCollider = GetComponent<Collider2D>();
+        if (myCollider == null) return;
+        
+        // Find all other enemies
+        EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
+        
+        foreach (EnemyAI enemy in enemies)
+        {
+            if (enemy == this) continue; // Skip self
+            
+            Collider2D[] enemyColliders = enemy.GetComponentsInChildren<Collider2D>();
+            foreach (Collider2D enemyCol in enemyColliders)
+            {
+                if (enemyCol != null && enemyCol.enabled)
+                {
+                    Physics2D.IgnoreCollision(myCollider, enemyCol, ignore);
+                }
+            }
+        }
+        // Debug.Log($"SpitterEnemy: ToggleEnemyCollisions({ignore})");
     }
 
     void ShootProjectile()

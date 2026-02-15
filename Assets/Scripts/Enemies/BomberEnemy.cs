@@ -6,10 +6,15 @@ public class BomberEnemy : EnemyAI
     [Header("Bomber Settings")]
     public float explosionRadius = 3f;
     public float playerDamage = 30f;
-    public float enemyDamage = 60f;
+    public float enemyDamage = 30f;
     public float explosionDelay = 0.5f; // Time to wait for animation before exploding
+    [Range(0.1f, 1.0f)]
+    public float explosionTimingNormalized = 0.7f; // When in the animation to explode (0.0 to 1.0)
+    public float explosionFreezeDuration = 0.5f; // How long to freeze animation at explosion point
     
     private bool isExploding = false;
+    private bool isFrozen = false; // Flag to pause visual effects
+    private float explosionDuration = 0f;
 
     protected override void OnEnemyStart()
     {
@@ -18,6 +23,19 @@ public class BomberEnemy : EnemyAI
         // speed = 3.5f; // Removed hardcoded speed to allow Inspector control
         
         Debug.Log("BomberEnemy: Initialized - will explode on death!");
+        
+        // Cache animation length
+        if (animator != null)
+        {
+            foreach(AnimationClip clip in animator.runtimeAnimatorController.animationClips)
+            {
+                if (clip.name.Contains("Explode"))
+                {
+                    explosionDuration = clip.length;
+                    break;
+                }
+            }
+        }
     }
 
     protected override void OnEnemyDeath()
@@ -45,40 +63,41 @@ public class BomberEnemy : EnemyAI
         float waitTime = explosionDelay; // Default fallback
 
         // Trigger Animation
+        // Use cached duration for reliability
+        if (explosionDuration > 0)
+        {
+            waitTime = explosionDuration;
+        }
+
         if (animator != null)
         {
             animator.SetTrigger("Explode");
-            
-            // Wait a frame for the Animator to process the trigger and start transition
-            yield return null; 
-            
-            // Get the duration of the new state
-            AnimatorStateInfo info = animator.GetCurrentAnimatorStateInfo(0);
-            if (animator.IsInTransition(0))
-            {
-                info = animator.GetNextAnimatorStateInfo(0);
-            }
-            
-            if (info.length > 0)
-            {
-                waitTime = info.length;
-            }
         }
         
         Debug.Log($"BomberEnemy: specific sequence started. Exploding in {waitTime}s (Animation Sync)...");
         
-        // Wait for first half of animation
-        float halfDuration = waitTime * 0.5f;
-        yield return new WaitForSeconds(halfDuration);
+        // Wait based on normalized timing variable
+        float explosionWait = waitTime * explosionTimingNormalized;
+        yield return new WaitForSeconds(explosionWait);
         
         // --- Visual Effects Trigger ---
         StartCoroutine(PlayVisualEffects(0.3f)); // Duration for effects
 
-        // BOOM (Damage happens here now, halfway through animation)
+        // BOOM (Damage happens here now)
         Explode();
+        
+        // --- Hit Stop / Freeze Frame Effect ---
+        if (explosionFreezeDuration > 0f)
+        {
+            if (animator != null) animator.speed = 0f;
+            isFrozen = true; // Pause visual effects
+            yield return new WaitForSeconds(explosionFreezeDuration);
+            isFrozen = false; // Resume visual effects
+            if (animator != null) animator.speed = 1f;
+        }
 
         // Wait for remainder of animation (so visual can finish playing)
-        yield return new WaitForSeconds(waitTime - halfDuration);
+        yield return new WaitForSeconds(waitTime - explosionWait);
         
         DropLoot();
         if (parentRoom != null) parentRoom.EnemyDefeated(this);
@@ -109,6 +128,13 @@ public class BomberEnemy : EnemyAI
 
         while (elapsed < duration)
         {
+            // Pause while frozen
+            if (isFrozen)
+            {
+                yield return null;
+                continue;
+            }
+
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
             
@@ -168,7 +194,8 @@ public class BomberEnemy : EnemyAI
         
         // Create explosion effect that IGNORES other bombers to prevent chain reactions
         // UPDATE: User requested to damage other entities, so we enable friendly fire for chain reactions!
-        ExplosionEffect.CreateExplosion(transform.position, explosionRadius, playerDamage, enemyDamage, false);
+        // We pass 'gameObject' as the source to ignore so we don't kill OURSELVES instantly.
+        ExplosionEffect.CreateExplosion(transform.position, explosionRadius, playerDamage, enemyDamage, false, gameObject);
     }
     
     // ... OnEnemyUpdate logic remains ...

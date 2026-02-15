@@ -4,7 +4,7 @@ using System.Collections;
 public class BomberEnemy : EnemyAI
 {
     [Header("Bomber Settings")]
-    public float explosionRadius = 3f;
+    public float explosionRadius = 1.3f; // Reduced from 3f to match visual (approx 1.28f)
     public float playerDamage = 30f;
     public float enemyDamage = 30f;
     public float explosionDelay = 0.5f; // Time to wait for animation before exploding
@@ -49,13 +49,19 @@ public class BomberEnemy : EnemyAI
     }
 
     // Removed Die() override: We want default behavior (Destroy on death)
-    // Removed TakeDamage() override: We want to take damage even while exploding so player can kill us to stop it.
+    
+    public override void TakeDamage(float damage)
+    {
+        if (isExploding) return; // Invincible during explosion animation
+        base.TakeDamage(damage);
+    }
 
     private IEnumerator ExplodeSequence()
     {
         isExploding = true;
+        SetActive(false); // Disable AI (Movement, Touch Damage, etc.) completely
         
-        // Stop movement
+        // Stop movement (Redundant but safe)
         speed = 0f;
         if (rb != null) rb.linearVelocity = Vector2.zero;
         if (pathfinding != null) pathfinding = null; // Stop path updates
@@ -68,13 +74,17 @@ public class BomberEnemy : EnemyAI
         {
             waitTime = explosionDuration;
         }
+        else
+        {
+             Debug.LogWarning("BomberEnemy: 'Explode' animation clip not found! Using default delay: " + explosionDelay);
+        }
 
         if (animator != null)
         {
             animator.SetTrigger("Explode");
         }
         
-        Debug.Log($"BomberEnemy: specific sequence started. Exploding in {waitTime}s (Animation Sync)...");
+        Debug.Log($"BomberEnemy Sequence: Duration={waitTime}s, Normalized={explosionTimingNormalized}, ExplosionTime={waitTime * explosionTimingNormalized}s");
         
         // Calculate timing: Start visual effect BEFORE explosion so it peaks AT explosion
         float visualDuration = 0.3f;
@@ -132,7 +142,13 @@ public class BomberEnemy : EnemyAI
         sr.sortingOrder = 10;
         shockwave.transform.localScale = Vector3.one * 0.5f;
         
-        float maxShockwaveScale = 4.0f; // Similar to FlashBomb
+        shockwave.transform.localScale = Vector3.one * 0.5f;
+        
+        // Calculate scale to match explosion radius
+        // Sprite is 64x64. At 100 PPU, world size is 0.64.
+        // We want world size = explosionRadius * 2 (diameter).
+        // scale * 0.64 = explosionRadius * 2  =>  scale = (explosionRadius * 2) / 0.64
+        float maxShockwaveScale = (explosionRadius * 2f) / 0.64f; 
         
         // Safety: Ensure shockwave is destroyed even if this coroutine stops (e.g. enemy dies)
         Destroy(shockwave, duration + 0.1f);

@@ -76,12 +76,23 @@ public class BomberEnemy : EnemyAI
         
         Debug.Log($"BomberEnemy: specific sequence started. Exploding in {waitTime}s (Animation Sync)...");
         
-        // Wait based on normalized timing variable
+        // Calculate timing: Start visual effect BEFORE explosion so it peaks AT explosion
+        float visualDuration = 0.3f;
         float explosionWait = waitTime * explosionTimingNormalized;
-        yield return new WaitForSeconds(explosionWait);
+        float timeToExplosion = explosionWait;
+        
+        // Start effect early (halfway through its duration so peak hits at explosion time)
+        // Ensure we don't try to wait negative time
+        float timeToStartVisuals = Mathf.Max(0f, timeToExplosion - (visualDuration * 0.5f));
+        
+        // Wait until visual start
+        yield return new WaitForSeconds(timeToStartVisuals);
         
         // --- Visual Effects Trigger ---
-        StartCoroutine(PlayVisualEffects(0.3f)); // Duration for effects
+        StartCoroutine(PlayVisualEffects(visualDuration)); 
+
+        // Wait remaining time until actual explosion
+        yield return new WaitForSeconds(timeToExplosion - timeToStartVisuals);
 
         // BOOM (Damage happens here now)
         Explode();

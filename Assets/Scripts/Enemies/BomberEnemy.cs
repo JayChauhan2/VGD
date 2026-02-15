@@ -63,7 +63,11 @@ public class BomberEnemy : EnemyAI
         
         // Stop movement (Redundant but safe)
         speed = 0f;
-        if (rb != null) rb.linearVelocity = Vector2.zero;
+        if (rb != null) 
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.bodyType = RigidbodyType2D.Kinematic; // Make immovable
+        }
         if (pathfinding != null) pathfinding = null; // Stop path updates
         
         float waitTime = explosionDelay; // Default fallback

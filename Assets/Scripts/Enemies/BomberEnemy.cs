@@ -64,14 +64,12 @@ public class BomberEnemy : EnemyAI
             yield return null; 
             
             // Get the duration of the new state
-            // If transitioning, we want the next state's length. If not (instant), current state.
             AnimatorStateInfo info = animator.GetCurrentAnimatorStateInfo(0);
             if (animator.IsInTransition(0))
             {
                 info = animator.GetNextAnimatorStateInfo(0);
             }
             
-            // Use animation length if valid, otherwise stick to default
             if (info.length > 0)
             {
                 waitTime = info.length;
@@ -80,8 +78,15 @@ public class BomberEnemy : EnemyAI
         
         Debug.Log($"BomberEnemy: specific sequence started. Exploding in {waitTime}s (Animation Sync)...");
         
-        // Wait for animation
-        yield return new WaitForSeconds(waitTime);
+        // Wait for first half of animation
+        float halfDuration = waitTime * 0.5f;
+        yield return new WaitForSeconds(halfDuration);
+        
+        // --- Visual Effects Trigger ---
+        StartCoroutine(PlayVisualEffects(0.3f)); // Duration for effects
+
+        // Wait for remainder
+        yield return new WaitForSeconds(waitTime - halfDuration);
         
         // BOOM
         Explode();
@@ -89,6 +94,80 @@ public class BomberEnemy : EnemyAI
         DropLoot();
         if (parentRoom != null) parentRoom.EnemyDefeated(this);
         Destroy(gameObject);
+    }
+    
+    private IEnumerator PlayVisualEffects(float duration)
+    {
+        // 1. Swell Effect (Scale Up and Down)
+        Vector3 originalScale = transform.localScale;
+        Vector3 targetScale = originalScale * 1.5f;
+        float elapsed = 0f;
+        
+        // 2. White Shockwave Circle
+        GameObject shockwave = new GameObject("Shockwave");
+        shockwave.transform.position = transform.position;
+        SpriteRenderer sr = shockwave.AddComponent<SpriteRenderer>();
+        sr.sprite = CreateCircleSprite();
+        sr.color = new Color(1f, 1f, 1f, 0.8f);
+        sr.sortingLayerName = "Object";
+        sr.sortingOrder = 10;
+        shockwave.transform.localScale = Vector3.one * 0.5f;
+        
+        float maxShockwaveScale = 4.0f; // Similar to FlashBomb
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            
+            // Swell: Up then Down (Sin curve 0->1->0)
+            // sin(0) = 0, sin(pi) = 0. We want 0 to PI.
+            float swell = Mathf.Sin(t * Mathf.PI); 
+            transform.localScale = Vector3.Lerp(originalScale, targetScale, swell);
+            
+            // Shockwave: Expand and Fade
+            float waveScale = Mathf.Lerp(0.5f, maxShockwaveScale, t);
+            shockwave.transform.localScale = Vector3.one * waveScale;
+            
+            float alpha = Mathf.Lerp(0.8f, 0f, t);
+            sr.color = new Color(1f, 1f, 1f, alpha);
+            
+            yield return null;
+        }
+        
+        transform.localScale = originalScale;
+        Destroy(shockwave);
+    }
+    
+    private Sprite CreateCircleSprite()
+    {
+        int size = 64;
+        Texture2D tex = new Texture2D(size, size);
+        Color[] colors = new Color[size * size];
+        Vector2 center = new Vector2(size / 2f, size / 2f);
+        float radius = size / 2f;
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float dist = Vector2.Distance(new Vector2(x, y), center);
+                if (dist <= radius)
+                {
+                    // Soft gradient from center
+                    float alpha = 1f - (dist / radius);
+                    colors[y * size + x] = new Color(1f, 1f, 1f, alpha);
+                }
+                else
+                {
+                    colors[y * size + x] = Color.clear;
+                }
+            }
+        }
+        
+        tex.SetPixels(colors);
+        tex.Apply();
+        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
     }
 
     void Explode()
@@ -98,7 +177,8 @@ public class BomberEnemy : EnemyAI
         // Create explosion effect
         ExplosionEffect.CreateExplosion(transform.position, explosionRadius, playerDamage, enemyDamage);
     }
-
+    
+    // ... OnEnemyUpdate logic remains ...
     protected override void OnEnemyUpdate()
     {
         if (isExploding) return;

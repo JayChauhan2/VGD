@@ -18,11 +18,24 @@ public class MimicEnemy : EnemyAI
         
         spriteRenderer = GetComponent<SpriteRenderer>();
         healthBar = GetComponent<EnemyHealthBar>();
+        rb = GetComponent<Rigidbody2D>(); // Ensure RB reference is cached
         
         // Hide health bar initially
         if (healthBar != null)
         {
             healthBar.SetVisibility(false);
+        }
+        
+        // Make Mimic immovable and pass-through while disguised
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.linearVelocity = Vector2.zero;
+        }
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null)
+        {
+            col.isTrigger = true;
         }
         
         // Setup initial disguise from coin prefab
@@ -87,12 +100,23 @@ public class MimicEnemy : EnemyAI
             spriteRenderer.color = Color.white; // Reset color tint
         }
         
+        // Re-enable physics (Dynamic + Solid)
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+        }
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null)
+        {
+            col.isTrigger = false;
+        }
+        
         // Show health bar
         if (healthBar != null)
         {
             healthBar.SetVisibility(true);
         }
-
+        
         // Animate Scale: 0.3 -> 0.5
         StartCoroutine(AnimateScale(new Vector3(0.5f, 0.5f, 0.5f), 0.5f));
         

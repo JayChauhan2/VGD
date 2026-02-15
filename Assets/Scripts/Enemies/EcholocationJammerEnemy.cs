@@ -13,7 +13,7 @@ public class EcholocationJammerEnemy : EnemyAI
     {
         maxHealth = 90f;
         currentHealth = maxHealth;
-        speed = 3f;
+        // speed = 3f; // Removed to allow Inspector value
         
         CreateJammerVisual();
         RegisterWithEcholocation();

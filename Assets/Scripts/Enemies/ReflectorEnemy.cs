@@ -18,7 +18,7 @@ public class ReflectorEnemy : EnemyAI
     {
         maxHealth = 135f;
         currentHealth = maxHealth;
-        speed = 2.5f;
+        // speed = 2.5f; // Removed to allow Inspector value
         
         spriteRenderer = GetComponent<SpriteRenderer>();
         stateTimer = shieldedDuration;

@@ -15,7 +15,7 @@ public class ShadowStalkerEnemy : EnemyAI
     {
         maxHealth = 80f;
         currentHealth = maxHealth;
-        speed = 5.5f;
+        // speed = 5.5f; // Removed to allow Inspector value
         
         spriteRenderer = GetComponent<SpriteRenderer>();
         

@@ -15,7 +15,7 @@ public class PuppeteerEnemy : EnemyAI
     {
         maxHealth = 165f;
         currentHealth = maxHealth;
-        speed = 2f;
+        // speed = 2f; // Removed to allow Inspector value
         
         // Spawn puppets
         SpawnPuppets();

@@ -21,7 +21,7 @@ public class OrbiterEnemy : EnemyAI
     {
         maxHealth = 45f;
         currentHealth = maxHealth;
-        speed = 5f;
+        // speed = 5f; // Removed to allow Inspector value
         
         // Random starting angle
         orbitAngle = Random.Range(0f, 360f);

@@ -17,7 +17,7 @@ public class PhaseWalkerEnemy : EnemyAI
     {
         maxHealth = 115f;
         currentHealth = maxHealth;
-        speed = 5.5f;
+        // speed = 5.5f; // Removed to allow Inspector value
         
         spriteRenderer = GetComponent<SpriteRenderer>();
         enemyCollider = GetComponent<Collider2D>();

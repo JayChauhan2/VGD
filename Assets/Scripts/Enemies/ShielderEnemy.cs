@@ -11,7 +11,7 @@ public class ShielderEnemy : EnemyAI
     {
         maxHealth = 110f;
         currentHealth = maxHealth;
-        speed = 2.5f;
+        // speed = 2.5f; // Removed to allow Inspector value
         
         CreateShieldVisual();
         

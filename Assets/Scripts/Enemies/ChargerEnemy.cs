@@ -20,7 +20,7 @@ public class ChargerEnemy : EnemyAI
     {
         maxHealth = 70f;
         currentHealth = maxHealth;
-        speed = 3f; // Slow when not charging
+        // speed = 3f; // Removed to allow Inspector value
         normalSpeed = Vector3.one * speed;
         
         Debug.Log("ChargerEnemy: Initialized");

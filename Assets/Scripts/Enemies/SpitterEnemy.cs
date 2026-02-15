@@ -21,6 +21,17 @@ public class SpitterEnemy : EnemyAI
     private float aimTimer;
     private float baseSpeed; // Store the movement speed
 
+    protected override void OnEnemyStart()
+    {
+        maxHealth = 40f; // Default if not set
+        currentHealth = maxHealth;
+        
+        // Capture the speed set in Inspector
+        baseSpeed = speed;
+        
+        Debug.Log($"SpitterEnemy: Initialized with speed {speed}");
+    }
+
     protected override void OnEnemyUpdate()
     {
         if (target == null) return;
@@ -75,7 +86,7 @@ public class SpitterEnemy : EnemyAI
             else
             {
                // Move if too far OR if we can't see the player (need to reposition)
-               speed = baseSpeed > 0 ? baseSpeed : 2.5f; // Fallback to 2.5f (slower) if baseSpeed is lost
+               speed = baseSpeed; 
             }
 
             // Check if ready to aim/shoot
@@ -172,6 +183,9 @@ public class SpitterEnemy : EnemyAI
         aimTimer = aimDuration;
         
         // Capture current speed if it's valid, otherwise keep existing baseSpeed
+        // baseSpeed is now set in OnEnemyStart, so we don't need to capture it here every time 
+        // unless we want to support dynamic speed changes (e.g. slows) persisting. 
+        // For now, let's trust OnEnemyStart or previous state.
         if (speed > 0.1f) baseSpeed = speed;
         
         speed = 0f; // Stop moving

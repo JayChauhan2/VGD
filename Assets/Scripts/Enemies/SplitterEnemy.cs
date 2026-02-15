@@ -11,7 +11,7 @@ public class SplitterEnemy : EnemyAI
     {
         maxHealth = 90f;
         currentHealth = maxHealth;
-        speed = 3f;
+        // speed = 3f; // Removed to allow Inspector value
         
         Debug.Log("SplitterEnemy: Initialized");
     }

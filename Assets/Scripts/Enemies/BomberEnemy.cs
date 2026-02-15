@@ -167,7 +167,8 @@ public class BomberEnemy : EnemyAI
         Debug.Log("BomberEnemy: EXPLODING!");
         
         // Create explosion effect that IGNORES other bombers to prevent chain reactions
-        ExplosionEffect.CreateExplosion(transform.position, explosionRadius, playerDamage, enemyDamage, true);
+        // UPDATE: User requested to damage other entities, so we enable friendly fire for chain reactions!
+        ExplosionEffect.CreateExplosion(transform.position, explosionRadius, playerDamage, enemyDamage, false);
     }
     
     // ... OnEnemyUpdate logic remains ...

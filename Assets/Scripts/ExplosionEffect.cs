@@ -71,11 +71,17 @@ public class ExplosionEffect : MonoBehaviour
         // Find all colliders in explosion radius
         Collider2D[] hitColliders = Physics2D.OverlapCircleAll(transform.position, explosionRadius);
         
+        // Track unique entities to prevent double damage from multiple colliders on same object
+        HashSet<GameObject> processedEntities = new HashSet<GameObject>();
+        
         foreach (Collider2D hitCollider in hitColliders)
         {
             // Damage player
             if (hitCollider.CompareTag("Player"))
             {
+                if (processedEntities.Contains(hitCollider.gameObject)) continue;
+                processedEntities.Add(hitCollider.gameObject);
+
                 PlayerHealth playerHealth = hitCollider.GetComponent<PlayerHealth>();
                 if (playerHealth != null)
                 {
@@ -85,9 +91,13 @@ public class ExplosionEffect : MonoBehaviour
             }
             
             // Damage other enemies
-            EnemyAI enemy = hitCollider.GetComponent<EnemyAI>();
+            // Use GetComponentInParent to handle child colliders
+            EnemyAI enemy = hitCollider.GetComponentInParent<EnemyAI>();
             if (enemy != null)
             {
+                if (processedEntities.Contains(enemy.gameObject)) continue;
+                processedEntities.Add(enemy.gameObject);
+
                 // Skip if this is a Bomber and we should ignore them
                 if (ignoreBombers && enemy is BomberEnemy)
                 {
@@ -98,7 +108,7 @@ public class ExplosionEffect : MonoBehaviour
             }
         }
         
-        Debug.Log($"Explosion at {transform.position} hit {hitColliders.Length} objects");
+        Debug.Log($"Explosion at {transform.position} hit {hitColliders.Length} colliders ({processedEntities.Count} unique entities)");
     }
 
     // Static helper method to create explosion

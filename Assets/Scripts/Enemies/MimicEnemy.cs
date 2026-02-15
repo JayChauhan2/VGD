@@ -167,4 +167,11 @@ public class MimicEnemy : EnemyAI
              // Intentionally Removed flipX logic so it doesn't face movement direction
         }
     }
+
+
+    public override void DropLoot()
+    {
+        // Mimics do not drop loot
+        Debug.Log("MimicEnemy: No loot dropped.");
+    }
 }

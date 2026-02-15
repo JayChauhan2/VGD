@@ -8,8 +8,7 @@ public class MimicEnemy : EnemyAI
     
     private bool isRevealed = false;
     private SpriteRenderer spriteRenderer;
-    private Sprite coinSprite;
-    private Sprite enemySprite;
+    private EnemyHealthBar healthBar;
 
     protected override void OnEnemyStart()
     {
@@ -18,68 +17,39 @@ public class MimicEnemy : EnemyAI
         speed = 0f; // Doesn't move until revealed
         
         spriteRenderer = GetComponent<SpriteRenderer>();
+        healthBar = GetComponent<EnemyHealthBar>();
         
-        // Create coin disguise sprite
-        coinSprite = CreateCoinSprite();
-        enemySprite = CreateEnemySprite();
-        
-        if (spriteRenderer != null)
+        // Hide health bar initially
+        if (healthBar != null)
         {
-            spriteRenderer.sprite = coinSprite;
-            spriteRenderer.color = new Color(1f, 0.84f, 0f); // Gold color
+            healthBar.SetVisibility(false);
+        }
+        
+        // Setup initial disguise from coin prefab
+        if (coinPrefab != null)
+        {
+            SpriteRenderer coinRenderer = coinPrefab.GetComponent<SpriteRenderer>();
+            if (coinRenderer != null && spriteRenderer != null)
+            {
+                spriteRenderer.sprite = coinRenderer.sprite;
+                spriteRenderer.color = coinRenderer.color;
+            }
+        }
+        else
+        {
+            // Fallback if coinPrefab not assigned
+             if (RoomManager.Instance != null && RoomManager.Instance.coinPrefab != null)
+             {
+                 SpriteRenderer coinRenderer = RoomManager.Instance.coinPrefab.GetComponent<SpriteRenderer>();
+                 if (coinRenderer != null && spriteRenderer != null)
+                 {
+                     spriteRenderer.sprite = coinRenderer.sprite;
+                     spriteRenderer.color = coinRenderer.color;
+                 }
+             }
         }
         
         Debug.Log("MimicEnemy: Initialized in disguise");
-    }
-
-    Sprite CreateCoinSprite()
-    {
-        // Create simple circle for coin
-        int size = 32;
-        Texture2D texture = new Texture2D(size, size);
-        Color[] pixels = new Color[size * size];
-        
-        Vector2 center = new Vector2(size / 2f, size / 2f);
-        float radius = size / 2f;
-        
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                float distance = Vector2.Distance(new Vector2(x, y), center);
-                pixels[y * size + x] = distance <= radius ? Color.white : Color.clear;
-            }
-        }
-        
-        texture.SetPixels(pixels);
-        texture.Apply();
-        
-        return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
-    }
-
-    Sprite CreateEnemySprite()
-    {
-        // Create different sprite for revealed form (red circle)
-        int size = 32;
-        Texture2D texture = new Texture2D(size, size);
-        Color[] pixels = new Color[size * size];
-        
-        Vector2 center = new Vector2(size / 2f, size / 2f);
-        float radius = size / 2f;
-        
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                float distance = Vector2.Distance(new Vector2(x, y), center);
-                pixels[y * size + x] = distance <= radius ? Color.white : Color.clear;
-            }
-        }
-        
-        texture.SetPixels(pixels);
-        texture.Apply();
-        
-        return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
     }
 
     protected override void OnEnemyUpdate()
@@ -107,12 +77,20 @@ public class MimicEnemy : EnemyAI
     {
         isRevealed = true;
         
-        // Change appearance
+       if (animator != null)
+       {
+           animator.SetTrigger("Reveal");
+       }
+
         if (spriteRenderer != null)
         {
-            spriteRenderer.sprite = enemySprite;
-            spriteRenderer.color = new Color(1f, 0.2f, 0.2f); // Red
-            transform.localScale = Vector3.one * 1.2f; // Slightly larger
+            spriteRenderer.color = Color.white; // Reset color tint
+        }
+        
+        // Show health bar
+        if (healthBar != null)
+        {
+            healthBar.SetVisibility(true);
         }
         
         Debug.Log("MimicEnemy: REVEALED! Attacking player!");

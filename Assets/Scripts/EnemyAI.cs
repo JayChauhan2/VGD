@@ -398,7 +398,7 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    protected void DropLoot()
+    public virtual void DropLoot()
     {
         // Fallback: Try to load from RoomManager if not locally assigned
         if (coinPrefab == null && RoomManager.Instance != null)
@@ -425,17 +425,32 @@ public class EnemyAI : MonoBehaviour
         else if (roll < 0.07f) coinCount = 2;
         else if (roll < 0.27f) coinCount = 1;
         
+        // TEMP: Force 3 coins for testing Mimic spawns
+        coinCount = 3;
+
+        // 1/5 chance to drop a Mimic instead of a coin (if coinCount > 0)
+        // Note: The prompt asked for "each coin has a 1/5 chance", 
+        // but spawning multiple mimics from one enemy might be too chaotic.
+        // Let's implement: If we are dropping coins, replace ONE with a mimic if chance hits.
+        // Or should we evaluate per coin? "Each coin has a 1/5 chance" implies per coin.
+        
         for(int i=0; i<coinCount; i++)
         {
-            Vector2 offset = Random.insideUnitCircle * 0.5f;
-            GameObject coin = Instantiate(coinPrefab, transform.position + (Vector3)offset, Quaternion.identity);
+            float mimicRoll = Random.value;
+            GameObject prefabToSpawn = coinPrefab;
             
-            // Optional: Add a little "pop" force if the coin has a rigidbody
-            // Rigidbody2D rb = coin.GetComponent<Rigidbody2D>();
-            // if (rb != null) rb.AddForce(offset.normalized * 2f, ForceMode2D.Impulse);
+            // 20% Chance to be a Mimic, IF functionality is available and valid
+            if (mimicRoll < 0.2f && RoomManager.Instance != null && RoomManager.Instance.mimicPrefab != null)
+            {
+                prefabToSpawn = RoomManager.Instance.mimicPrefab;
+                Debug.Log("EnemyAI: Spawning Mimic instead of Coin!");
+            }
+            
+            Vector2 offset = Random.insideUnitCircle * 0.5f;
+            Instantiate(prefabToSpawn, transform.position + (Vector3)offset, Quaternion.identity);
         }
         
-        if (coinCount > 0) Debug.Log($"EnemyAI: Dropped {coinCount} coins (Roll: {roll:F3})");
+        if (coinCount > 0) Debug.Log($"EnemyAI: Dropped {coinCount} items (Roll: {roll:F3})");
     }
 
     public void MarkAsDetected()

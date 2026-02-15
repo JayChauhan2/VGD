@@ -6,6 +6,7 @@ public class RoomManager : MonoBehaviour
     public static RoomManager Instance;
 
     public GameObject coinPrefab;
+    public GameObject mimicPrefab;
     [SerializeField] PathfindingGrid pathfindingGrid;
 
     [Header("Room Prefabs")]

@@ -11,18 +11,19 @@ public class EnemyHealthBar : MonoBehaviour
     private Canvas healthCanvas;
     private EnemyAI enemyAI;
 
-    void Start()
+    void Awake()
     {
         enemyAI = GetComponent<EnemyAI>();
         SetupHealthBar();
-        
-        enemyAI.OnHealthChanged += UpdateHealthBar;
-        // Initial update
-        // We can't easily get current health without modifying EnemyAI to expose it publicly or just waiting for event
-        // But EnemyAI invokes event in Start, so if we run after, we catch it? 
-        // Or we might miss it if execution order differs.
-        // Safer to not worry about initial sync if event is fired in Start, provided this component initializes fast enough.
-        // Actually, best to ensure we catch it.
+    }
+
+    void Start()
+    {
+        if (enemyAI != null)
+        {
+            enemyAI.OnHealthChanged += UpdateHealthBar;
+            // Initial update if needed, but usually full health at start
+        }
     }
 
     void OnDestroy()
@@ -96,6 +97,14 @@ public class EnemyHealthBar : MonoBehaviour
             float pct = Mathf.Clamp01(current / max);
             // using localScale X to scale the bar
             healthFillImage.rectTransform.localScale = new Vector3(pct, 1, 1);
+        }
+    }
+
+    public void SetVisibility(bool visible)
+    {
+        if (healthCanvas != null)
+        {
+            healthCanvas.gameObject.SetActive(visible);
         }
     }
 }

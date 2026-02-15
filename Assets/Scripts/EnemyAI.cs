@@ -236,6 +236,7 @@ public class EnemyAI : MonoBehaviour
         }
         
         UpdateAnimation(velocity);
+        CheckTouchDamage();
     }
     
     protected virtual void UpdateAnimation(Vector2 velocity)
@@ -269,7 +270,25 @@ public class EnemyAI : MonoBehaviour
         {
             target = player.transform;
             Debug.Log($"EnemyAI: Player found (Name: {player.name}) and assigned as target.");
+            
+            // Ignore collision with Player so we don't push them around
+            IgnoreCollisionWithPlayer(player);
         }
+    }
+
+    void IgnoreCollisionWithPlayer(GameObject player)
+    {
+        Collider2D[] myColliders = GetComponentsInChildren<Collider2D>();
+        Collider2D[] playerColliders = player.GetComponentsInChildren<Collider2D>();
+
+        foreach (Collider2D myCol in myColliders)
+        {
+            foreach (Collider2D playerCol in playerColliders)
+            {
+                Physics2D.IgnoreCollision(myCol, playerCol, true);
+            }
+        }
+        // Debug.Log("EnemyAI: Ignored collision with Player.");
     }
 
     void OnDrawGizmos()
@@ -296,7 +315,35 @@ public class EnemyAI : MonoBehaviour
 
     private float lastDamageTime;
     public float damageCooldown = 1.0f;
+    public float touchDamageRange = 0.8f; // Distance to check for "touching" player
 
+    // Replaced OnCollisionStay2D with custom check in Update
+    protected void CheckTouchDamage()
+    {
+        if (target != null)
+        {
+            float distance = Vector2.Distance(transform.position, target.position);
+            
+            // Check if close enough to "touch"
+            if (distance <= touchDamageRange)
+            {
+                if (Time.time >= lastDamageTime + damageCooldown)
+                {
+                    PlayerHealth playerHealth = target.GetComponent<PlayerHealth>();
+                    if (playerHealth != null)
+                    {
+                        Vector2 knockbackDir = (target.position - transform.position).normalized;
+                        playerHealth.TakeDamage(10f, knockbackDir);
+                        lastDamageTime = Time.time;
+                        // Debug.Log($"EnemyAI: Touched Player! Dealt Damage. Distance: {distance}");
+                    }
+                }
+            }
+        }
+    }
+
+    /* 
+    // Removed to allow passing through player
     void OnCollisionStay2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Player"))
@@ -313,6 +360,7 @@ public class EnemyAI : MonoBehaviour
             }
         }
     }
+    */
 
     private Coroutine activationCoroutine;
 

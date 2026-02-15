@@ -712,6 +712,8 @@ MonoBehaviour:
   rechargeRate: 10
   laserFirePoint: {fileID: 1960840414}
   m_lineRenderer: {fileID: 687766237}
+  flashlightOnSprite: {fileID: 2547833562694337563, guid: 91db661b70518a0429ed9e0a072fd00b, type: 3}
+  flashlightOffSprite: {fileID: -5913738696227704600, guid: 91db661b70518a0429ed9e0a072fd00b, type: 3}
   overheatThreshold: 20
   chargeDuration: 0.1
   missPressureRate: 5

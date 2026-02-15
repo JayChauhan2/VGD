@@ -19,6 +19,11 @@ public class Laser : MonoBehaviour
     public LineRenderer m_lineRenderer;
     Transform m_transform;
 
+    [Header("Visuals")]
+    public Sprite flashlightOnSprite;
+    public Sprite flashlightOffSprite;
+    private SpriteRenderer spriteRenderer;
+
     private bool isOverheated = false;
     [SerializeField] private float overheatThreshold = 20f; // Must recharge to this to shoot again
 
@@ -29,6 +34,7 @@ public class Laser : MonoBehaviour
     private void Awake()
     {
         m_transform = GetComponent<Transform>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
         currentEnergy = maxEnergy;
     }
 
@@ -166,6 +172,10 @@ public class Laser : MonoBehaviour
     void DisableLaser()
     {
         if (m_lineRenderer != null) m_lineRenderer.enabled = false;
+        if (spriteRenderer != null && flashlightOffSprite != null)
+        {
+            spriteRenderer.sprite = flashlightOffSprite;
+        }
     }
     
     [Header("Pressure Settings")]
@@ -174,6 +184,10 @@ public class Laser : MonoBehaviour
     void ShootLaser()
     {
         if (m_lineRenderer != null) m_lineRenderer.enabled = true;
+        if (spriteRenderer != null && flashlightOnSprite != null)
+        {
+            spriteRenderer.sprite = flashlightOnSprite;
+        }
 
         RaycastHit2D _hit = Physics2D.Raycast(m_transform.position, transform.right);
         

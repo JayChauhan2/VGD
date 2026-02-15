@@ -189,37 +189,80 @@ public class Laser : MonoBehaviour
             spriteRenderer.sprite = flashlightOnSprite;
         }
 
-        RaycastHit2D _hit = Physics2D.Raycast(m_transform.position, transform.right);
+        // Raycast 1
+        RaycastHit2D _hit = Physics2D.Raycast(m_transform.position, transform.right, defDistanceRay);
         
-        Vector2 endPos;
+        Vector2 firstEndPos = _hit.collider != null ? _hit.point : (Vector2)laserFirePoint.position + (Vector2)transform.right * defDistanceRay;
         bool isHitEnemy = false;
-
-        if (_hit.collider != null) // Hit something
+        
+        // Handle First Hit
+        if (_hit.collider != null)
         {
-            endPos = _hit.point;
+            // Check for Reflector
+            ReflectorEnemy reflector = _hit.collider.GetComponent<ReflectorEnemy>();
+            if (reflector != null && reflector.IsReflecting())
+            {
+                // REFLECTION LOGIC
+                // 1. Calculate Reflection Vector
+                Vector2 incomingDir = transform.right;
+                Vector2 normal = _hit.normal;
+                Vector2 reflectDir = Vector2.Reflect(incomingDir, normal).normalized;
+                
+                // 2. Raycast 2 (Bounce)
+                RaycastHit2D _hit2 = Physics2D.Raycast(_hit.point + reflectDir * 0.1f, reflectDir, defDistanceRay);
+                Vector2 secondEndPos = _hit2.collider != null ? _hit2.point : _hit.point + reflectDir * defDistanceRay;
+                
+                // Draw 3 points: Start -> Hit1 -> Hit2
+                m_lineRenderer.positionCount = 3;
+                m_lineRenderer.SetPosition(0, laserFirePoint.position);
+                m_lineRenderer.SetPosition(1, firstEndPos);
+                m_lineRenderer.SetPosition(2, secondEndPos);
+                
+                // Handle Damage for Second Hit
+                if (_hit2.collider != null)
+                {
+                    EnemyAI enemy2 = _hit2.collider.GetComponent<EnemyAI>();
+                    if (enemy2 != null)
+                    {
+                        // Friendly Fire? Or does reflected laser hurt enemies? 
+                        // Typically lasers hurt enemies. Let's allow multi-hit.
+                        enemy2.TakeDamage(damagePerSecond * Time.deltaTime);
+                    }
+                    else if (_hit2.collider.CompareTag("Player"))
+                    {
+                         // Reflected laser hurts player!
+                         PlayerHealth ph = _hit2.collider.GetComponent<PlayerHealth>();
+                         if (ph != null) ph.TakeDamage(10f * Time.deltaTime, reflectDir); // Constant small damage or burst? using time delta
+                    }
+                }
+                
+                // Apply damage to the Reflector Shield itself (it degrades)
+                reflector.TakeDamage(damagePerSecond * Time.deltaTime);
+                
+                isHitEnemy = true; // We hit a reflector, so no miss penalty
+                return; // Exit here, handled reflection drawing
+            }
             
-            // Apply Damage
+            // Standard Enemy Hit
             EnemyAI enemy = _hit.collider.GetComponent<EnemyAI>();
             if (enemy != null)
             {
                 enemy.TakeDamage(damagePerSecond * Time.deltaTime);
                 isHitEnemy = true;
             }
-            // Check for Projectile
+            
+            // Projectile Hit
             EnemyProjectile proj = _hit.collider.GetComponent<EnemyProjectile>();
             if (proj != null)
             {
                 Destroy(proj.gameObject);
-                // We hit a bullet, so it's not a "Miss" (no penalty), but also didn't hit enemy.
-                // Just return or let it draw the ray to the bullet impact point.
-                // We'll set isHitEnemy = true purely to skip the "Miss" penalty below.
                 isHitEnemy = true; 
             }
         }
-        else
-        {
-            endPos = (Vector2)laserFirePoint.position + (Vector2)transform.right * defDistanceRay;
-        }
+        
+        // No Reflection / Standard Draw
+        m_lineRenderer.positionCount = 2;
+        Draw2DRay(laserFirePoint.position, firstEndPos);
         
         // Miss Logic
         if (!isHitEnemy)
@@ -230,8 +273,6 @@ public class Laser : MonoBehaviour
                 room.Pressure.OnMissed(missPressureRate * Time.deltaTime);
             }
         }
-
-        Draw2DRay(laserFirePoint.position, endPos);
     }
 
     void Draw2DRay(Vector2 startPos, Vector2 endPos)

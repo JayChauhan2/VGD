@@ -3,172 +3,168 @@ using UnityEngine;
 public class ReflectorEnemy : EnemyAI
 {
     [Header("Reflector Settings")]
-    public float shieldedDuration = 3f;
-    public float vulnerableDuration = 2f;
-    public float reflectDamageMultiplier = 0.5f;
+    public float maxShieldHealth = 100f; // Shield HP
+    [SerializeField] private float damageFlashCooldown = 0.1f;
     
-    private enum ShieldState { Shielded, Vulnerable }
+    [Header("Visual References")]
+    [SerializeField] private Animator shieldAnimator; // Assign the Shield child here
+    
+    // Shield States
+    private enum ShieldState { Shielded, Vulnerable, Broken }
     private ShieldState currentState = ShieldState.Shielded;
+    private float currentShieldHealth;
+    private float lastFlashTime;
     
-    private float stateTimer;
-    private SpriteRenderer spriteRenderer;
-    private GameObject shieldVisual;
+    private Vector3 initialScale;
 
     protected override void OnEnemyStart()
     {
-        maxHealth = 135f;
-        currentHealth = maxHealth;
-        // speed = 2.5f; // Removed to allow Inspector value
+        // Stats are now set in Inspector (MaxHealth from base, MaxShieldHealth here)
+        currentShieldHealth = maxShieldHealth;
         
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        stateTimer = shieldedDuration;
+        // Capture initial scale
+        initialScale = transform.localScale;
         
-        CreateShieldVisual();
+        // Ensure we find the components if user forgets to link
+        if (shieldAnimator == null)
+            shieldAnimator = GetComponentInChildren<Animator>();
+            
         UpdateVisuals();
         
-        Debug.Log("ReflectorEnemy: Initialized in shielded state");
-    }
-
-    void CreateShieldVisual()
-    {
-        // Create shield visual as child object
-        shieldVisual = new GameObject("ShieldVisual");
-        shieldVisual.transform.SetParent(transform);
-        shieldVisual.transform.localPosition = Vector3.zero;
-        shieldVisual.transform.localScale = Vector3.one * 1.5f;
-        
-        SpriteRenderer shieldSR = shieldVisual.AddComponent<SpriteRenderer>();
-        shieldSR.sprite = CreateCircleSprite();
-        shieldSR.color = new Color(0f, 1f, 1f, 0.4f); // Cyan, semi-transparent
-        shieldSR.sortingOrder = -1; // Behind enemy
-    }
-
-    Sprite CreateCircleSprite()
-    {
-        int size = 32;
-        Texture2D texture = new Texture2D(size, size);
-        Color[] pixels = new Color[size * size];
-        
-        Vector2 center = new Vector2(size / 2f, size / 2f);
-        float outerRadius = size / 2f;
-        float innerRadius = size / 2f - 4f;
-        
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                float distance = Vector2.Distance(new Vector2(x, y), center);
-                // Create ring shape
-                if (distance <= outerRadius && distance >= innerRadius)
-                {
-                    pixels[y * size + x] = Color.white;
-                }
-                else
-                {
-                    pixels[y * size + x] = Color.clear;
-                }
-            }
-        }
-        
-        texture.SetPixels(pixels);
-        texture.Apply();
-        
-        return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+        Debug.Log("ReflectorEnemy: Initialized");
     }
 
     protected override void OnEnemyUpdate()
     {
-        // Update state timer
-        stateTimer -= Time.deltaTime;
-        
-        if (stateTimer <= 0)
-        {
-            // Switch states
-            if (currentState == ShieldState.Shielded)
-            {
-                currentState = ShieldState.Vulnerable;
-                stateTimer = vulnerableDuration;
-            }
-            else
-            {
-                currentState = ShieldState.Shielded;
-                stateTimer = shieldedDuration;
-            }
-            
-            UpdateVisuals();
-        }
+        RotateShieldToPlayer();
     }
 
     void UpdateVisuals()
     {
-        if (shieldVisual != null)
+        if (shieldAnimator != null)
         {
-            shieldVisual.SetActive(currentState == ShieldState.Shielded);
+            // If Broken, disable shield GameObject entirely
+            if (currentState == ShieldState.Broken)
+            {
+                shieldAnimator.gameObject.SetActive(false);
+                return;
+            }
+
+            shieldAnimator.SetBool("IsVulnerable", currentState == ShieldState.Vulnerable);
+        }
+    }
+
+    void RotateShieldToPlayer()
+    {
+        if (target == null)
+        {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null) target = player.transform;
+            else return;
         }
         
+        // 1. Handle Shield Rotation (Aiming)
+        Vector2 direction = (target.position - transform.position).normalized;
+        float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        
+        // The Shield should rotate to face the player fully
+        if (shieldAnimator != null && shieldAnimator.gameObject.activeSelf)
+        {
+             // Aligning shield rotation with target angle (0 degree offset)
+             shieldAnimator.transform.rotation = Quaternion.Euler(0, 0, targetAngle);
+        }
+        
+        // 2. Handle Body Facing (Discrete Left/Right) using SpriteRenderer.
         if (spriteRenderer != null)
         {
-            // Change color based on state
-            if (currentState == ShieldState.Shielded)
+            if (target.position.x < transform.position.x - 0.1f)
             {
-                spriteRenderer.color = new Color(0.5f, 0.8f, 1f); // Light blue
+                // Target is Left. Sprite is Left (default). No flip.
+                spriteRenderer.flipX = false;
             }
-            else
+            else if (target.position.x > transform.position.x + 0.1f)
             {
-                spriteRenderer.color = new Color(1f, 0.6f, 0.3f); // Orange (vulnerable)
+                // Target is Right. Sprite is Left. Flip needed.
+                spriteRenderer.flipX = true;
             }
         }
-        
-        Debug.Log($"ReflectorEnemy: State changed to {currentState}");
+    }
+
+    // Override UpdateAnimation to prevent EnemyAI from overriding our Facing logic
+    protected override void UpdateAnimation(Vector2 velocity)
+    {
+        if (animator != null)
+        {
+            animator.SetFloat("Speed", velocity.magnitude);
+        }
+
+        if (spriteRenderer != null)
+        {
+             spriteRenderer.sortingOrder = Mathf.RoundToInt(transform.position.y * -100);
+             // Facing handled in RotateShieldToPlayer
+        }
+    }
+
+    public bool IsReflecting()
+    {
+        // Reflector specifically reflects when Shielded
+        return currentState == ShieldState.Shielded && currentShieldHealth > 0;
     }
 
     public override void TakeDamage(float damage)
     {
-        if (currentState == ShieldState.Shielded)
+        // 1. If Shield Broken, take full body damage
+        if (currentState == ShieldState.Broken)
         {
-            Debug.Log("ReflectorEnemy: Damage blocked by shield!");
-            
-            // Reflect damage back to player (if damage source is laser)
-            // This is a simplified implementation
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-            {
-                PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
-                if (playerHealth != null)
-                {
-                    Vector2 knockbackDir = (player.transform.position - transform.position).normalized;
-                    playerHealth.TakeDamage(damage * reflectDamageMultiplier, knockbackDir);
-                    Debug.Log("ReflectorEnemy: Reflected damage to player!");
-                }
-            }
-            
-            // Visual feedback
-            if (shieldVisual != null)
-            {
-                SpriteRenderer shieldSR = shieldVisual.GetComponent<SpriteRenderer>();
-                if (shieldSR != null)
-                {
-                    shieldSR.color = Color.white;
-                    Invoke(nameof(ResetShieldColor), 0.1f);
-                }
-            }
-            
-            return; // Don't take damage
+            base.TakeDamage(damage);
+            return;
+        }
+
+        // 2. If Vulnerable, next hit breaks the shield
+        if (currentState == ShieldState.Vulnerable)
+        {
+             Debug.Log("ReflectorEnemy: Shield Hit while Vulnerable! BREAKING SHIELD.");
+             currentState = ShieldState.Broken;
+             UpdateVisuals();
+             return;
+        }
+
+        // 3. If Shielded
+        if (target == null)
+        {
+            base.TakeDamage(damage);
+            return;
         }
         
-        // Vulnerable state - take full damage
-        base.TakeDamage(damage);
-    }
-
-    void ResetShieldColor()
-    {
-        if (shieldVisual != null)
+        // Accumulate Damage to Shield
+        currentShieldHealth -= damage;
+        
+        // Visual Feedback
+        if (Time.time > lastFlashTime + damageFlashCooldown)
         {
-            SpriteRenderer shieldSR = shieldVisual.GetComponent<SpriteRenderer>();
-            if (shieldSR != null)
+            if (shieldAnimator != null)
             {
-                shieldSR.color = new Color(0f, 1f, 1f, 0.4f);
+                StartCoroutine(FlashVulnerableState());
+                lastFlashTime = Time.time;
             }
+        }
+
+        if (currentShieldHealth <= 0)
+        {
+            Debug.Log("ReflectorEnemy: Shield health depleted! Becoming Vulnerable.");
+            currentState = ShieldState.Vulnerable;
+            UpdateVisuals();
+        }
+    }
+    
+    private System.Collections.IEnumerator FlashVulnerableState()
+    {
+        if (shieldAnimator != null)
+        {
+            shieldAnimator.SetBool("IsVulnerable", true);
+            yield return new WaitForSeconds(0.05f); // Very short flash
+            if (currentState == ShieldState.Shielded) 
+                shieldAnimator.SetBool("IsVulnerable", false);
         }
     }
 }

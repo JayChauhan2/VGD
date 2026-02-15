@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 1448053404080634689}
   - component: {fileID: 5265725211855758773}
   - component: {fileID: 3572659386511661256}
-  - component: {fileID: 2735808451077252982}
+  - component: {fileID: 6262977331934324309}
   m_Layer: 0
-  m_Name: Shiedler
+  m_Name: Reflfector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -154,7 +154,7 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
---- !u!114 &2735808451077252982
+--- !u!114 &6262977331934324309
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -163,7 +163,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 6454240620750936782}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 14042c07c9b8c8c4d85b425fec6eb792, type: 3}
+  m_Script: {fileID: 11500000, guid: 758c3bd8ab1437d498718aebac58287a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
@@ -173,7 +173,6 @@ MonoBehaviour:
   maxHealth: 50
   damageCooldown: 1
   touchDamageRange: 0.8
-  shieldArc: 180
   maxShieldHealth: 100
   damageFlashCooldown: 0.1
   shieldAnimator: {fileID: 1034105609369835506}

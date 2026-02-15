@@ -184,4 +184,11 @@ public class ShielderEnemy : EnemyAI
     {
         // Deprecated by Animator flash
     }
+
+    // Checking for Reflection Logic
+    public bool IsReflecting()
+    {
+        // Only reflect if Shield is UP and not Vulnerable/Broken
+        return currentState == ShieldState.Shielded && currentShieldHealth > 0;
+    }
 }

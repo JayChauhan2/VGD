@@ -8,15 +8,25 @@ public class GameHUD : MonoBehaviour
 
     [Header("Configuration")]
     public Vector2 coinPosition = new Vector2(-20, -20);
+    // Health position will be used for the heart container
     public Vector2 healthPosition = new Vector2(-20, -50);
     public int fontSize = 24;
     public Color textColor = Color.black;
 
+    [Header("Heart Assets")]
+    public Sprite fullHeartSprite;
+    public Sprite halfHeartSprite;
+    public Sprite emptyHeartSprite;
+    public Vector2 heartSize = new Vector2(32, 32);
+
     private Text coinText;
-    private Text healthText;
+    // private Text healthText; // Removed in favor of Heart System
     private Text bombText;
     private int coinCount = 0;
     private PlayerHealth playerHealth;
+    
+    private List<HeartDisplay> hearts = new List<HeartDisplay>();
+    private int lastHealth = -1; // Track for animations
 
     private void Awake()
     {
@@ -37,7 +47,7 @@ public class GameHUD : MonoBehaviour
         }
     }
 
-    private Text winText; // Reference to the Win Text component
+    private Text winText; 
     
     private void OnDestroy()
     {
@@ -61,13 +71,11 @@ public class GameHUD : MonoBehaviour
         }
         else
         {
-            // Fallback for finding by type
             playerHealth = FindFirstObjectByType<PlayerHealth>();
         }
 
         UpdateCoinDisplay();
         
-        // Hide Win Text just in case
         if (winText != null) winText.gameObject.SetActive(false);
     }
     
@@ -79,7 +87,6 @@ public class GameHUD : MonoBehaviour
     
     private void OnRoomEntered(Room room)
     {
-        // Unsubscribe from old room
         if (currentRoom != null && currentRoom.Pressure != null)
         {
             currentRoom.Pressure.OnPressureChanged -= UpdatePressureUI;
@@ -87,18 +94,15 @@ public class GameHUD : MonoBehaviour
         
         currentRoom = room;
         
-        // Subscribe to new room
         if (currentRoom != null && currentRoom.Pressure != null)
         {
             currentRoom.Pressure.OnPressureChanged += UpdatePressureUI;
             UpdatePressureUI(currentRoom.Pressure.currentPressure / currentRoom.Pressure.maxPressure);
             
-            // Show slider
             if (pressureSlider != null) pressureSlider.gameObject.SetActive(true);
         }
         else
         {
-            // Hide slider if no pressure system (e.g. start room?)
             if (pressureSlider != null) pressureSlider.gameObject.SetActive(false);
         }
     }
@@ -109,7 +113,6 @@ public class GameHUD : MonoBehaviour
         {
             pressureSlider.value = percent;
             
-            // Optional: Color Change based on pressure
             if (fillImage != null)
             {
                 fillImage.color = Color.Lerp(Color.blue, Color.red, percent);
@@ -119,7 +122,6 @@ public class GameHUD : MonoBehaviour
 
     private void CheckWinCondition(Room room)
     {
-        // Check if ALL rooms in Room.AllRooms are cleared
         bool allCleared = true;
         foreach(var r in Room.AllRooms)
         {
@@ -143,7 +145,7 @@ public class GameHUD : MonoBehaviour
             winText.gameObject.SetActive(true);
             winText.text = "Congrats you won!";
         }
-        Time.timeScale = 0; // Pause game
+        Time.timeScale = 0; 
     }
 
     private void Update()
@@ -164,20 +166,18 @@ public class GameHUD : MonoBehaviour
     }
     
     private List<Marker> activeMarkers = new List<Marker>();
-    private GameObject hudCanvasObj; // Reference to our specific canvas
+    private GameObject hudCanvasObj; 
 
     public void ShowEnemyMarker(Transform target, Vector3 offset, float duration)
     {
-        // Check if marker already exists for this target
         Marker existing = activeMarkers.Find(m => m.target == target);
         if (existing != null)
         {
-            existing.timer = 0; // Reset timer
+            existing.timer = 0; 
             existing.duration = duration;
             return;
         }
 
-        // Validate Canvas
         if (hudCanvasObj == null)
         {
              Debug.LogError("[GameHUD] HUD Canvas is missing! Cannot create marker.");
@@ -193,24 +193,22 @@ public class GameHUD : MonoBehaviour
         Sprite circle = Resources.Load<Sprite>("Sprites/Circle");
         if (circle == null)
         {
-            // Fallback: Generate a high-res circle texture
-            int size = 64; // Higher res for smooth edges
+            int size = 64; 
             Texture2D tex = new Texture2D(size, size);
-            tex.filterMode = FilterMode.Bilinear; // Ensure smooth scaling
+            tex.filterMode = FilterMode.Bilinear; 
             
             Color[] colors = new Color[size*size];
             Vector2 center = new Vector2(size/2f, size/2f);
-            float radius = (size/2f) - 1; // Slight padding
+            float radius = (size/2f) - 1; 
             
             for(int y=0; y<size; y++)
             {
                 for(int x=0; x<size; x++)
                 {
                     float dist = Vector2.Distance(new Vector2(x,y), center);
-                    // Anti-aliased edge roughly
                     float alpha = 1f - Mathf.Clamp01(dist - radius + 0.5f);
                     
-                    if (dist <= radius) colors[y*size + x] = new Color(1, 1, 1, alpha); // White with alpha
+                    if (dist <= radius) colors[y*size + x] = new Color(1, 1, 1, alpha); 
                     else colors[y*size + x] = Color.clear;
                 }
             }
@@ -221,7 +219,7 @@ public class GameHUD : MonoBehaviour
         img.sprite = circle;
 
         RectTransform rt = markerObj.GetComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(10, 10); // Much smaller (was 25, user said too big)
+        rt.sizeDelta = new Vector2(10, 10); 
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.zero;
         rt.pivot = new Vector2(0.5f, 0.5f);
@@ -234,7 +232,6 @@ public class GameHUD : MonoBehaviour
         m.timer = 0;
         
         activeMarkers.Add(m);
-        // Debug.Log($"[GameHUD] Created marker for {target.name}");
     }
 
     private void UpdateMarkers()
@@ -246,7 +243,6 @@ public class GameHUD : MonoBehaviour
         {
             Marker m = activeMarkers[i];
             
-            // Validation
             if (m.target == null)
             {
                 if (m.rect != null) Destroy(m.rect.gameObject);
@@ -254,7 +250,6 @@ public class GameHUD : MonoBehaviour
                 continue;
             }
             
-            // Timer
             m.timer += Time.deltaTime;
             if (m.timer >= m.duration)
             {
@@ -263,19 +258,15 @@ public class GameHUD : MonoBehaviour
                 continue;
             }
             
-            // Position
-            // Use offset only for world calc
             Vector3 worldPos = m.target.position + m.offset;
             Vector3 screenPos = cam.WorldToScreenPoint(worldPos);
             
-            // Hide if behind camera
             if (screenPos.z < 0)
             {
                  m.rect.gameObject.SetActive(false);
             }
             else
             {
-                 // Check if actually on screen (optional, but good for optimization)
                  if (screenPos.x > 0 && screenPos.x < Screen.width && screenPos.y > 0 && screenPos.y < Screen.height)
                  {
                      m.rect.gameObject.SetActive(true);
@@ -283,8 +274,6 @@ public class GameHUD : MonoBehaviour
                  }
                  else
                  {
-                     // Off-screen clamp? Or just hide?
-                     // For now, let it be clipped by canvas or just stay there.
                      m.rect.gameObject.SetActive(true);
                      m.rect.anchoredPosition = new Vector2(screenPos.x, screenPos.y);
                  }
@@ -295,11 +284,11 @@ public class GameHUD : MonoBehaviour
     private void CreateUI()
     {
         GameObject canvasObj = new GameObject("GameHUDCanvas");
-        hudCanvasObj = canvasObj; // Assign reference for markers
+        hudCanvasObj = canvasObj; 
         
         Canvas canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 101; // Above Minimap
+        canvas.sortingOrder = 101; 
         canvasObj.AddComponent<CanvasScaler>();
         canvasObj.AddComponent<GraphicRaycaster>();
         DontDestroyOnLoad(canvasObj);
@@ -308,7 +297,7 @@ public class GameHUD : MonoBehaviour
         GameObject coinObj = new GameObject("CoinText");
         coinObj.transform.SetParent(canvasObj.transform, false);
         coinText = coinObj.AddComponent<Text>();
-        coinText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); // Default font
+        coinText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         if (coinText.font == null) coinText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         coinText.fontSize = fontSize;
         coinText.color = textColor;
@@ -317,46 +306,84 @@ public class GameHUD : MonoBehaviour
         coinText.verticalOverflow = VerticalWrapMode.Overflow;
 
         RectTransform coinRect = coinObj.GetComponent<RectTransform>();
-        coinRect.anchorMin = Vector2.one; // Top Right
+        coinRect.anchorMin = Vector2.one; 
         coinRect.anchorMax = Vector2.one;
         coinRect.pivot = Vector2.one;
         coinRect.anchoredPosition = coinPosition;
 
-        // Health Text
-        GameObject healthObj = new GameObject("HealthText");
+        // --- HEART CONTAINER ---
+        GameObject healthObj = new GameObject("HealthContainer");
         healthObj.transform.SetParent(canvasObj.transform, false);
-        healthText = healthObj.AddComponent<Text>();
-        healthText.font = coinText.font;
-        healthText.fontSize = fontSize - 4; // Slightly smaller
-        healthText.color = textColor;
-        healthText.alignment = TextAnchor.UpperRight;
-        healthText.horizontalOverflow = HorizontalWrapMode.Overflow;
-        healthText.verticalOverflow = VerticalWrapMode.Overflow;
+        
+        HorizontalLayoutGroup layout = healthObj.AddComponent<HorizontalLayoutGroup>();
+        layout.spacing = 5;
+        layout.childControlWidth = false;
+        layout.childControlHeight = false;
+        layout.childAlignment = TextAnchor.UpperRight;
+        // layout.reverseArrangement = true; // Was causing Left-to-Right loss. Default is Left-to-Right layout.
+         // We want [0][1][2]. Damage starts at 2 (Rightmost). So we lose Right-to-Left. Default order is correct.
 
         RectTransform healthRect = healthObj.GetComponent<RectTransform>();
-        healthRect.anchorMin = Vector2.one; // Top Right
+        healthRect.anchorMin = Vector2.one; 
         healthRect.anchorMax = Vector2.one;
         healthRect.pivot = Vector2.one;
-        // Positioned under coin text
         healthRect.anchoredPosition = new Vector2(coinPosition.x, coinPosition.y - 30);
-        
+        float width = (heartSize.x * 3) + (layout.spacing * 2);
+        healthRect.sizeDelta = new Vector2(width, heartSize.y);
+
+        // Instantiate 3 hearts
+        hearts.Clear();
+        for (int i = 0; i < 3; i++)
+        {
+            GameObject heartGo = new GameObject($"Heart_{i}");
+            heartGo.transform.SetParent(healthObj.transform, false);
+            
+            Image img = heartGo.AddComponent<Image>();
+            img.preserveAspect = true;
+            
+            RectTransform hr = heartGo.GetComponent<RectTransform>();
+            hr.sizeDelta = heartSize;
+
+            // Effect child
+            GameObject effectGo = new GameObject("Effect");
+            effectGo.transform.SetParent(heartGo.transform, false);
+            Image effImg = effectGo.AddComponent<Image>();
+            effImg.preserveAspect = true;
+            effectGo.SetActive(false);
+            
+            RectTransform effRect = effectGo.GetComponent<RectTransform>();
+            effRect.anchorMin = Vector2.zero;
+            effRect.anchorMax = Vector2.one;
+            effRect.offsetMin = Vector2.zero;
+            effRect.offsetMax = Vector2.zero;
+
+            HeartDisplay hd = heartGo.AddComponent<HeartDisplay>();
+            hd.heartImage = img;
+            hd.effectImage = effImg;
+            // Pass references (they might be null initially, user must assign in inspector)
+            hd.fullHeart = fullHeartSprite;
+            hd.halfHeart = halfHeartSprite;
+            hd.emptyHeart = emptyHeartSprite;
+            
+            hearts.Add(hd);
+        }
+
         // Bomb Text
         GameObject bombObj = new GameObject("BombText");
         bombObj.transform.SetParent(canvasObj.transform, false);
         bombText = bombObj.AddComponent<Text>();
         bombText.font = coinText.font;
-        bombText.fontSize = fontSize - 4; // Slightly smaller
+        bombText.fontSize = fontSize - 4; 
         bombText.color = textColor;
         bombText.alignment = TextAnchor.UpperRight;
         bombText.horizontalOverflow = HorizontalWrapMode.Overflow;
         bombText.verticalOverflow = VerticalWrapMode.Overflow;
 
         RectTransform bombRect = bombObj.GetComponent<RectTransform>();
-        bombRect.anchorMin = Vector2.one; // Top Right
+        bombRect.anchorMin = Vector2.one; 
         bombRect.anchorMax = Vector2.one;
         bombRect.pivot = Vector2.one;
-        // Positioned under health text
-        bombRect.anchoredPosition = new Vector2(coinPosition.x, coinPosition.y - 60); 
+        bombRect.anchoredPosition = new Vector2(coinPosition.x, coinPosition.y - 65); // Adjusted for hearts
         
         // Pressure Slider
         GameObject sliderObj = new GameObject("PressureSlider");
@@ -368,7 +395,7 @@ public class GameHUD : MonoBehaviour
         sliderRect.anchorMax = Vector2.one;
         sliderRect.pivot = Vector2.one;
         sliderRect.sizeDelta = new Vector2(200, 20);
-        sliderRect.anchoredPosition = new Vector2(coinPosition.x, coinPosition.y - 60);
+        sliderRect.anchoredPosition = new Vector2(coinPosition.x, coinPosition.y - 90); // Adjusted
 
         // Background
         GameObject bgObj = new GameObject("Background");
@@ -387,7 +414,7 @@ public class GameHUD : MonoBehaviour
         RectTransform fillAreaRect = fillArea.AddComponent<RectTransform>();
         fillAreaRect.anchorMin = Vector2.zero;
         fillAreaRect.anchorMax = Vector2.one;
-        fillAreaRect.offsetMin = new Vector2(5, 0); // Padding?
+        fillAreaRect.offsetMin = new Vector2(5, 0); 
         fillAreaRect.offsetMax = new Vector2(-5, 0);
         
         // Fill
@@ -420,12 +447,12 @@ public class GameHUD : MonoBehaviour
         winText.verticalOverflow = VerticalWrapMode.Overflow;
         
         RectTransform winRect = winObj.GetComponent<RectTransform>();
-        winRect.anchorMin = new Vector2(0.5f, 0.5f); // Center
+        winRect.anchorMin = new Vector2(0.5f, 0.5f); 
         winRect.anchorMax = new Vector2(0.5f, 0.5f);
         winRect.pivot = new Vector2(0.5f, 0.5f);
         winRect.anchoredPosition = Vector2.zero;
         
-        winObj.SetActive(false); // Hidden by default
+        winObj.SetActive(false); 
     }
 
     public void AddCoin(int amount = 1)
@@ -444,42 +471,83 @@ public class GameHUD : MonoBehaviour
 
     private void UpdateHealthDisplay()
     {
-        if (healthText != null)
+        if (playerHealth == null)
         {
-            if (playerHealth != null)
-            {
-                // Heart Display (6 units = 3 Hearts, so 2 units = 1 Heart)
-                int current = Mathf.Clamp(playerHealth.CurrentHealth, 0, playerHealth.maxHealth);
-                int fullHearts = current / 2;
-                bool hasHalfHeart = (current % 2) != 0;
+             // Retry finding player
+             if (Random.Range(0, 100) < 5) 
+             {
+                  PlayerHealth ph = FindFirstObjectByType<PlayerHealth>();
+                  if (ph != null) playerHealth = ph;
+             }
+             return;
+        }
 
-                string heartString = "";
-                for (int i = 0; i < fullHearts; i++)
+        int current = Mathf.Clamp(playerHealth.CurrentHealth, 0, playerHealth.maxHealth);
+        
+        // Sync with local field sprites just in case they were assigned late
+        foreach(var h in hearts)
+        {
+            if (h.fullHeart == null) h.fullHeart = fullHeartSprite;
+            if (h.halfHeart == null) h.halfHeart = halfHeartSprite;
+            if (h.emptyHeart == null) h.emptyHeart = emptyHeartSprite;
+        }
+
+        // Logic to determine state of each heart
+        // 1 Heart = 2 health points. Max 6 health = 3 hearts.
+        // Heart 0: Health 1-2
+        // Heart 1: Health 3-4
+        // Heart 2: Health 5-6
+
+        // Detect if logic needs running
+        if (current == lastHealth) return;
+
+        // Helper to get status of interaction for heart i
+        HeartDisplay.HeartStatus GetStatus(int heartIndex, int health)
+        {
+            int thresholdLow = heartIndex * 2;
+            int thresholdHigh = (heartIndex + 1) * 2;
+            
+            if (health >= thresholdHigh) return HeartDisplay.HeartStatus.Full;
+            if (health <= thresholdLow) return HeartDisplay.HeartStatus.Empty;
+            return HeartDisplay.HeartStatus.Half;
+        }
+
+        for (int i = 0; i < 3; i++)
+        {
+            HeartDisplay hd = hearts[i];
+            HeartDisplay.HeartStatus newStatus = GetStatus(i, current);
+            
+            // If we have a previous state, check for animation
+            if (lastHealth != -1)
+            {
+                HeartDisplay.HeartStatus oldStatus = GetStatus(i, lastHealth);
+                if (oldStatus != newStatus)
                 {
-                    heartString += "❤";
+                    if (current < lastHealth)
+                    {
+                        // Damage taken
+                        hd.AnimateLoss(oldStatus, newStatus);
+                    }
+                    else
+                    {
+                        // Healed
+                        hd.SetHeart(newStatus);
+                    }
                 }
-                if (hasHalfHeart)
+                else
                 {
-                    heartString += "💔"; 
+                     // Ensure visual is correct anyway (e.g. init)
+                     hd.SetHeart(newStatus); 
                 }
-                
-                healthText.text = $"Health: {heartString}";
-                
-                // Color warning when equal to or less than 1 full heart (2 units)
-                if (current <= 2) healthText.color = Color.red;
-                else healthText.color = textColor;
             }
             else
             {
-                healthText.text = "Health: --";
-                // Try finding it again if we missed it start (e.g. player spawned late)
-                if (Random.Range(0, 100) < 5) // Occasional retry
-                {
-                     PlayerHealth ph = FindFirstObjectByType<PlayerHealth>();
-                     if (ph != null) playerHealth = ph;
-                }
+                // First initialization
+                hd.SetHeart(newStatus);
             }
         }
+
+        lastHealth = current;
     }
     
     private void UpdateBombDisplay()

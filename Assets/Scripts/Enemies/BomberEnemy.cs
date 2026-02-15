@@ -114,6 +114,9 @@ public class BomberEnemy : EnemyAI
         shockwave.transform.localScale = Vector3.one * 0.5f;
         
         float maxShockwaveScale = 4.0f; // Similar to FlashBomb
+        
+        // Safety: Ensure shockwave is destroyed even if this coroutine stops (e.g. enemy dies)
+        Destroy(shockwave, duration + 0.1f);
 
         while (elapsed < duration)
         {
@@ -174,8 +177,8 @@ public class BomberEnemy : EnemyAI
     {
         Debug.Log("BomberEnemy: EXPLODING!");
         
-        // Create explosion effect
-        ExplosionEffect.CreateExplosion(transform.position, explosionRadius, playerDamage, enemyDamage);
+        // Create explosion effect that IGNORES other bombers to prevent chain reactions
+        ExplosionEffect.CreateExplosion(transform.position, explosionRadius, playerDamage, enemyDamage, true);
     }
     
     // ... OnEnemyUpdate logic remains ...

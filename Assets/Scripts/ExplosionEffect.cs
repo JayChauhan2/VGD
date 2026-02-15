@@ -8,6 +8,7 @@ public class ExplosionEffect : MonoBehaviour
     public float playerDamage = 25f;
     public float enemyDamage = 50f;
     public float visualDuration = 0.5f;
+    public bool ignoreBombers = false; // New flag
     
     private LineRenderer circleRenderer;
     private float spawnTime;
@@ -87,6 +88,12 @@ public class ExplosionEffect : MonoBehaviour
             EnemyAI enemy = hitCollider.GetComponent<EnemyAI>();
             if (enemy != null)
             {
+                // Skip if this is a Bomber and we should ignore them
+                if (ignoreBombers && enemy is BomberEnemy)
+                {
+                    continue;
+                }
+                
                 enemy.TakeDamage(enemyDamage);
             }
         }
@@ -95,7 +102,7 @@ public class ExplosionEffect : MonoBehaviour
     }
 
     // Static helper method to create explosion
-    public static void CreateExplosion(Vector3 position, float radius = 3f, float playerDmg = 25f, float enemyDmg = 50f)
+    public static void CreateExplosion(Vector3 position, float radius = 3f, float playerDmg = 25f, float enemyDmg = 50f, bool ignoreBombers = false)
     {
         GameObject explosionObj = new GameObject("Explosion");
         explosionObj.transform.position = position;
@@ -104,5 +111,6 @@ public class ExplosionEffect : MonoBehaviour
         explosion.explosionRadius = radius;
         explosion.playerDamage = playerDmg;
         explosion.enemyDamage = enemyDmg;
+        explosion.ignoreBombers = ignoreBombers;
     }
 }

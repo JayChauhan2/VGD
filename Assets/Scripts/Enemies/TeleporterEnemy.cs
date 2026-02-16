@@ -22,6 +22,7 @@ public class TeleporterEnemy : EnemyAI
     
     // References
     private Collider2D[] myColliders;
+    private SpriteRenderer[] allRenderers;
 
     private void OnEnable()
     {
@@ -29,8 +30,6 @@ public class TeleporterEnemy : EnemyAI
         if (currentHealth > 0)
         {
              // Force a fresh start.
-             // If we were hidden, this will reset visibility eventually (in BehaviorLoop).
-             // But let's also ensure no old coroutines are blocking us.
              behaviorCoroutine = null;
              recoveryCoroutine = null;
              StartBehavior();
@@ -52,6 +51,9 @@ public class TeleporterEnemy : EnemyAI
         speed = 0f; 
         
         spriteRenderer = GetComponent<SpriteRenderer>();
+        // Grab ALL renderers (body + beak + whatever else)
+        allRenderers = GetComponentsInChildren<SpriteRenderer>();
+        
         myColliders = GetComponentsInChildren<Collider2D>();
         
         if (projectilePrefab == null)
@@ -150,7 +152,18 @@ public class TeleporterEnemy : EnemyAI
     {
         isHidden = !visible;
         
-        if (spriteRenderer != null) spriteRenderer.enabled = visible;
+        if (allRenderers != null)
+        {
+            foreach (var sr in allRenderers)
+            {
+                sr.enabled = visible;
+            }
+        }
+        else if (spriteRenderer != null)
+        {
+             // Fallback if array not init
+             spriteRenderer.enabled = visible;
+        }
         
         if (myColliders != null)
         {

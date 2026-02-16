@@ -7388,7 +7388,7 @@ MonoBehaviour:
   - {fileID: 1127242731612300559, guid: 5110fba8dd08f944e8ad76cf01375583, type: 3}
   spawnInterval: 3
   minSpawnInterval: 0
-  maxActiveEnemies: 5
+  maxActiveEnemies: 1
   spawnRadius: 2
   enemiesPerSpawn: 1
 --- !u!1001 &872661908896325867

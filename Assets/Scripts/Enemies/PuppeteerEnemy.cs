@@ -1,26 +1,36 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public class PuppeteerEnemy : EnemyAI
 {
     [Header("Puppeteer Settings")]
+    public GameObject puppetPrefab; // Assign in Inspector
     public int puppetCount = 3;
-    public float controlRadius = 8f;
-    public float keepDistanceFromPlayer = 6f;
+    public float keepDistanceFromPlayer = 8f;
+    public float summonCooldown = 2f;
     
     private List<WandererEnemy> puppets = new List<WandererEnemy>();
     private LineRenderer[] tethers;
+
+    private enum State { Spawning, Hiding, Summoning, Panic }
+    private State currentState;
+    
+    private Vector3 hidingSpot;
+    private bool isSummoning = false;
 
     protected override void OnEnemyStart()
     {
         maxHealth = 165f;
         currentHealth = maxHealth;
-        // speed = 2f; // Removed to allow Inspector value
         
-        // Spawn puppets
+        // Spawn puppets immediately but set them to confused initially
         SpawnPuppets();
         
-        Debug.Log("PuppeteerEnemy: Initialized with puppets");
+        // Start by hiding
+        TransitionToState(State.Hiding);
+        
+        Debug.Log("PuppeteerEnemy: Initialized with State Machine");
     }
 
     void SpawnPuppets()
@@ -28,6 +38,12 @@ public class PuppeteerEnemy : EnemyAI
         if (parentRoom == null)
         {
             Debug.LogWarning("PuppeteerEnemy: No parent room, cannot spawn puppets");
+            return;
+        }
+
+        if (puppetPrefab == null)
+        {
+            Debug.LogError("PuppeteerEnemy: Puppet Prefab is NOT assigned!");
             return;
         }
         
@@ -41,34 +57,19 @@ public class PuppeteerEnemy : EnemyAI
             Vector3 offset = new Vector3(Mathf.Cos(radians), Mathf.Sin(radians), 0) * 2f;
             Vector3 spawnPosition = transform.position + offset;
             
-            // Create puppet
-            GameObject puppetObj = new GameObject($"Puppet_{i}");
-            puppetObj.transform.position = spawnPosition;
+            // Create puppet from PREFAB
+            GameObject puppetObj = Instantiate(puppetPrefab, spawnPosition, Quaternion.identity);
+            puppetObj.name = $"Puppet_{i}";
             
-            // Add sprite renderer
-            SpriteRenderer sr = puppetObj.AddComponent<SpriteRenderer>();
-            sr.sprite = CreateCircleSprite();
-            sr.color = new Color(0.6f, 0.4f, 0.8f); // Purple-ish
-            puppetObj.transform.localScale = Vector3.one * 0.8f;
-            
-            // Add collider
-            CircleCollider2D collider = puppetObj.AddComponent<CircleCollider2D>();
-            collider.radius = 0.5f;
-            
-            // Add rigidbody
-            Rigidbody2D rb = puppetObj.AddComponent<Rigidbody2D>();
-            rb.gravityScale = 0;
-            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-            
-            // Add WandererEnemy script
-            WandererEnemy puppet = puppetObj.AddComponent<WandererEnemy>();
-            puppet.maxHealth = 40f;
-            puppet.speed = 4.5f;
-            
-            puppets.Add(puppet);
+            // Get valid WandererEnemy script
+            WandererEnemy puppet = puppetObj.GetComponent<WandererEnemy>();
+            if (puppet == null) puppet = puppetObj.AddComponent<WandererEnemy>();
             
             // Register with room
             parentRoom.RegisterEnemy(puppet);
+            
+            // Store reference
+            puppets.Add(puppet);
             
             // Create tether visual
             CreateTether(i, puppetObj);
@@ -90,32 +91,16 @@ public class PuppeteerEnemy : EnemyAI
         lr.startColor = new Color(0.6f, 0.4f, 0.8f, 0.5f);
         lr.endColor = new Color(0.6f, 0.4f, 0.8f, 0.2f);
         lr.sortingOrder = -1;
+        lr.material = new Material(Shader.Find("Sprites/Default")); // Ensure visibility
         
         tethers[index] = lr;
     }
 
-    Sprite CreateCircleSprite()
+    // Override UpdatePath to prevent base class from automatically pathfinding to 'target' (Player)
+    protected override IEnumerator UpdatePath()
     {
-        int size = 32;
-        Texture2D texture = new Texture2D(size, size);
-        Color[] pixels = new Color[size * size];
-        
-        Vector2 center = new Vector2(size / 2f, size / 2f);
-        float radius = size / 2f;
-        
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                float distance = Vector2.Distance(new Vector2(x, y), center);
-                pixels[y * size + x] = distance <= radius ? Color.white : Color.clear;
-            }
-        }
-        
-        texture.SetPixels(pixels);
-        texture.Apply();
-        
-        return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+        // We handle our own pathfinding/movement in OnEnemyUpdate state machine
+        yield break;
     }
 
     protected override void OnEnemyUpdate()
@@ -123,33 +108,158 @@ public class PuppeteerEnemy : EnemyAI
         // Clean up destroyed puppets
         puppets.RemoveAll(p => p == null);
         
-        // Keep distance from player (flee behavior)
-        if (target != null)
+        // Update State Machine
+        switch (currentState)
         {
-            float distanceToPlayer = Vector2.Distance(transform.position, target.position);
+            case State.Hiding:
+                UpdateHidingState();
+                break;
+            case State.Summoning:
+                UpdateSummoningState();
+                break;
+            case State.Panic:
+                UpdatePanicState();
+                break;
+        }
+
+        // Always update tethers
+        UpdateTethers();
+    }
+
+    void TransitionToState(State newState)
+    {
+        currentState = newState;
+        Debug.Log($"PuppeteerEnemy: Transitioned to {newState}");
+
+        switch (currentState)
+        {
+            case State.Hiding:
+                isSummoning = false;
+                UpdateAnimator();
+                FindFurthestHidingSpot();
+                MovePuppetsToConfusion(true);
+                break;
+                
+            case State.Summoning:
+                isSummoning = true;
+                UpdateAnimator();
+                path = null; // Stop moving
+                if (rb != null) rb.linearVelocity = Vector2.zero;
+                MovePuppetsToConfusion(false); // regain control
+                break;
+                
+            case State.Panic:
+                isSummoning = false;
+                UpdateAnimator();
+                MovePuppetsToConfusion(true); // lose control
+                // Panic ensures we run away immediately
+                FindFurthestHidingSpot();
+                TransitionToState(State.Hiding); // Immediately start hiding behavior
+                break;
+        }
+    }
+
+    void UpdateHidingState()
+    {
+        // Move towards hiding spot
+        if (Vector3.Distance(transform.position, hidingSpot) < 0.5f)
+        {
+            // Reached hiding spot
+            TransitionToState(State.Summoning);
+        }
+        else
+        {
+            // Continue moving to hiding spot
+            // We use simple MoveTowards or Pathfinding if available
+            // Since hiding spot is static, we can use Pathfinding
             
-            if (distanceToPlayer < keepDistanceFromPlayer)
+            if (pathfinding != null && pathfinding.IsGridReady)
             {
-                // Flee from player using safe movement
-                path = null;
-                Vector2 fleeDirection = (transform.position - target.position).normalized;
-                MoveSafely(fleeDirection, speed * Time.deltaTime);
+                // Basic Pathfollowing manually or reuse base class logic? 
+                // Base class UpdatePath uses 'target'. Let's override 'target' logic or just move manually.
+                
+                // Let's use MoveSafely to go straight to point for now (simple)
+                 Vector3 dir = (hidingSpot - transform.position).normalized;
+                 MoveSafely(dir, speed * Time.deltaTime);
+            }
+        }
+    }
+
+    void UpdateSummoningState()
+    {
+        // Just wait here. 
+        // If player gets too close? The request says "When it starts shooting".
+        // So we just stay here until we take damage.
+    }
+
+    void UpdatePanicState()
+    {
+        // Transient state, usually immediately goes to Hiding
+    }
+
+    public override void TakeDamage(float damage)
+    {
+        base.TakeDamage(damage);
+        
+        // Trigger Panic if currently summoning
+        if (currentState == State.Summoning)
+        {
+            TransitionToState(State.Panic);
+        }
+    }
+
+    void FindFurthestHidingSpot()
+    {
+        if (parentRoom == null) return;
+        
+        // Get room corners
+        Vector3 roomPos = parentRoom.transform.position;
+        Vector2 size = parentRoom.roomSize;
+        
+        List<Vector3> corners = new List<Vector3>
+        {
+            roomPos + new Vector3(-size.x/2 + 2, -size.y/2 + 2, 0), // Bottom Left
+            roomPos + new Vector3(size.x/2 - 2, -size.y/2 + 2, 0),  // Bottom Right
+            roomPos + new Vector3(-size.x/2 + 2, size.y/2 - 2, 0),  // Top Left
+            roomPos + new Vector3(size.x/2 - 2, size.y/2 - 2, 0)    // Top Right
+        };
+        
+        // Find corner furthest from player
+        Vector3 bestSpot = transform.position;
+        float maxDist = -1f;
+        
+        Vector3 playerPos = (target != null) ? target.position : transform.position;
+        
+        foreach (var corner in corners)
+        {
+            float dist = Vector3.Distance(corner, playerPos);
+            if (dist > maxDist)
+            {
+                maxDist = dist;
+                bestSpot = corner;
             }
         }
         
-        // Update tether visuals
-        UpdateTethers();
-        
-        // Activate puppets if this enemy is active
-        if (IsActive)
+        hidingSpot = bestSpot;
+        Debug.Log($"PuppeteerEnemy: New hiding spot at {hidingSpot} (Distance: {maxDist})");
+    }
+
+    void MovePuppetsToConfusion(bool confused)
+    {
+        foreach (var puppet in puppets)
         {
-            foreach (var puppet in puppets)
+            if (puppet != null)
             {
-                if (puppet != null && !puppet.IsActive)
-                {
-                    puppet.SetActive(true);
-                }
+                puppet.SetConfusion(confused);
             }
+        }
+    }
+
+    void UpdateAnimator()
+    {
+        if (animator != null)
+        {
+            animator.SetBool("IsSummoning", isSummoning);
         }
     }
 
@@ -157,32 +267,39 @@ public class PuppeteerEnemy : EnemyAI
     {
         for (int i = 0; i < puppets.Count && i < tethers.Length; i++)
         {
-            if (puppets[i] != null && tethers[i] != null)
+            if (tethers[i] != null)
             {
-                tethers[i].SetPosition(0, transform.position);
-                tethers[i].SetPosition(1, puppets[i].transform.position);
+                if (puppets[i] != null)
+                {
+                    tethers[i].enabled = true;
+                    tethers[i].SetPosition(0, transform.position);
+                    tethers[i].SetPosition(1, puppets[i].transform.position);
+                    
+                    // Dim tether if confused
+                    Color color = isSummoning ? new Color(0.6f, 0.4f, 0.8f, 0.5f) : new Color(0.3f, 0.3f, 0.3f, 0.2f);
+                    tethers[i].startColor = color;
+                    tethers[i].endColor = new Color(color.r, color.g, color.b, 0.1f);
+                }
+                else
+                {
+                    tethers[i].enabled = false;
+                }
             }
         }
     }
 
     protected override void OnEnemyDeath()
     {
-        // When puppeteer dies, weaken/confuse puppets
-        foreach (var puppet in puppets)
+        MovePuppetsToConfusion(true); // Permanently confused
+        Debug.Log("PuppeteerEnemy: Died, puppets are now permanently confused!");
+        
+        // Destroy tethers
+        if (tethers != null)
         {
-            if (puppet != null)
+            foreach (var t in tethers)
             {
-                puppet.speed *= 0.5f; // Slow them down
-                
-                // Change color to indicate confusion
-                SpriteRenderer sr = puppet.GetComponent<SpriteRenderer>();
-                if (sr != null)
-                {
-                    sr.color = new Color(0.5f, 0.5f, 0.5f); // Gray
-                }
+                if (t != null) Destroy(t.gameObject);
             }
         }
-        
-        Debug.Log("PuppeteerEnemy: Died, puppets are now confused!");
     }
 }

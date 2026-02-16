@@ -167,7 +167,7 @@ public class EnemyAI : MonoBehaviour
     // Virtual method for subclasses to override (e.g., spawn enemies, explode)
     protected virtual void OnEnemyDeath() { }
 
-    IEnumerator UpdatePath()
+    protected virtual IEnumerator UpdatePath()
     {
         while (pathfinding == null || !pathfinding.IsGridReady)
         {

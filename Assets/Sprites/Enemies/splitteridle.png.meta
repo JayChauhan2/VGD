@@ -157,9 +157,9 @@ TextureImporter:
       name: splitteridle_1
       rect:
         serializedVersion: 2
-        x: 15
+        x: 16
         y: 0
-        width: 17
+        width: 16
         height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
@@ -179,9 +179,9 @@ TextureImporter:
       name: splitteridle_2
       rect:
         serializedVersion: 2
-        x: 31
+        x: 32
         y: 0
-        width: 17
+        width: 16
         height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
@@ -201,7 +201,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: ed299c9619376e84fb3b2221d4b0ff66
     internalID: 0
     vertices: []
     indices: 
@@ -209,7 +209,9 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":16.0,"y":16.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
       splitteridle_0: -6269883274587512294
       splitteridle_1: 7129170449274597807

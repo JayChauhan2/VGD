@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: 18ee3dcdd76910b498ddab516876be80
+guid: 39a80bd6c9fc79c4d9537de9ef572a81
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 3653617893956900581
-    second: teleporter-body_0
-  - first:
-      213: 5925930804302385897
-    second: teleporter-body_1
+      213: -2249985061257626533
+    second: teleporter-complete_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -49,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -129,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: teleporter-body_0
+      name: teleporter-complete_0
       rect:
         serializedVersion: 2
-        x: 0
+        x: 2
         y: 0
-        width: 16
-        height: 16
+        width: 12
+        height: 14
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -144,30 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5e6df4aed1244b230800000000000000
-      internalID: 3653617893956900581
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: teleporter-body_1
-      rect:
-        serializedVersion: 2
-        x: 16
-        y: 0
-        width: 16
-        height: 16
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 9e21df96ba22d3250800000000000000
-      internalID: 5925930804302385897
+      spriteID: b5cbdc9f18276c0e0800000000000000
+      internalID: -2249985061257626533
       vertices: []
       indices: 
       edges: []
@@ -176,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: cc369a8454ddb954ca83cd5736204c98
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -184,12 +159,9 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries:
-      - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":16.0,"y":16.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
+      entries: []
     nameFileIdTable:
-      teleporter-body_0: 3653617893956900581
-      teleporter-body_1: 5925930804302385897
+      teleporter-complete_0: -2249985061257626533
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

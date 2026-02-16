@@ -113,9 +113,19 @@ public class PuppeteerEnemy : EnemyAI
     // --- Smart Hiding Variables ---
     private float retargetTimer = 0f;
     private const float RETARGET_INTERVAL = 0.5f;
+    
+    // Timer to track if we were recently damaged
+    private float underAttackTimer = 0f;
+    private const float UNDER_ATTACK_DURATION = 3.0f; // Run for 3 seconds after being shot
 
     protected override void OnEnemyUpdate()
     {
+        // Update attack timer
+        if (underAttackTimer > 0)
+        {
+            underAttackTimer -= Time.deltaTime;
+        }
+
         // Clean up destroyed puppets
         puppets.RemoveAll(p => p == null);
 
@@ -136,24 +146,24 @@ public class PuppeteerEnemy : EnemyAI
         // Always update tethers
         UpdateTethers();
     }
-
-    // --- Manual Animation Handling ---
     
-    // Override UpdateAnimation to ignore the velocity passed by EnemyAI (which is 0 because we handle movement manually)
-    // Override UpdateAnimation to use base logic but add custom parameter
-    protected override void UpdateAnimation(Vector2 velocity)
-    {
-        // Use base EnemyAI animation logic for Speed and Flip
-        base.UpdateAnimation(velocity);
-        
-        // Add our custom parameter
-        if (animator != null)
-        {
-            animator.SetBool("IsSummoning", isSummoning);
-        }
-    }
+    // ... UpdateAnimation ...
 
     // --- State Logic ---
+    
+    public override void TakeDamage(float damage)
+    {
+        base.TakeDamage(damage);
+        
+        // Reset the under attack timer whenever we take damage
+        underAttackTimer = UNDER_ATTACK_DURATION;
+        
+        // Trigger Panic if currently summoning
+        if (currentState == State.Summoning)
+        {
+            TransitionToState(State.Panic);
+        }
+    }
 
     void TransitionToState(State newState)
     {
@@ -194,22 +204,37 @@ public class PuppeteerEnemy : EnemyAI
 
     void UpdateHidingState()
     {
-        // 1. Check if we are hidden
-        if (!CheckLineOfSight())
+        // 1. Check if we can safely summon
+        // Conditions: 
+        // - We are hidden from player (Line of Sight blocked)
+        // - AND We are NOT under active attack (Timer <= 0)
+        if (!CheckLineOfSight() && underAttackTimer <= 0)
         {
-            // We are hidden! Switch to summon.
+            // We are hidden and safe! Switch to summon.
             TransitionToState(State.Summoning);
             return;
         }
 
-        // 2. Navigation
-        // If we reached current hiding spot but are still visible, find a new one
-        if (Vector3.Distance(transform.position, hidingSpot) < 1.0f)
+        // 2. Navigation & Retargeting
+        retargetTimer -= Time.deltaTime;
+        if (retargetTimer <= 0)
         {
-            FindBestHidingSpot();
-        }
+            retargetTimer = RETARGET_INTERVAL;
 
-        FollowPathToHidingSpot();
+            // If we are close to our current "best spot" but still here (meaning still unsafe), 
+            // try to find a better one.
+            if (Vector3.Distance(transform.position, hidingSpot) < 2.0f)
+            {
+                FindBestHidingSpot();
+            }
+
+            // Refresh Path
+            if (pathfinding != null && pathfinding.IsGridReady)
+            {
+                path = pathfinding.FindPath(transform.position, hidingSpot);
+                targetIndex = 0;
+            }
+        }
     }
 
     void UpdateSummoningState()
@@ -314,24 +339,8 @@ public class PuppeteerEnemy : EnemyAI
         // Debug.Log($"PuppeteerEnemy: New hiding spot: {hidingSpot} (Hidden Score: {bestScore})");
     }
 
-    void FollowPathToHidingSpot()
-    {
-        // Update path periodically
-        retargetTimer -= Time.deltaTime;
-        if (retargetTimer <= 0)
-        {
-            retargetTimer = RETARGET_INTERVAL;
-            if (pathfinding != null && pathfinding.IsGridReady)
-            {
-                // Set the path for EnemyAI to follow
-                path = pathfinding.FindPath(transform.position, hidingSpot);
-                targetIndex = 0;
-            }
-        }
-        
-        // EnemyAI.Update() handles the actual movement along 'path'
-        // We don't need to manually move RB here
-    }
+    // FollowPathToHidingSpot logic merged into UpdateHidingState
+
 
     void MovePuppetsToConfusion(bool confused)
     {

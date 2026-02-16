@@ -56,6 +56,57 @@ public class Room : MonoBehaviour
         if (Pressure != null) Pressure.OnPressureChanged -= OnPressureChanged;
     }
 
+    // Ghost Persistence
+    private List<Vector3> pendingGhosts = new List<Vector3>();
+
+    public void AddGhost(Vector3 position)
+    {
+        pendingGhosts.Add(position);
+        Debug.Log($"Room {name}: Ghost added at {position}. Pending Ghosts: {pendingGhosts.Count}");
+    }
+
+    private void SpawnPendingGhosts()
+    {
+        if (pendingGhosts.Count == 0) return;
+        
+        Debug.Log($"Room {name}: Spawning {pendingGhosts.Count} pending ghosts.");
+        
+        GameObject prefab = null;
+        if (RoomManager.Instance != null) prefab = RoomManager.Instance.ghostEnemyPrefab;
+        
+        if (prefab == null)
+        {
+            Debug.LogWarning("Room: Cannot spawn ghosts because GhostEnemyPrefab is missing in RoomManager!");
+            return;
+        }
+
+        foreach (Vector3 pos in pendingGhosts)
+        {
+            GameObject ghostObj = Instantiate(prefab, pos, Quaternion.identity);
+            
+            // Register as enemy but make sure it doesn't lock room
+            EnemyAI ghostAI = ghostObj.GetComponent<EnemyAI>();
+            if (ghostAI != null)
+            {
+                // Force it to NOT count towards clear, just in case prefab is wrong
+                ghostAI.CountTowardsRoomClear = false;
+                ghostAI.AssignRoom(this);
+                RegisterEnemy(ghostAI);
+            }
+        }
+        
+        // Clear list so they don't double-spawn next time (they are now active enemies in the room)
+        // Wait, if we clear properties, they become "real" enemies. 
+        // If the player leaves and comes back, "activeEnemies" might be cleared?
+        // "activeEnemies" are usually destroyed when room is unloaded? 
+        // In this game, rooms seem to stay instantiated (List<GameObject> roomObjects in RoomManager).
+        // So they persist. Standard enemies might not respawn, but these ghosts are newly spawned.
+        // Once spawned, they are in "activeEnemies". If player leaves and comes back, they are still there?
+        // Only if we don't destroy them on exit.
+        // Assuming rooms persist, clearing this list is correct.
+        pendingGhosts.Clear();
+    }
+
     public static Room GetRoomContaining(Vector3 position)
     {
         foreach (var r in AllRooms)
@@ -184,10 +235,13 @@ public class Room : MonoBehaviour
         PlayerHasEntered = true;
 
         OnRoomEntered?.Invoke(this);
+        
+        // Spawn any ghosts waiting for the player
+        SpawnPendingGhosts();
 
         // If we have enemies OR spawners, we lock.
         // Even if activeEnemies is 0, if we have a spawner, it might spawn them next frame.
-        if ((activeEnemies.Count > 0 || hasSpawners) && !IsCleared)
+        if ((GetLockingEnemyCount() > 0 || hasSpawners) && !IsCleared)
         {
             LockDoors();
             foreach (var enemy in activeEnemies)
@@ -293,13 +347,28 @@ public class Room : MonoBehaviour
         // Condition: No active enemies AND (Spawners disabled OR No spawners to begin with)
         bool spawnersDone = !hasSpawners || areSpawnersDisabled;
         
-        if (activeEnemies.Count == 0 && spawnersDone)
+        // We only care about enemies that "CountTowardsRoomClear"
+        if (GetLockingEnemyCount() == 0 && spawnersDone)
         {
              IsCleared = true;
              Debug.Log($"Room {name}: Room Cleared! Unlocking Exits.");
              UnlockDoors();
              OnRoomCleared?.Invoke(this);
         }
+    }
+    
+    // Helper to count only enemies that should lock the room
+    private int GetLockingEnemyCount()
+    {
+        int count = 0;
+        foreach(var enemy in activeEnemies)
+        {
+            if (enemy != null && enemy.CountTowardsRoomClear)
+            {
+                count++;
+            }
+        }
+        return count;
     }
 
     private void LockDoors()

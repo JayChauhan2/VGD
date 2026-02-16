@@ -1311,10 +1311,10 @@ MonoBehaviour:
   shopRoomPrefab: {fileID: 1299928572387882687, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
   generatedRoomPrefabs:
   - {fileID: 2167945867662251604, guid: ad0ee1855b9e3c54bbee740bd3fac092, type: 3}
-  isTestingMode: 1
+  isTestingMode: 0
   testingRoomPrefab: {fileID: 2167945867662251604, guid: ad0ee1855b9e3c54bbee740bd3fac092, type: 3}
-  roomWidth: 20
-  roomHeight: 12
+  roomWidth: 32
+  roomHeight: 16
   doorExitOffset: 2
   teleportCooldown: 0.5
 --- !u!4 &1234879618

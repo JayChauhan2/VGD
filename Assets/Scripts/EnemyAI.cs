@@ -20,6 +20,9 @@ public class EnemyAI : MonoBehaviour
 
     public bool IsActive { get; private set; } = false;
     public bool IsKnockedBack { get; private set; } = false; // New flag for knockback state
+    
+    [Tooltip("If true, this enemy counts towards locking the room. Set false for summoned minions or ghosts.")]
+    public bool CountTowardsRoomClear = true;
 
     public float maxHealth = 100f;
     protected float currentHealth;
@@ -149,7 +152,8 @@ public class EnemyAI : MonoBehaviour
     protected virtual void Die()
     {
         // Play death animation effect (explosion + ghost) - Scaled to enemy size
-        EnemyDeathEffect.PlayDeathEffect(transform.position, spriteRenderer?.sprite, transform.localScale.x);
+        // Pass parentRoom so we can register ghosts if the RNG succeeds
+        EnemyDeathEffect.PlayDeathEffect(transform.position, spriteRenderer?.sprite, transform.localScale.x, parentRoom);
         
         DropLoot();
         // Virtual hook for subclasses (called before room notification)

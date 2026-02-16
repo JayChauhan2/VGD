@@ -36,20 +36,49 @@ public class EnemyDeathEffect : MonoBehaviour
     /// <summary>
     /// Static method to easily play death effect from anywhere.
     /// </summary>
-    public static void PlayDeathEffect(Vector3 position, Sprite enemySprite = null, float enemyScale = 1.0f)
+    public static void PlayDeathEffect(Vector3 position, Sprite enemySprite = null, float enemyScale = 1.0f, Room room = null)
     {
+        // 25% Chance to become a ghost
+        // If successful:
+        // 1. Force use of Ghost Sprite in animation (ignore enemySprite)
+        // 2. Register ghost with Room for future spawning
+        bool isGhostSuccess = Random.value < 0.25f;
+        
+        if (isGhostSuccess)
+        {
+            // If it's a ghost death, we DON'T use the enemy sprite at all.
+            // We rely on LoadSettingsFromAsset to pick up the default ghost sprite.
+            enemySprite = null; 
+            
+            if (room != null)
+            {
+                room.AddGhost(position);
+            }
+        }
+
         // Create temporary GameObject to run the effect
         GameObject effectObj = new GameObject("EnemyDeathEffect");
         effectObj.transform.position = position;
         
         EnemyDeathEffect effect = effectObj.AddComponent<EnemyDeathEffect>();
         effect.baseScale = enemyScale; // Store enemy scale
-        // Don't set ghostSprite here - let LoadSettingsFromAsset handle it
-        // Only use enemySprite as fallback if settings has no sprite
+        
+        // If it was a ghost success, we want to ensure we use the ghost sprite.
+        // If it was NOT a success, we pass the enemy sprite as fallback.
+        // But LoadSettingsFromAsset prioritizes Settings.ghostSprite if it exists!
+        // We need to tell the instance to IGNORE the settings ghost sprite if we failed the roll?
+        // OR, the user wants "Ghost Sprite will show for their death animation" ONLY if successful.
+        // If not successful, "start of the enemy sprite floating up".
+        
+        effect.isGhostDeath = isGhostSuccess;
+        effect.fallbackEnemySprite = enemySprite;
+        
         effect.StartEffect();
     }
     
-    private float baseScale = 1.0f; // Scale multiplier from enemy size
+    private float baseScale = 1.0f; 
+    private bool isGhostDeath = false;
+    private Sprite fallbackEnemySprite;
 
     private void StartEffect()
     {
@@ -62,14 +91,24 @@ public class EnemyDeathEffect : MonoBehaviour
         {
             var settings = EnemyDeathSettings.Instance;
             
-            // Load from settings (settings take priority)
             if (explosionPrefab == null) explosionPrefab = settings.explosionPrefab;
             
-            // ALWAYS use settings ghost sprite if available (don't use enemy sprite)
-            if (settings.ghostSprite != null)
+            // LOGIC CHANGE:
+            // If isGhostDeath == true -> Use Settings Ghost Sprite
+            // If isGhostDeath == false -> Use fallbackEnemySprite (the enemy's actual sprite)
+            
+            if (isGhostDeath)
             {
-                ghostSprite = settings.ghostSprite;
+                // Use the cool ghost sprite
+                if (settings.ghostSprite != null) ghostSprite = settings.ghostSprite;
             }
+            else
+            {
+                // Use the enemy's own sprite (boring death)
+                ghostSprite = fallbackEnemySprite;
+            }
+            
+            // ... rest of settings ...
             
             explosionDuration = settings.explosionDuration;
             // Multiply settings scale by enemy scale

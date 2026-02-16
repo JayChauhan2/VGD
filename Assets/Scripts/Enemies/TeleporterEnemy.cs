@@ -7,7 +7,8 @@ public class TeleporterEnemy : EnemyAI
     public float minTeleportDistance = 3f;
     public float maxTeleportDistance = 8f;
     public float timeToAim = 1.0f;       // Time visible before shooting
-    public float timeAfterShot = 0.5f;   // Time visible after shooting
+    public float minTimeAfterShot = 0.1f;
+    public float maxTimeAfterShot = 0.5f;
     public float hideDuration = 2.0f;    // Time invisible
     
     [Header("Projectile Settings")]
@@ -104,6 +105,22 @@ public class TeleporterEnemy : EnemyAI
         else
         {
             hiddenTimer = 0f;
+            
+            // Look at player ONLY when visible
+            if (target != null && currentHealth > 0)
+            {
+                float dirX = target.position.x - transform.position.x;
+                if (dirX > 0.1f)
+                {
+                    // Look Right
+                    transform.rotation = Quaternion.Euler(0, 0, 0);
+                }
+                else if (dirX < -0.1f)
+                {
+                    // Look Left
+                    transform.rotation = Quaternion.Euler(0, 180, 0);
+                }
+            }
         }
     }
 
@@ -127,7 +144,7 @@ public class TeleporterEnemy : EnemyAI
             }
             
             // 4. Vulnerable window after shot
-            yield return new WaitForSeconds(timeAfterShot);
+            yield return new WaitForSeconds(Random.Range(minTimeAfterShot, maxTimeAfterShot));
             
             // 5. Disappear
             Disappear();
@@ -242,40 +259,8 @@ public class TeleporterEnemy : EnemyAI
         
         base.TakeDamage(damage);
         
-        // Reactive Teleport!
-        if (currentHealth > 0 && isActiveAndEnabled)
-        {
-             // Log the hit
-             // Debug.Log($"TeleporterEnemy: Took damage! Health: {currentHealth}. Initiating reactive teleport.");
-
-             StopAllBehaviorCoroutines();
-             
-             // CRITICAL FIX: Start the recovery coroutine *FIRST*
-             // If this fails (e.g. object inactive), we will catch it and NOT Disappear.
-             // This ensures we never get stuck in an invisible state.
-             try 
-             {
-                 if (gameObject.activeInHierarchy)
-                 {
-                     recoveryCoroutine = StartCoroutine(RecoverFromHit());
-                     
-                     // Only if the coroutine started successfully do we hide
-                     if (recoveryCoroutine != null)
-                     {
-                        Disappear();
-                     }
-                 }
-                 else
-                 {
-                     Debug.LogWarning("TeleporterEnemy: Object inactive, cannot start recovery. Staying visible.");
-                 }
-             }
-             catch (System.Exception e)
-             {
-                 Debug.LogWarning($"TeleporterEnemy: Failed to start recovery coroutine: {e.Message}");
-                 // Do NOT Disappear if we failed to start the recovery logic
-             }
-        }
+        // User requested REMOVAL of reactive teleport.
+        // The enemy now simply takes damage and continues its behavior loop until it dies or its timer runs out.
     }
 
     protected override void OnEnemyDeath()

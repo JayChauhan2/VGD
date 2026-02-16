@@ -62,6 +62,10 @@ public class TeleporterEnemy : EnemyAI
             projectilePrefab = CreateProjectilePrefab();
         }
         
+        // OPTIMIZATION: Teleporter Enemy does not need pathfinding.
+        // It teleports instead of walking. This prevents heavy calculations.
+        usePathfinding = false;
+        
         StartBehavior();
         
         Debug.Log("TeleporterEnemy: Initialized with Whack-a-Mole behavior");

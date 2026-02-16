@@ -124,10 +124,19 @@ public class Pathfinding : MonoBehaviour
         List<Node> path = new List<Node>();
         Node currentNode = endNode;
 
+        int safetyCounter = 0;
         while (currentNode != startNode)
         {
             path.Add(currentNode);
             currentNode = currentNode.parent;
+            
+            safetyCounter++;
+            if (safetyCounter > 5000)
+            {
+                Debug.LogError("Pathfinding: Infinite loop detected in RetracePath! Breaking safety.");
+                break;
+            }
+            if (currentNode == null) break; // Should not happen but good safety
         }
         path.Reverse();
         return path;

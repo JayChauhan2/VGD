@@ -14,6 +14,9 @@ public class EnemyAI : MonoBehaviour
     protected Pathfinding pathfinding;
     protected List<Node> path;
     protected int targetIndex;
+    
+    // Performance Optimization: Allow disabling pathfinding for enemies that don't need it (e.g. Teleporters)
+    public bool usePathfinding = true;
 
     public bool IsActive { get; private set; } = false;
     public bool IsKnockedBack { get; private set; } = false; // New flag for knockback state
@@ -168,12 +171,15 @@ public class EnemyAI : MonoBehaviour
     {
         while (pathfinding == null || !pathfinding.IsGridReady)
         {
+            if (!usePathfinding) yield break; // Exit if pathfinding disabled
             Debug.LogWarning($"EnemyAI: Waiting for Pathfinding Grid... (Pathfinding Obj: '{(pathfinding != null ? pathfinding.name : "null")}', IsGridReady: {pathfinding?.IsGridReady})");
             yield return new WaitForSeconds(1.0f);
         }
 
         while (true)
         {
+            if (!usePathfinding) yield break; // Exit if pathfinding disabled
+
             if (!IsActive || IsKnockedBack) // Pause path updates if knocked back
             {
                 yield return new WaitForSeconds(pathUpdateDelay);

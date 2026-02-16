@@ -22,6 +22,20 @@ public class SplitterEnemy : EnemyAI
         SpawnSplits();
     }
 
+    protected override void UpdateAnimation(Vector2 velocity)
+    {
+        // Call base for sorting order
+        base.UpdateAnimation(velocity);
+
+        // Override sprite flipping to face TOWARD player (opposite of default)
+        if (spriteRenderer != null && velocity.sqrMagnitude > 0.01f)
+        {
+            // Invert the default logic: flip when moving RIGHT, don't flip when moving LEFT
+            if (velocity.x < -0.01f) spriteRenderer.flipX = false;
+            else if (velocity.x > 0.01f) spriteRenderer.flipX = true;
+        }
+    }
+
     void SpawnSplits()
     {
         if (parentRoom == null)

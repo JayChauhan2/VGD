@@ -4,57 +4,292 @@ using System.Collections;
 public class TeleporterEnemy : EnemyAI
 {
     [Header("Teleporter Settings")]
-    public float teleportDistance = 4f;
-    public float teleportCooldown = 3f;
-    public float shootInterval = 2.5f;
+    public float minTeleportDistance = 3f;
+    public float maxTeleportDistance = 8f;
+    public float timeToAim = 1.0f;       // Time visible before shooting
+    public float timeAfterShot = 0.5f;   // Time visible after shooting
+    public float hideDuration = 2.0f;    // Time invisible
+    
+    [Header("Projectile Settings")]
     public float projectileSpeed = 7f;
     public float projectileDamage = 10f;
-    public float invulnerabilityDuration = 0.3f;
-    
-    [Header("Projectile Prefab")]
     public GameObject projectilePrefab;
     
-    private float teleportTimer;
-    private float shootTimer;
-    private bool isInvulnerable;
-    private SpriteRenderer spriteRenderer;
+    // Internal State
+    private bool isHidden = false;
+    private Coroutine behaviorCoroutine;
+    private Coroutine recoveryCoroutine;
+    
+    // References
+    private Collider2D[] myColliders;
+
+    private void OnEnable()
+    {
+        // Restart behavior if re-enabled (and not dead)
+        if (currentHealth > 0 && behaviorCoroutine == null && recoveryCoroutine == null)
+        {
+             StartBehavior();
+        }
+    }
 
     protected override void OnEnemyStart()
     {
-        maxHealth = 80f;
+        maxHealth = 40f; 
         currentHealth = maxHealth;
-        speed = 0f; // Doesn't move, only teleports
-        
-        teleportTimer = teleportCooldown;
-        shootTimer = shootInterval;
+        speed = 0f; 
         
         spriteRenderer = GetComponent<SpriteRenderer>();
+        myColliders = GetComponentsInChildren<Collider2D>();
         
-        // Create projectile prefab if not assigned
         if (projectilePrefab == null)
         {
             projectilePrefab = CreateProjectilePrefab();
         }
         
-        Debug.Log("TeleporterEnemy: Initialized");
+        StartBehavior();
+        
+        Debug.Log("TeleporterEnemy: Initialized with Whack-a-Mole behavior");
     }
 
+    void StartBehavior()
+    {
+        StopAllBehaviorCoroutines();
+        behaviorCoroutine = StartCoroutine(BehaviorLoop());
+    }
+
+    void StopAllBehaviorCoroutines()
+    {
+        if (behaviorCoroutine != null) StopCoroutine(behaviorCoroutine);
+        if (recoveryCoroutine != null) StopCoroutine(recoveryCoroutine);
+        behaviorCoroutine = null;
+        recoveryCoroutine = null;
+    }
+
+    // Override Update to disable default movement logic from EnemyAI
+    protected override void OnEnemyUpdate()
+    {
+        // No movement logic needed here
+    }
+
+    IEnumerator BehaviorLoop()
+    {
+        // Initial start delay
+        yield return new WaitForSeconds(1.0f);
+
+        while (true)
+        {
+            // 1. Appear near player
+            Appear();
+            
+            // 2. Wait/Aim
+            yield return new WaitForSeconds(timeToAim);
+            
+            // 3. Shoot (if still alive and target valid)
+            if (currentHealth > 0 && target != null)
+            {
+                ShootProjectile();
+            }
+            
+            // 4. Vulnerable window after shot
+            yield return new WaitForSeconds(timeAfterShot);
+            
+            // 5. Disappear
+            Disappear();
+            
+            // 6. Wait while hidden
+            yield return new WaitForSeconds(hideDuration);
+        }
+    }
+
+    void Appear()
+    {
+        TeleportNearPlayer();
+        SetVisibility(true);
+    }
+
+    void Disappear()
+    {
+        SetVisibility(false);
+    }
+
+    void SetVisibility(bool visible)
+    {
+        isHidden = !visible;
+        
+        if (spriteRenderer != null) spriteRenderer.enabled = visible;
+        
+        if (myColliders != null)
+        {
+            foreach (var col in myColliders)
+            {
+                col.enabled = visible;
+            }
+        }
+        
+        var healthBar = GetComponentInChildren<EnemyHealthBar>();
+        if (healthBar != null) healthBar.gameObject.SetActive(visible);
+    }
+
+    void TeleportNearPlayer()
+    {
+        if (target == null) 
+        {
+            FindPlayer(); 
+            if (target == null) return;
+        }
+        
+        Bounds roomBounds = GetRoomBounds();
+        Vector3 newPosition = Vector3.zero;
+        bool validPosition = false;
+        int attempts = 0;
+        
+        // Try to find a position in a "donut" shape around the player
+        while (!validPosition && attempts < 20)
+        {
+            Vector2 randomDir = Random.insideUnitCircle.normalized;
+            float distance = Random.Range(minTeleportDistance, maxTeleportDistance);
+            Vector3 candidatePos = target.position + (Vector3)(randomDir * distance);
+            candidatePos.z = transform.position.z;
+            
+            // Check 1: Inside Room
+            // Check 2: Not inside a wall (IsPositionValid)
+            // Check 3: Line of Sight to Player (New!)
+            if (roomBounds.Contains(candidatePos) && IsPositionValid(candidatePos))
+            {
+                // Linecast checks if there's an obstacle between candidate and target
+                RaycastHit2D hit = Physics2D.Linecast(candidatePos, target.position, LayerMask.GetMask("Obstacle"));
+                if (hit.collider == null)
+                {
+                    newPosition = candidatePos;
+                    validPosition = true;
+                }
+            }
+            
+            attempts++;
+        }
+        
+        // Fallback: Random point in room if donut fails
+        if (!validPosition)
+        {
+             // Even for fallback, try to find a valid one, but relax constraints if needed
+             // For now, just pick a random valid spot
+             newPosition = new Vector3(
+                 Random.Range(roomBounds.min.x + 1f, roomBounds.max.x - 1f),
+                 Random.Range(roomBounds.min.y + 1f, roomBounds.max.y - 1f),
+                 transform.position.z
+             );
+        }
+
+        transform.position = newPosition;
+    }
+
+    void FindPlayer()
+    {
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null) target = player.transform;
+    }
+
+    public override void TakeDamage(float damage)
+    {
+        if (isHidden) return; 
+        
+        base.TakeDamage(damage);
+        
+        // Reactive Teleport!
+        if (currentHealth > 0)
+        {
+            // Debug.Log("TeleporterEnemy: Hit! Vanishing immediately.");
+            
+            // Stop ALL current routies so we don't have duplicates
+            StopAllBehaviorCoroutines();
+            
+            // Disappear immediately
+            Disappear();
+            
+            // Start recovery
+            recoveryCoroutine = StartCoroutine(RecoverFromHit());
+        }
+    }
+
+    IEnumerator RecoverFromHit()
+    {
+        // Wait a bit (simulate retreating/relocating)
+        yield return new WaitForSeconds(hideDuration * 0.5f);
+        
+        // Restart the normal behavior
+        behaviorCoroutine = StartCoroutine(BehaviorLoop());
+        recoveryCoroutine = null;
+    }
+
+    void ShootProjectile()
+    {
+        if (projectilePrefab == null || target == null) return;
+        
+        // Recalculate direction right now to be accurate
+        Vector2 direction = (target.position - transform.position).normalized;
+        
+        GameObject projectileObj = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+        
+        // ROBUSTNESS FRONT:
+        // Ensure the projectile has a Rigidbody and it's set to Dynamic (for velocity to work reliably)
+        // This overrides whatever settings might be on the user's prefab
+        Rigidbody2D rb = projectileObj.GetComponent<Rigidbody2D>();
+        if (rb == null) rb = projectileObj.AddComponent<Rigidbody2D>();
+        
+        rb.bodyType = RigidbodyType2D.Dynamic;
+        rb.gravityScale = 0f;
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous; 
+        rb.freezeRotation = true;
+
+        // Ensure it has a Collider (Trigger)
+        Collider2D col = projectileObj.GetComponent<Collider2D>();
+        if (col == null) 
+        {
+            CircleCollider2D circle = projectileObj.AddComponent<CircleCollider2D>();
+            circle.radius = 0.5f;
+            circle.isTrigger = true;
+        }
+
+        // Ensure logic script exists
+        EnemyProjectile projectile = projectileObj.GetComponent<EnemyProjectile>();
+        if (projectile == null) projectile = projectileObj.AddComponent<EnemyProjectile>();
+        
+        // Initialize
+        projectile.Initialize(direction, projectileSpeed, projectileDamage);
+        projectile.SetOwner(gameObject); // Prevent friendly fire on self
+
+        // VISIBILITY FRONT:
+        // Force the sprite to be on the "Object" layer
+        SpriteRenderer sr = projectileObj.GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            sr.sortingLayerName = "Object";
+            sr.sortingOrder = 10; // High order to be on top of floor/walls
+        }
+    }
+
+    // Helper to create default projectile if none assigned
     GameObject CreateProjectilePrefab()
     {
-        GameObject prefab = new GameObject("TeleporterProjectile");
+        GameObject prefab = new GameObject("TeleporterProjectile_Generated");
         
         SpriteRenderer sr = prefab.AddComponent<SpriteRenderer>();
         sr.sprite = CreateCircleSprite();
-        sr.color = new Color(0.5f, 0f, 1f); // Purple
-        prefab.transform.localScale = Vector3.one * 0.35f;
+        sr.color = new Color(0.6f, 0f, 0.8f); // Purple
+        sr.sortingLayerName = "Object"; // Ensure it's on the correct layer
+        sr.sortingOrder = 10;
+        prefab.transform.localScale = Vector3.one * 0.4f;
         
+        // Critical: Needs Collider and Rigidbody for EnemyProjectile.cs to work!
         CircleCollider2D collider = prefab.AddComponent<CircleCollider2D>();
         collider.isTrigger = true;
         collider.radius = 0.5f;
         
         Rigidbody2D rb = prefab.AddComponent<Rigidbody2D>();
         rb.gravityScale = 0;
-        rb.isKinematic = true;
+        rb.bodyType = RigidbodyType2D.Dynamic; // Must be Dynamic for linearVelocity to work reliably without custom physics steps
+        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        rb.freezeRotation = true;
         
         prefab.AddComponent<EnemyProjectile>();
         
@@ -66,9 +301,8 @@ public class TeleporterEnemy : EnemyAI
         int size = 32;
         Texture2D texture = new Texture2D(size, size);
         Color[] pixels = new Color[size * size];
-        
         Vector2 center = new Vector2(size / 2f, size / 2f);
-        float radius = size / 2f;
+        float radius = size / 2f - 2;
         
         for (int y = 0; y < size; y++)
         {
@@ -81,115 +315,6 @@ public class TeleporterEnemy : EnemyAI
         
         texture.SetPixels(pixels);
         texture.Apply();
-        
         return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
-    }
-
-    protected override void OnEnemyUpdate()
-    {
-        if (target == null) return;
-        
-        // Disable pathfinding (teleporter doesn't walk)
-        path = null;
-        
-        float distanceToPlayer = Vector2.Distance(transform.position, target.position);
-        
-        // Teleport if player gets too close
-        if (distanceToPlayer < teleportDistance)
-        {
-            teleportTimer -= Time.deltaTime;
-            if (teleportTimer <= 0)
-            {
-                Teleport();
-                teleportTimer = teleportCooldown;
-            }
-        }
-        
-        // Shoot projectiles
-        shootTimer -= Time.deltaTime;
-        if (shootTimer <= 0 && !isInvulnerable)
-        {
-            ShootProjectile();
-            shootTimer = shootInterval;
-        }
-    }
-
-    void Teleport()
-    {
-        Bounds roomBounds = GetRoomBounds();
-        
-        // Find random position in room
-        Vector3 newPosition = Vector3.zero;
-        int attempts = 0;
-        bool validPosition = false;
-        
-        while (!validPosition && attempts < 10)
-        {
-            float randomX = Random.Range(roomBounds.min.x + 1f, roomBounds.max.x - 1f);
-            float randomY = Random.Range(roomBounds.min.y + 1f, roomBounds.max.y - 1f);
-            newPosition = new Vector3(randomX, randomY, transform.position.z);
-            
-            // Check if far enough from player AND valid position (not in wall)
-            if (Vector2.Distance(newPosition, target.position) > teleportDistance && IsPositionValid(newPosition))
-            {
-                validPosition = true;
-            }
-            
-            attempts++;
-        }
-        
-        if (validPosition)
-        {
-            transform.position = newPosition;
-            StartCoroutine(InvulnerabilityPeriod());
-            Debug.Log("TeleporterEnemy: Teleported to new position!");
-        }
-        else
-        {
-            Debug.LogWarning("TeleporterEnemy: Failed to find valid teleport position.");
-        }
-    }
-
-    IEnumerator InvulnerabilityPeriod()
-    {
-        isInvulnerable = true;
-        
-        // Visual feedback - flash sprite
-        if (spriteRenderer != null)
-        {
-            Color originalColor = spriteRenderer.color;
-            spriteRenderer.color = new Color(originalColor.r, originalColor.g, originalColor.b, 0.5f);
-            
-            yield return new WaitForSeconds(invulnerabilityDuration);
-            
-            spriteRenderer.color = originalColor;
-        }
-        else
-        {
-            yield return new WaitForSeconds(invulnerabilityDuration);
-        }
-        
-        isInvulnerable = false;
-    }
-
-    public override void TakeDamage(float damage)
-    {
-        if (isInvulnerable) return;
-        base.TakeDamage(damage);
-    }
-
-    void ShootProjectile()
-    {
-        if (projectilePrefab == null || target == null) return;
-        
-        Vector2 direction = (target.position - transform.position).normalized;
-        
-        GameObject projectileObj = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
-        EnemyProjectile projectile = projectileObj.GetComponent<EnemyProjectile>();
-        
-        if (projectile != null)
-        {
-            projectile.Initialize(direction, projectileSpeed, projectileDamage);
-        }
     }
 }

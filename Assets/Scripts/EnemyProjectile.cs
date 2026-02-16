@@ -42,9 +42,19 @@ public class EnemyProjectile : MonoBehaviour
         }
     }
 
+    private GameObject owner;
+
+    public void SetOwner(GameObject ownerObject)
+    {
+        this.owner = ownerObject;
+    }
+
     void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision == null) return;
+        
+        // Ignore collision with the shooter (owner)
+        if (owner != null && collision.gameObject == owner) return;
         
         // Debug.Log($"EnemyProjectile hit: {collision.gameObject.name} (Layer: {LayerMask.LayerToName(collision.gameObject.layer)})");
 

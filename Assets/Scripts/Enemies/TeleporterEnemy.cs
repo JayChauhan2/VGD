@@ -14,6 +14,8 @@ public class TeleporterEnemy : EnemyAI
     [Header("Animation Settings")]
     public float appearAnimDuration = 1.0f;
     public float disappearAnimDuration = 1.0f;
+    [Tooltip("If true, wait for animation state normalized time (looping checked). If false, wait for duration.")]
+    public bool useNormalizedTimeCheck = true;
     
     [Header("Projectile Settings")]
     public float projectileSpeed = 7f;
@@ -63,6 +65,7 @@ public class TeleporterEnemy : EnemyAI
         allRenderers = GetComponentsInChildren<SpriteRenderer>();
         
         animator = GetComponent<Animator>();
+        if (animator != null) animator.applyRootMotion = false; // Disable root motion to prevent animation overriding transform
         appearHash = Animator.StringToHash("Appear");
         disappearHash = Animator.StringToHash("Disappear");
 
@@ -111,13 +114,14 @@ public class TeleporterEnemy : EnemyAI
         if (isHidden)
         {
             hiddenTimer += Time.deltaTime;
-            if (hiddenTimer > 3.0f) // Max expected hide time ~2s
+            if (hiddenTimer > 5.0f) // Increased watchdog to 5s to be safe
             {
                 Debug.LogWarning("TeleporterEnemy: Watchdog triggered! Force appearing stuck enemy.");
+                float oldTime = hiddenTimer;
+                hiddenTimer = 0f; // Reset first
                 Appear();
-                hiddenTimer = 0f;
-                // Restart behavior just in case
-                if (behaviorCoroutine == null) StartBehavior();
+                // Avoid infinite loop if Appear fails
+                if (behaviorCoroutine == null) StartBehavior(); 
             }
         }
         else
@@ -174,20 +178,28 @@ public class TeleporterEnemy : EnemyAI
 
     IEnumerator AppearSequence()
     {
+        isHidden = false; 
+        hiddenTimer = 0f;
+
+        // Force position update
+        Vector3 oldPos = transform.position;
         TeleportNearPlayer();
         
-        // Show visuals so animation plays
+        // Wait one frame to ensure Transform updates propagate and physics settle
+        yield return null; 
+
+        // Show visuals 
         SetRenderersEnabled(true);
         
         if (animator != null)
         {
-            animator.SetTrigger(appearHash);
+            // Use Play() to force restart from beginning, avoiding stuck triggers
+            animator.Play(appearHash, -1, 0f);
             yield return new WaitForSeconds(appearAnimDuration);
         }
         
         // Now fully interactive
         SetCollidersEnabled(true);
-        isHidden = false;
         
         var healthBar = GetComponentInChildren<EnemyHealthBar>();
         if (healthBar != null) healthBar.SetVisibility(true);
@@ -197,11 +209,27 @@ public class TeleporterEnemy : EnemyAI
     {
         if (animator != null)
         {
-            animator.SetTrigger(disappearHash);
-            yield return new WaitForSeconds(disappearAnimDuration);
+            // Force play from start
+            animator.Play(disappearHash, -1, 0f);
+            
+            // Wait until animation is playing the correct state
+            yield return null; 
+            
+            if (useNormalizedTimeCheck)
+            {
+                 // Wait until near end (95%) to prevent loop/transition to idle
+                 while (animator.GetCurrentAnimatorStateInfo(0).normalizedTime < 0.95f)
+                 {
+                     yield return null;
+                 }
+            }
+            else
+            {
+                 yield return new WaitForSeconds(disappearAnimDuration);
+            }
         }
         
-        // Now fully hidden
+        // NOW disable renderer immediately
         SetRenderersEnabled(false);
         SetCollidersEnabled(false);
         isHidden = true;
@@ -245,7 +273,7 @@ public class TeleporterEnemy : EnemyAI
         if (target == null) 
         {
             FindPlayer(); 
-            if (target == null) return;
+            // Don't return if target null, just fall through to random pos
         }
         
         Bounds roomBounds = GetRoomBounds();
@@ -254,7 +282,7 @@ public class TeleporterEnemy : EnemyAI
         int attempts = 0;
         
         // Try to find a position in a "donut" shape around the player
-        while (!validPosition && attempts < 20)
+        while (target != null && !validPosition && attempts < 20)
         {
             Vector2 randomDir = Random.insideUnitCircle.normalized;
             float distance = Random.Range(minTeleportDistance, maxTeleportDistance);

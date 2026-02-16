@@ -10,7 +10,8 @@ public class ShielderEnemy : EnemyAI
     
     [Header("Visual References")]
     [SerializeField] protected Animator shieldAnimator; // Protected for child access
-    
+    public Transform shieldTransform; // Reference to the actual Shield GameObject to rotate
+
     // Shield States
     public enum ShieldState { Shielded, Vulnerable, Broken } // Public for child access
     protected ShieldState currentState = ShieldState.Shielded; // Protected
@@ -33,9 +34,25 @@ public class ShielderEnemy : EnemyAI
         if (shieldAnimator == null)
             shieldAnimator = GetComponentInChildren<Animator>();
             
+        // Try to find Shield Transform if not assigned
+        if (shieldTransform == null)
+        {
+            // First check if shieldAnimator is on a child, that might be it
+            if (shieldAnimator != null && shieldAnimator.transform != transform)
+            {
+                shieldTransform = shieldAnimator.transform;
+            }
+            else
+            {
+                // Look for a child named "Shield"
+                Transform shieldChild = transform.Find("Shield");
+                if (shieldChild != null) shieldTransform = shieldChild;
+            }
+        }
+            
         UpdateVisuals();
         
-        Debug.Log($"{GetType().Name}: Initialized");
+        Debug.Log($"{GetType().Name}: Initialized. Shield Transform: {(shieldTransform != null ? shieldTransform.name : "NULL")}");
     }
 
     protected override void OnEnemyUpdate()
@@ -56,6 +73,12 @@ public class ShielderEnemy : EnemyAI
 
             shieldAnimator.SetBool("IsVulnerable", currentState == ShieldState.Vulnerable);
         }
+        
+        // Also toggle the shieldTransform if it's different from animator
+        if (shieldTransform != null && currentState == ShieldState.Broken)
+        {
+             shieldTransform.gameObject.SetActive(false);
+        }
     }
 
     protected virtual void RotateShieldToPlayer()
@@ -68,17 +91,18 @@ public class ShielderEnemy : EnemyAI
         }
         
         // 1. Handle Shield Rotation (Aiming)
-        Vector2 direction = (target.position - transform.position).normalized;
-        float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        // We only rotate the Shield Transform, NOT the main body.
         
-        // The Shield should rotate to face the player fully
-        if (shieldAnimator != null && shieldAnimator.gameObject.activeSelf)
+        if (shieldTransform != null && shieldTransform.gameObject.activeSelf)
         {
+             Vector2 direction = (target.position - transform.position).normalized;
+             float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+
              // Smooth Rotation towards target
-             float currentAngle = shieldAnimator.transform.rotation.eulerAngles.z;
+             float currentAngle = shieldTransform.rotation.eulerAngles.z;
              float nextAngle = Mathf.MoveTowardsAngle(currentAngle, targetAngle, shieldRotationSpeed * Time.deltaTime);
              
-             shieldAnimator.transform.rotation = Quaternion.Euler(0, 0, nextAngle);
+             shieldTransform.rotation = Quaternion.Euler(0, 0, nextAngle);
         }
         
         // 2. Handle Body Facing (Discrete Left/Right) using SpriteRenderer.
@@ -145,7 +169,8 @@ public class ShielderEnemy : EnemyAI
         // Check angle (Optional, implemented for completeness)
         Vector2 directionToPlayer = (target.position - transform.position).normalized;
         Vector2 shieldForward = Vector2.right; // Logic handled by rotation + 180 fix if needed, but here simple checking
-        if (shieldAnimator != null) shieldForward = shieldAnimator.transform.right;
+        if (shieldTransform != null) shieldForward = shieldTransform.right; // Use shieldTransform instead of animator
+        else if (shieldAnimator != null) shieldForward = shieldAnimator.transform.right;
 
         float dotProduct = Vector2.Dot(shieldForward, directionToPlayer);
         // dot > 0 means frontal roughly, but let's assume if it tracks player, it blocks.
@@ -197,6 +222,6 @@ public class ShielderEnemy : EnemyAI
 
     public GameObject GetShieldGameObject()
     {
-        return shieldAnimator != null ? shieldAnimator.gameObject : null;
+        return shieldTransform != null ? shieldTransform.gameObject : (shieldAnimator != null ? shieldAnimator.gameObject : null);
     }
 }

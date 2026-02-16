@@ -10,7 +10,7 @@ public class PuppeteerEnemy : EnemyAI
     public float keepDistanceFromPlayer = 8f;
     public float summonCooldown = 2f;
     
-    private List<WandererEnemy> puppets = new List<WandererEnemy>();
+    private List<PuppetMinion> puppets = new List<PuppetMinion>();
     private LineRenderer[] tethers;
 
     private enum State { Spawning, Hiding, Summoning, Panic }
@@ -18,16 +18,14 @@ public class PuppeteerEnemy : EnemyAI
     
     private Vector3 hidingSpot;
     private bool isSummoning = false;
+    private bool hasSpawned = false;
 
     protected override void OnEnemyStart()
     {
         maxHealth = 165f;
         currentHealth = maxHealth;
         
-        // Spawn puppets immediately but set them to confused initially
-        SpawnPuppets();
-        
-        // Start by hiding
+        // Start by hiding (don't spawn yet)
         TransitionToState(State.Hiding);
         
         Debug.Log("PuppeteerEnemy: Initialized with State Machine");
@@ -47,6 +45,13 @@ public class PuppeteerEnemy : EnemyAI
             return;
         }
         
+        // CRASH FIX: Prevent infinite recursion if Puppeteer is assigned as its own puppet
+        if (puppetPrefab.GetComponent<PuppeteerEnemy>() != null)
+        {
+            Debug.LogError("PuppeteerEnemy: CRITICAL ERROR! The assigned Puppet Prefab has a PuppeteerEnemy script. This causes infinite recursion/crash. Please assign the Minion/Wanderer prefab instead.");
+            return;
+        }
+        
         tethers = new LineRenderer[puppetCount];
         
         for (int i = 0; i < puppetCount; i++)
@@ -61,9 +66,9 @@ public class PuppeteerEnemy : EnemyAI
             GameObject puppetObj = Instantiate(puppetPrefab, spawnPosition, Quaternion.identity);
             puppetObj.name = $"Puppet_{i}";
             
-            // Get valid WandererEnemy script
-            WandererEnemy puppet = puppetObj.GetComponent<WandererEnemy>();
-            if (puppet == null) puppet = puppetObj.AddComponent<WandererEnemy>();
+            // Get valid PuppetMinion script
+            PuppetMinion puppet = puppetObj.GetComponent<PuppetMinion>();
+            if (puppet == null) puppet = puppetObj.AddComponent<PuppetMinion>();
             
             // Register with room
             parentRoom.RegisterEnemy(puppet);
@@ -103,11 +108,17 @@ public class PuppeteerEnemy : EnemyAI
         yield break;
     }
 
+    private Vector3 lastPosition;
+
+    // --- Smart Hiding Variables ---
+    private float retargetTimer = 0f;
+    private const float RETARGET_INTERVAL = 0.5f;
+
     protected override void OnEnemyUpdate()
     {
         // Clean up destroyed puppets
         puppets.RemoveAll(p => p == null);
-        
+
         // Update State Machine
         switch (currentState)
         {
@@ -124,124 +135,217 @@ public class PuppeteerEnemy : EnemyAI
 
         // Always update tethers
         UpdateTethers();
+        
+        // Manual Animation Handling (velocity calculation)
+        Vector3 displacement = transform.position - lastPosition;
+        Vector2 velocity = displacement / Time.deltaTime;
+        lastPosition = transform.position;
+        UpdateAnimation(velocity);
     }
+
+    // --- State Logic ---
 
     void TransitionToState(State newState)
     {
         currentState = newState;
-        Debug.Log($"PuppeteerEnemy: Transitioned to {newState}");
+        // Debug.Log($"PuppeteerEnemy: Transitioned to {newState}");
 
         switch (currentState)
         {
             case State.Hiding:
                 isSummoning = false;
-                UpdateAnimator();
-                FindFurthestHidingSpot();
+                FindBestHidingSpot(); 
                 MovePuppetsToConfusion(true);
                 break;
                 
             case State.Summoning:
                 isSummoning = true;
-                UpdateAnimator();
                 path = null; // Stop moving
                 if (rb != null) rb.linearVelocity = Vector2.zero;
+                
+                // Spawn puppets if first time
+                if (!hasSpawned)
+                {
+                    SpawnPuppets();
+                    hasSpawned = true;
+                }
+                
                 MovePuppetsToConfusion(false); // regain control
                 break;
                 
             case State.Panic:
                 isSummoning = false;
-                UpdateAnimator();
-                MovePuppetsToConfusion(true); // lose control
-                // Panic ensures we run away immediately
-                FindFurthestHidingSpot();
-                TransitionToState(State.Hiding); // Immediately start hiding behavior
+                MovePuppetsToConfusion(true);
+                // Immediately transition to Hiding to run away
+                TransitionToState(State.Hiding); 
                 break;
         }
     }
 
     void UpdateHidingState()
     {
-        // Move towards hiding spot
-        if (Vector3.Distance(transform.position, hidingSpot) < 0.5f)
+        // 1. Check if we are hidden
+        if (!CheckLineOfSight())
         {
-            // Reached hiding spot
+            // We are hidden! Switch to summon.
             TransitionToState(State.Summoning);
+            return;
         }
-        else
+
+        // 2. Navigation
+        // If we reached current hiding spot but are still visible, find a new one
+        if (Vector3.Distance(transform.position, hidingSpot) < 1.0f)
         {
-            // Continue moving to hiding spot
-            // We use simple MoveTowards or Pathfinding if available
-            // Since hiding spot is static, we can use Pathfinding
-            
-            if (pathfinding != null && pathfinding.IsGridReady)
-            {
-                // Basic Pathfollowing manually or reuse base class logic? 
-                // Base class UpdatePath uses 'target'. Let's override 'target' logic or just move manually.
-                
-                // Let's use MoveSafely to go straight to point for now (simple)
-                 Vector3 dir = (hidingSpot - transform.position).normalized;
-                 MoveSafely(dir, speed * Time.deltaTime);
-            }
+            FindBestHidingSpot();
         }
+
+        FollowPathToHidingSpot();
     }
 
     void UpdateSummoningState()
     {
-        // Just wait here. 
-        // If player gets too close? The request says "When it starts shooting".
-        // So we just stay here until we take damage.
+        // If player spots us, run!
+        if (CheckLineOfSight())
+        {
+            // Debug.Log("PuppeteerEnemy: Player saw me! running!");
+            TransitionToState(State.Hiding);
+        }
     }
 
     void UpdatePanicState()
     {
-        // Transient state, usually immediately goes to Hiding
+        // Transient state, shouldn't stay here
     }
 
-    public override void TakeDamage(float damage)
+    // --- Helper Methods ---
+
+    bool CheckLineOfSight()
     {
-        base.TakeDamage(damage);
-        
-        // Trigger Panic if currently summoning
-        if (currentState == State.Summoning)
+        if (target == null) return false; // Can't see null target
+
+        float distance = Vector3.Distance(transform.position, target.position);
+        Vector3 direction = (target.position - transform.position).normalized;
+
+        // Raycast to player
+        // Use "Obstacle" layer to check for walls
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, distance, LayerMask.GetMask("Obstacle"));
+
+        // If we hit nothing (or player isn't an obstacle), we have LOS
+        // If we hit a wall, we are hidden.
+        return hit.collider == null;
+    }
+
+    void FindBestHidingSpot()
+    {
+        if (parentRoom == null || target == null) 
         {
-            TransitionToState(State.Panic);
+             // Fallback if no room/target
+             hidingSpot = transform.position; 
+             return;
         }
-    }
 
-    void FindFurthestHidingSpot()
-    {
-        if (parentRoom == null) return;
-        
-        // Get room corners
         Vector3 roomPos = parentRoom.transform.position;
         Vector2 size = parentRoom.roomSize;
-        
-        List<Vector3> corners = new List<Vector3>
+        float halfX = size.x / 2f - 2f; // Buffer from walls
+        float halfY = size.y / 2f - 2f;
+
+        // Sample candidate points
+        List<Vector3> candidates = new List<Vector3>();
+
+        // 1. Corners
+        candidates.Add(roomPos + new Vector3(-halfX, -halfY, 0));
+        candidates.Add(roomPos + new Vector3(halfX, -halfY, 0));
+        candidates.Add(roomPos + new Vector3(-halfX, halfY, 0));
+        candidates.Add(roomPos + new Vector3(halfX, halfY, 0));
+
+        // 2. Random points
+        for (int i = 0; i < 6; i++)
         {
-            roomPos + new Vector3(-size.x/2 + 2, -size.y/2 + 2, 0), // Bottom Left
-            roomPos + new Vector3(size.x/2 - 2, -size.y/2 + 2, 0),  // Bottom Right
-            roomPos + new Vector3(-size.x/2 + 2, size.y/2 - 2, 0),  // Top Left
-            roomPos + new Vector3(size.x/2 - 2, size.y/2 - 2, 0)    // Top Right
-        };
-        
-        // Find corner furthest from player
-        Vector3 bestSpot = transform.position;
-        float maxDist = -1f;
-        
-        Vector3 playerPos = (target != null) ? target.position : transform.position;
-        
-        foreach (var corner in corners)
+            float randX = Random.Range(-halfX, halfX);
+            float randY = Random.Range(-halfY, halfY);
+            candidates.Add(roomPos + new Vector3(randX, randY, 0));
+        }
+
+        // Evaluate points
+        Vector3 bestSpot = transform.position; // Default stay put
+        float bestScore = -1f;
+
+        foreach (Vector3 spot in candidates)
         {
-            float dist = Vector3.Distance(corner, playerPos);
-            if (dist > maxDist)
+            if (!IsPositionValid(spot)) continue;
+
+            float score = 0;
+
+            // Factor 1: Is it hidden from player? (Heavy Weight)
+            float distToPlayer = Vector3.Distance(spot, target.position);
+            Vector3 dirToPlayer = (target.position - spot).normalized;
+            RaycastHit2D hit = Physics2D.Raycast(spot, dirToPlayer, distToPlayer, LayerMask.GetMask("Obstacle"));
+            
+            bool isHidden = hit.collider != null;
+
+            if (isHidden) score += 1000f; // Pivotally important
+            
+            // Factor 2: Distance from player (Further is better)
+            score += distToPlayer;
+
+            // Factor 3: Distance from current pos (Closer is better to get there fast)
+            // But we prioritize being hidden/far from player more.
+            // float distFromSelf = Vector3.Distance(spot, transform.position);
+            // score -= distFromSelf * 0.5f;
+
+            if (score > bestScore)
             {
-                maxDist = dist;
-                bestSpot = corner;
+                bestScore = score;
+                bestSpot = spot;
             }
         }
-        
+
         hidingSpot = bestSpot;
-        Debug.Log($"PuppeteerEnemy: New hiding spot at {hidingSpot} (Distance: {maxDist})");
+        // Debug.Log($"PuppeteerEnemy: New hiding spot: {hidingSpot} (Hidden Score: {bestScore})");
+    }
+
+    void FollowPathToHidingSpot()
+    {
+        // Update path periodically
+        retargetTimer -= Time.deltaTime;
+        if (retargetTimer <= 0)
+        {
+            retargetTimer = RETARGET_INTERVAL;
+            if (pathfinding != null && pathfinding.IsGridReady)
+            {
+                path = pathfinding.FindPath(transform.position, hidingSpot);
+                targetIndex = 0;
+            }
+        }
+
+        // Follow Path
+        if (path == null) return;
+
+        if (targetIndex >= path.Count)
+        {
+            // End of path
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+            return;
+        }
+
+        Vector3 currentWaypoint = path[targetIndex].worldPosition;
+        Vector2 dir = (currentWaypoint - transform.position).normalized;
+        
+        // Move
+        if (rb != null)
+        {
+             rb.linearVelocity = dir * speed;
+        }
+        else
+        {
+             transform.position += (Vector3)dir * speed * Time.deltaTime;
+        }
+
+        // Check waypoint distance
+        if (Vector3.Distance(transform.position, currentWaypoint) < 0.2f)
+        {
+            targetIndex++;
+        }
     }
 
     void MovePuppetsToConfusion(bool confused)
@@ -255,13 +359,14 @@ public class PuppeteerEnemy : EnemyAI
         }
     }
 
-    void UpdateAnimator()
-    {
-        if (animator != null)
-        {
-            animator.SetBool("IsSummoning", isSummoning);
-        }
-    }
+    // UpdateAnimator() is no longer needed as its logic is moved to UpdateAnimation override
+    // void UpdateAnimator()
+    // {
+    //     if (animator != null)
+    //     {
+    //         animator.SetBool("IsSummoning", isSummoning);
+    //     }
+    // }
 
     void UpdateTethers()
     {

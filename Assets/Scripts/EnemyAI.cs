@@ -280,7 +280,7 @@ public class EnemyAI : MonoBehaviour
     // Virtual method for subclasses to add custom update behavior
     protected virtual void OnEnemyUpdate() { }
 
-    void FindPlayer()
+    protected virtual void FindPlayer()
     {
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)

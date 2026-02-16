@@ -11,7 +11,7 @@ public class EnemyDeathEffect : MonoBehaviour
     [Header("Explosion Settings")]
     [Tooltip("Optional prefab with explosion animation. If null, uses procedural effect.")]
     public GameObject explosionPrefab;
-    public float explosionDuration = 0.25f;
+    public float explosionDuration = 0.5f;
     public float explosionScale = 1.0f;
     
     [Header("Ghost Settings")]

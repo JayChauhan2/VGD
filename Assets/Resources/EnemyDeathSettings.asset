@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   explosionPrefab: {fileID: 892155499060712766, guid: 583b411a6f27c024bb016a2c3718d8fe, type: 3}
   explosionFrames: []
-  explosionDuration: 0.25
+  explosionDuration: 0.333
   explosionScale: 2
   ghostSprite: {fileID: 7011265459045433248, guid: 6b8fac36ca72b1d47aaed854128cab87, type: 3}
   ghostScale: 1

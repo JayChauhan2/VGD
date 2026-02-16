@@ -7385,12 +7385,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyPrefabs:
-  - {fileID: 6454240620750936782, guid: c318244b93c821e44b56ba9a1eecd99c, type: 3}
+  - {fileID: 6710552969564480974, guid: 0be9697145e0bdb499f8950f19318f10, type: 3}
   spawnInterval: 3
-  minSpawnInterval: 1
+  minSpawnInterval: 0
   maxActiveEnemies: 5
   spawnRadius: 2
-  enemiesPerSpawn: 3
+  enemiesPerSpawn: 1
 --- !u!1001 &872661908896325867
 PrefabInstance:
   m_ObjectHideFlags: 0

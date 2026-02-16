@@ -5,18 +5,19 @@ public class ShielderEnemy : EnemyAI
     [Header("Shielder Settings")]
     public float shieldArc = 180f; // Degrees of protection in front
     public float maxShieldHealth = 100f; // Increased for continuous laser damage (approx 3-4 sec survival)
-    [SerializeField] private float damageFlashCooldown = 0.1f;
+    public float shieldRotationSpeed = 100f; // Degrees per second. Lower = easier to flank.
+    [SerializeField] protected float damageFlashCooldown = 0.1f;
     
     [Header("Visual References")]
-    [SerializeField] private Animator shieldAnimator;
+    [SerializeField] protected Animator shieldAnimator; // Protected for child access
     
     // Shield States
-    private enum ShieldState { Shielded, Vulnerable, Broken }
-    private ShieldState currentState = ShieldState.Shielded;
-    private float currentShieldHealth;
-    private float lastFlashTime;
+    public enum ShieldState { Shielded, Vulnerable, Broken } // Public for child access
+    protected ShieldState currentState = ShieldState.Shielded; // Protected
+    protected float currentShieldHealth;
+    protected float lastFlashTime;
     
-    private Vector3 initialScale;
+    protected Vector3 initialScale;
 
     protected override void OnEnemyStart()
     {
@@ -34,7 +35,7 @@ public class ShielderEnemy : EnemyAI
             
         UpdateVisuals();
         
-        Debug.Log("ShielderEnemy: Initialized");
+        Debug.Log($"{GetType().Name}: Initialized");
     }
 
     protected override void OnEnemyUpdate()
@@ -42,7 +43,7 @@ public class ShielderEnemy : EnemyAI
         RotateShieldToPlayer();
     }
 
-    void UpdateVisuals()
+    protected virtual void UpdateVisuals()
     {
         if (shieldAnimator != null)
         {
@@ -57,7 +58,7 @@ public class ShielderEnemy : EnemyAI
         }
     }
 
-    void RotateShieldToPlayer()
+    protected virtual void RotateShieldToPlayer()
     {
         if (target == null)
         {
@@ -73,9 +74,11 @@ public class ShielderEnemy : EnemyAI
         // The Shield should rotate to face the player fully
         if (shieldAnimator != null && shieldAnimator.gameObject.activeSelf)
         {
-             // We set global rotation. 
-             // Aligning shield rotation with target angle (0 degree offset).
-             shieldAnimator.transform.rotation = Quaternion.Euler(0, 0, targetAngle);
+             // Smooth Rotation towards target
+             float currentAngle = shieldAnimator.transform.rotation.eulerAngles.z;
+             float nextAngle = Mathf.MoveTowardsAngle(currentAngle, targetAngle, shieldRotationSpeed * Time.deltaTime);
+             
+             shieldAnimator.transform.rotation = Quaternion.Euler(0, 0, nextAngle);
         }
         
         // 2. Handle Body Facing (Discrete Left/Right) using SpriteRenderer.
@@ -126,7 +129,7 @@ public class ShielderEnemy : EnemyAI
         // 2. If Vulnerable, next hit breaks the shield
         if (currentState == ShieldState.Vulnerable)
         {
-             Debug.Log("ShielderEnemy: Shield Hit while Vulnerable! BREAKING SHIELD.");
+             Debug.Log($"{GetType().Name}: Shield Hit while Vulnerable! BREAKING SHIELD.");
              currentState = ShieldState.Broken;
              UpdateVisuals();
              return;
@@ -163,13 +166,13 @@ public class ShielderEnemy : EnemyAI
 
         if (currentShieldHealth <= 0)
         {
-            Debug.Log("ShielderEnemy: Shield health depleted! Becoming Vulnerable.");
+            Debug.Log($"{GetType().Name}: Shield health depleted! Becoming Vulnerable.");
             currentState = ShieldState.Vulnerable;
             UpdateVisuals();
         }
     }
     
-    private System.Collections.IEnumerator FlashVulnerableState()
+    protected System.Collections.IEnumerator FlashVulnerableState()
     {
         if (shieldAnimator != null)
         {
@@ -180,15 +183,20 @@ public class ShielderEnemy : EnemyAI
         }
     }
 
-    void ResetShieldColor()
+    // Checking for Reflection Logic - Helper
+    // Base Shielder DOES NOT reflect (return false), or we can return true but Laser ignores it.
+    // To implement "Shielder doesn't reflect", we should return false here, 
+    // AND let Reflector override it to return true.
+    // BUT, user's previous code had IsReflecting return true here.
+    // For proper OOP, Shielder shouldn't reflect. 
+    // UPDATE: Now takes incoming direction to check angle (for Reflector)
+    public virtual bool IsReflecting(Vector2 incomingDir)
     {
-        // Deprecated by Animator flash
+        return false; // Default: No reflection
     }
 
-    // Checking for Reflection Logic
-    public bool IsReflecting()
+    public GameObject GetShieldGameObject()
     {
-        // Only reflect if Shield is UP and not Vulnerable/Broken
-        return currentState == ShieldState.Shielded && currentShieldHealth > 0;
+        return shieldAnimator != null ? shieldAnimator.gameObject : null;
     }
 }

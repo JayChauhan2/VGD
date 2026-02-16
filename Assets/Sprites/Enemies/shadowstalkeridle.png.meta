@@ -135,9 +135,9 @@ TextureImporter:
       name: shadowstalkeridle_0
       rect:
         serializedVersion: 2
-        x: 3
+        x: 0
         y: 0
-        width: 11
+        width: 16
         height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
@@ -157,9 +157,9 @@ TextureImporter:
       name: shadowstalkeridle_1
       rect:
         serializedVersion: 2
-        x: 19
+        x: 16
         y: 0
-        width: 11
+        width: 16
         height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
@@ -179,9 +179,9 @@ TextureImporter:
       name: shadowstalkeridle_2
       rect:
         serializedVersion: 2
-        x: 35
+        x: 32
         y: 0
-        width: 11
+        width: 16
         height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
@@ -201,7 +201,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: d76b1efdd1cef7b4b82a4fc3e1bf76e5
     internalID: 0
     vertices: []
     indices: 
@@ -209,7 +209,9 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":16.0,"y":16.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
       shadowstalkeridle_0: 180630364716235000
       shadowstalkeridle_1: 3736565333739716509

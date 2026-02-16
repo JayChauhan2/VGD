@@ -198,9 +198,22 @@ public class Laser : MonoBehaviour
         // Handle First Hit
         if (_hit.collider != null)
         {
-            // Check for Reflector
-            ReflectorEnemy reflector = _hit.collider.GetComponent<ReflectorEnemy>();
-            if (reflector != null && reflector.IsReflecting())
+            // CHECK FOR REFLECTOR (Body or Shield)
+            // Use GetComponentInParent to handle hitting the Shield Child OR the Body
+            ReflectorEnemy reflector = _hit.collider.GetComponentInParent<ReflectorEnemy>();
+            
+            // Determine if we specifically hit the Shield Object
+            bool hitShieldObject = false;
+            if (reflector != null)
+            {
+                GameObject shieldObj = reflector.GetShieldGameObject();
+                if (shieldObj != null && _hit.collider.gameObject == shieldObj)
+                {
+                    hitShieldObject = true;
+                }
+            }
+
+            if (reflector != null && hitShieldObject && reflector.IsReflecting(transform.right))
             {
                 // REFLECTION LOGIC
                 // 1. Calculate Reflection Vector
@@ -212,7 +225,7 @@ public class Laser : MonoBehaviour
                 RaycastHit2D _hit2 = Physics2D.Raycast(_hit.point + reflectDir * 0.1f, reflectDir, defDistanceRay);
                 Vector2 secondEndPos = _hit2.collider != null ? _hit2.point : _hit.point + reflectDir * defDistanceRay;
                 
-                // Draw 3 points: Start -> Hit1 -> Hit2
+                // Draw 3 points
                 m_lineRenderer.positionCount = 3;
                 m_lineRenderer.SetPosition(0, laserFirePoint.position);
                 m_lineRenderer.SetPosition(1, firstEndPos);
@@ -222,29 +235,29 @@ public class Laser : MonoBehaviour
                 if (_hit2.collider != null)
                 {
                     EnemyAI enemy2 = _hit2.collider.GetComponent<EnemyAI>();
-                    if (enemy2 != null)
-                    {
-                        // Friendly Fire? Or does reflected laser hurt enemies? 
-                        // Typically lasers hurt enemies. Let's allow multi-hit.
-                        enemy2.TakeDamage(damagePerSecond * Time.deltaTime);
-                    }
+                    if (enemy2 != null) enemy2.TakeDamage(damagePerSecond * Time.deltaTime);
                     else if (_hit2.collider.CompareTag("Player"))
                     {
-                         // Reflected laser hurts player!
                          PlayerHealth ph = _hit2.collider.GetComponent<PlayerHealth>();
-                         if (ph != null) ph.TakeDamage(10f * Time.deltaTime, reflectDir); // Constant small damage or burst? using time delta
+                         if (ph != null) ph.TakeDamage(10f * Time.deltaTime, reflectDir);
                     }
                 }
                 
-                // Apply damage to the Reflector Shield itself (it degrades)
+                // Damage Shield
                 reflector.TakeDamage(damagePerSecond * Time.deltaTime);
                 
-                isHitEnemy = true; // We hit a reflector, so no miss penalty
-                return; // Exit here, handled reflection drawing
+                isHitEnemy = true; 
+                return; 
             }
             
-            // Standard Enemy Hit
+            // Standard Enemy Hit (Body or Non-Reflecting Shield)
+            // If we hit the Reflector Body (not shield), take damage.
+            // If we hit the Shield but it's not reflecting (e.g. broken), take damage (handled by TakeDamage logic).
+             
             EnemyAI enemy = _hit.collider.GetComponent<EnemyAI>();
+            // If we hit the Shield Child (which implies no EnemyAI on it), we need to get it from Parent
+            if (enemy == null) enemy = _hit.collider.GetComponentInParent<EnemyAI>();
+
             if (enemy != null)
             {
                 enemy.TakeDamage(damagePerSecond * Time.deltaTime);

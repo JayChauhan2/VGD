@@ -35,6 +35,19 @@ public class SpawnProtection : MonoBehaviour
                 r.sortingLayerName = "Object";
                 r.sortingOrder = 10;
             }
+            // Disable looping animation to prevent annoyance
+            Animator anim = forcefield.GetComponent<Animator>();
+            if (anim != null && anim.runtimeAnimatorController != null)
+            {
+                AnimationClip[] clips = anim.runtimeAnimatorController.animationClips;
+                if (clips != null && clips.Length > 0)
+                {
+                    float clipLength = clips[0].length;
+                     
+                     // Sync protection duration to animation length
+                     duration = clipLength;
+                }
+            }
             return;
         }
 
@@ -82,6 +95,8 @@ public class SpawnProtection : MonoBehaviour
         Destroy(this); // Remove component when done
     }
     
+
+
     void LateUpdate()
     {
         // Maintain sorting order on top of enemy

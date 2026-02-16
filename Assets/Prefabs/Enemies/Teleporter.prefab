@@ -171,15 +171,18 @@ MonoBehaviour:
   speed: 3
   pathUpdateDelay: 0.2
   coinPrefab: {fileID: 0}
+  usePathfinding: 1
   maxHealth: 100
   damageCooldown: 1
   touchDamageRange: 0.8
-  teleportDistance: 4
-  teleportCooldown: 3
-  shootInterval: 2.5
+  minTeleportDistance: 3
+  maxTeleportDistance: 8
+  timeToAim: 1
+  minTimeAfterShot: 0.1
+  maxTimeAfterShot: 0.5
+  hideDuration: 2
   projectileSpeed: 7
   projectileDamage: 10
-  invulnerabilityDuration: 0.3
   projectilePrefab: {fileID: 3387595598632382087, guid: c9f3a51d7ff672f4fbe918498da7b556, type: 3}
 --- !u!1 &7322812485225073034
 GameObject:

@@ -66,6 +66,9 @@ public class TeleporterEnemy : EnemyAI
         // It teleports instead of walking. This prevents heavy calculations.
         usePathfinding = false;
         
+        // No touch damage (User Request)
+        touchDamageRange = 0f;
+        
         StartBehavior();
         
         Debug.Log("TeleporterEnemy: Initialized with Whack-a-Mole behavior");

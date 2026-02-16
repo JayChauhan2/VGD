@@ -1301,6 +1301,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   coinPrefab: {fileID: 8510305196089219782, guid: cd3293d4e8023324fa2758c06ec6026a, type: 3}
   mimicPrefab: {fileID: 2889202060155188467, guid: bc83e5cad2a848542a5a01820f3e3978, type: 3}
+  enemyForcefieldPrefab: {fileID: 3639917087683709169, guid: f67373ff934d9464d814b59be4030ef6, type: 3}
+  enemyForcefieldScale: 1
   pathfindingGrid: {fileID: 1986833165}
   firstRoomPrefab: {fileID: 1299928572387882687, guid: deae6b6425f70c4419fd4b236779d814, type: 3}
   shopRoomPrefab: {fileID: 1299928572387882687, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}

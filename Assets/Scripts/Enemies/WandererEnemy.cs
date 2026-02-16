@@ -7,11 +7,15 @@ public class WandererEnemy : EnemyAI
     
     protected override void OnEnemyStart()
     {
-        // Set Wanderer-specific stats
-        maxHealth = 40f;
+        // Set Wanderer-specific stats only if not already configured
+        // This allows SplitterEnemy or Inspector to override these values
+        if (maxHealth == 100f) // 100f is the default from EnemyAI
+        {
+            maxHealth = 40f;
+        }
         currentHealth = maxHealth;
         // speed = 4.5f; // Removed to allow Inspector value
         
-        Debug.Log("WandererEnemy: Initialized with low health, moderate speed");
+        Debug.Log($"WandererEnemy: Initialized with health={maxHealth}");
     }
 }

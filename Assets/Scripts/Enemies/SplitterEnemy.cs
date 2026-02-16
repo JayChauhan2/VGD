@@ -29,6 +29,12 @@ public class SplitterEnemy : EnemyAI
             Debug.LogWarning("SplitterEnemy: No parent room, cannot spawn splits");
             return;
         }
+
+        if (wandererPrefab == null)
+        {
+            Debug.LogWarning("SplitterEnemy: Wanderer Prefab is NOT assigned in the Inspector! Cannot spawn splits.");
+            return;
+        }
         
         for (int i = 0; i < splitCount; i++)
         {
@@ -38,64 +44,52 @@ public class SplitterEnemy : EnemyAI
             Vector3 offset = new Vector3(Mathf.Cos(radians), Mathf.Sin(radians), 0) * 0.5f;
             Vector3 spawnPosition = transform.position + offset;
             
-            // Create wanderer enemy
-            GameObject splitObj = new GameObject($"Split_{i}");
-            splitObj.transform.position = spawnPosition;
+            // Create wanderer enemy from Prefab
+            GameObject splitObj = Instantiate(wandererPrefab, spawnPosition, Quaternion.identity);
             
-            // Add sprite renderer (smaller, different color)
-            SpriteRenderer sr = splitObj.AddComponent<SpriteRenderer>();
-            sr.sprite = CreateCircleSprite();
-            sr.color = new Color(1f, 0.5f, 0.5f); // Light red
-            splitObj.transform.localScale = Vector3.one * 0.6f; // Smaller than normal
-            
-            // Add collider
-            CircleCollider2D collider = splitObj.AddComponent<CircleCollider2D>();
-            collider.radius = 0.5f;
-            
-            // Add rigidbody
-            Rigidbody2D rb = splitObj.AddComponent<Rigidbody2D>();
-            rb.gravityScale = 0;
-            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-            
-            // Add WandererEnemy script
-            WandererEnemy wanderer = splitObj.AddComponent<WandererEnemy>();
-            wanderer.maxHealth = spawnHealth;
-            wanderer.speed = 5f; // Faster than normal wanderer
-            
-            // Register with room
-            parentRoom.RegisterEnemy(wanderer);
-            
-            // Activate if room is already active
-            if (IsActive)
+            // Get EnemyAI component
+            EnemyAI enemyAI = splitObj.GetComponent<EnemyAI>();
+            if (enemyAI != null)
             {
-                wanderer.SetActive(true);
+                // IMPORTANT: Start coroutine on the SPAWNED enemy, not this dying one
+                // This enemy is about to be destroyed, so coroutines won't complete
+                enemyAI.StartCoroutine(InitializeSplitCoroutine(enemyAI, parentRoom, IsActive));
+            }
+            else
+            {
+                Debug.LogWarning($"SplitterEnemy: Spawned object {splitObj.name} is missing an EnemyAI component!");
             }
             
-            Debug.Log($"SplitterEnemy: Spawned split {i}");
+            Debug.Log($"SplitterEnemy: Spawned split {i} from prefab");
         }
     }
-
-    Sprite CreateCircleSprite()
+    
+    
+    static System.Collections.IEnumerator InitializeSplitCoroutine(EnemyAI enemyAI, Room room, bool shouldActivate)
     {
-        int size = 32;
-        Texture2D texture = new Texture2D(size, size);
-        Color[] pixels = new Color[size * size];
+        // Wait for the enemy's Start() to complete
+        yield return null;
         
-        Vector2 center = new Vector2(size / 2f, size / 2f);
-        float radius = size / 2f;
+        Debug.Log($"SplitterEnemy: Initializing split {enemyAI.name}");
         
-        for (int y = 0; y < size; y++)
+        // Now configure the enemy
+        enemyAI.AssignRoom(room);
+        enemyAI.maxHealth = 25f; // Using hardcoded value since we can't access instance field
+        enemyAI.TakeDamage(0); // Trigger health update to sync currentHealth
+        
+        Debug.Log($"SplitterEnemy: Adding SpawnProtection to {enemyAI.name}");
+        
+        // Add spawn protection (forcefield)
+        SpawnProtection protection = enemyAI.gameObject.AddComponent<SpawnProtection>();
+        
+        Debug.Log($"SplitterEnemy: SpawnProtection added. Component exists: {protection != null}");
+        
+        // Activate if parent was active
+        if (shouldActivate)
         {
-            for (int x = 0; x < size; x++)
-            {
-                float distance = Vector2.Distance(new Vector2(x, y), center);
-                pixels[y * size + x] = distance <= radius ? Color.white : Color.clear;
-            }
+            enemyAI.SetActive(true);
         }
         
-        texture.SetPixels(pixels);
-        texture.Apply();
-        
-        return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+        Debug.Log($"SplitterEnemy: Split {enemyAI.name} fully initialized");
     }
 }

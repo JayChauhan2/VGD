@@ -47,8 +47,31 @@ public class EnemyDeathEffect : MonoBehaviour
         StartCoroutine(PlayEffectSequence());
     }
     
+    private void LoadSettingsFromAsset()
+    {
+        if (EnemyDeathSettings.Instance != null)
+        {
+            var settings = EnemyDeathSettings.Instance;
+            
+            // Only override if not already set
+            if (explosionPrefab == null) explosionPrefab = settings.explosionPrefab;
+            if (ghostSprite == null) ghostSprite = settings.ghostSprite;
+            
+            explosionDuration = settings.explosionDuration;
+            explosionScale = settings.explosionScale;
+            ghostRiseSpeed = settings.ghostRiseSpeed;
+            ghostDuration = settings.ghostDuration;
+            sineWaveAmplitude = settings.sineWaveAmplitude;
+            sineWaveFrequency = settings.sineWaveFrequency;
+            ghostTint = settings.ghostTint;
+        }
+    }
+    
     private IEnumerator PlayEffectSequence()
     {
+        // Load settings from ScriptableObject if available
+        LoadSettingsFromAsset();
+        
         // 1. Spawn Explosion
         GameObject explosion = SpawnExplosion();
         

@@ -114,4 +114,26 @@ public class PuppetMinion : EnemyAI
         
         confusionTimer = Random.Range(1f, 3f);
     }
+    // Override UpdateAnimation to ensure we use actual velocity/movement
+    // The base EnemyAI.Update passes calculated path velocity, which is zero when confused (no path).
+    protected override void UpdateAnimation(Vector2 ignoredVelocity)
+    {
+        Vector2 actualVelocity = Vector2.zero;
+
+        if (rb != null)
+        {
+            actualVelocity = rb.linearVelocity;
+        }
+        else
+        {
+            // Fallback if no RB (though EnemyAI requires one)
+            // We could track lastPosition here or just use what we have
+        }
+
+        // If we are confused, we ignored the passed velocity anyway.
+        // If we are NOT confused, base EnemyAI passes correct velocity, but RB velocity should also be correct.
+        // Let's rely on RB velocity for animation as it's the source of truth for physics movement.
+        
+        base.UpdateAnimation(actualVelocity);
+    }
 }

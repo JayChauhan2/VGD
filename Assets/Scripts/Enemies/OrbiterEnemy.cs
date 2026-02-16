@@ -21,13 +21,18 @@ public class OrbiterEnemy : EnemyAI
     {
         maxHealth = 45f;
         currentHealth = maxHealth;
-        // speed = 5f; // Removed to allow Inspector value
+        
+        // Disable automatic pathfinding to player, we handle it manually
+        usePathfinding = false;
+        
+        // Allow physics to control movement when path is null (for Darting)
+        stopWhenNoPath = false;
         
         // Random starting angle
         orbitAngle = Random.Range(0f, 360f);
         dartTimer = dartInterval;
         
-        Debug.Log("OrbiterEnemy: Initialized");
+        Debug.Log("OrbiterEnemy: Initialized with Pathfinding");
     }
 
     protected override void OnEnemyUpdate()
@@ -43,23 +48,13 @@ public class OrbiterEnemy : EnemyAI
                 dartTimer -= Time.deltaTime;
                 if (dartTimer <= 0)
                 {
-                    // Check for Line of Sight before attacking
-                    Vector3 directionToTarget = (target.position - transform.position).normalized;
-                    float distanceToTarget = Vector3.Distance(transform.position, target.position);
-                    
-                    // Cast a ray to see if we hit an obstacle before the player
-                    RaycastHit2D hit = Physics2D.Raycast(transform.position, directionToTarget, distanceToTarget, LayerMask.GetMask("Obstacle"));
-                    
-                    if (hit.collider == null)
+                    if (CheckLineOfSight())
                     {
-                        // No obstacle, clear to attack!
                         StartDart();
                     }
                     else
                     {
-                        // Blocked by wall, wait a bit and keep orbiting
-                        dartTimer = 0.5f; 
-                        // Debug.Log("OrbiterEnemy: Attack blocked by wall, waiting...");
+                        dartTimer = 0.5f; // Wait for LOS
                     }
                 }
                 break;
@@ -74,34 +69,58 @@ public class OrbiterEnemy : EnemyAI
         }
     }
 
+    private float pathUpdateTimer;
+
     void UpdateOrbit()
     {
-        // Disable pathfinding, use manual orbit movement
-        path = null;
-        
         // Increment orbit angle
-        orbitAngle += orbitSpeed * Time.deltaTime * 50f; // Multiply for reasonable rotation speed
+        orbitAngle += orbitSpeed * Time.deltaTime * 50f; 
         if (orbitAngle >= 360f) orbitAngle -= 360f;
         
-        // Calculate orbit position around player
+        // Calculate orbit position
         float radians = orbitAngle * Mathf.Deg2Rad;
         Vector3 offset = new Vector3(Mathf.Cos(radians), Mathf.Sin(radians), 0) * orbitRadius;
-        Vector3 targetPosition = target.position + offset;
+        Vector3 desiredPosition = target.position + offset;
         
-        // Only move to target if it's valid, otherwise hold position or move closer to player
-        if (IsPositionValid(targetPosition))
+        // Validate position or find better one
+        if (!IsPositionValid(desiredPosition))
         {
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
+             // Try to find a valid spot if current one is blocked
+             if (TryGetValidOrbitPosition(orbitAngle, orbitRadius, out Vector3 validPos))
+             {
+                 desiredPosition = validPos;
+             }
         }
-        else
+
+        // Move towards invalid position anyway? No, let pathfinding handle it.
+        // If we are far, pathfind. If close, direct move?
+        // Actually, just Pathfind to the desired spot.
+        
+        RequestPath(desiredPosition);
+    }
+
+    void RequestPath(Vector3 destination)
+    {
+        pathUpdateTimer -= Time.deltaTime;
+        if (pathUpdateTimer <= 0 && pathfinding != null && pathfinding.IsGridReady)
         {
-            // If orbit position is blocked, try to move slightly closer to player (tighten orbit)
-            Vector3 tighterTarget = target.position + (offset * 0.5f);
-            if (IsPositionValid(tighterTarget))
-            {
-                transform.position = Vector3.MoveTowards(transform.position, tighterTarget, speed * Time.deltaTime);
-            }
+            path = pathfinding.FindPath(transform.position, destination);
+            targetIndex = 0;
+            pathUpdateTimer = 0.2f; // Limit path updates
         }
+    }
+
+    bool CheckLineOfSight()
+    {
+        Vector3 directionToTarget = (target.position - transform.position).normalized;
+        float distanceToTarget = Vector3.Distance(transform.position, target.position);
+        
+        // Raycast only against Obstacles (Walls), ignoring enemies/projectiles
+        // Ensure the enemy itself defaults to a layer that is NOT "Obstacle"
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, directionToTarget, distanceToTarget, LayerMask.GetMask("Obstacle"));
+        
+        // If we hit nothing (on the Obstacle layer), line of sight is clear
+        return hit.collider == null;
     }
 
     void StartDart()
@@ -109,15 +128,20 @@ public class OrbiterEnemy : EnemyAI
         currentState = OrbiterState.Darting;
         dartStartPosition = transform.position;
         dartTimer = dartDuration;
+        path = null; // Stop pathfinding movement
         
-        Debug.Log("OrbiterEnemy: Darting toward player!");
+        // Initial burst velocity
+        Vector3 direction = (target.position - transform.position).normalized;
+        if (rb != null) rb.linearVelocity = direction * dartSpeed;
+        
+        Debug.Log("OrbiterEnemy: Darting!");
     }
 
     void UpdateDart()
     {
-        // Move quickly toward player
-        Vector3 direction = (target.position - transform.position).normalized;
-        transform.position += direction * dartSpeed * Time.deltaTime;
+        // Direct physics movement for impact
+        // Velocity is set in StartDart, we can maintain it or home slightly?
+        // Let's just let physics carry it for now, like a bullet.
         
         dartTimer -= Time.deltaTime;
         if (dartTimer <= 0)
@@ -129,53 +153,45 @@ public class OrbiterEnemy : EnemyAI
     void StartReturn()
     {
         currentState = OrbiterState.Returning;
-        
+        if (rb != null) rb.linearVelocity = Vector2.zero; // Stop dart momentum
+
         // Find a valid orbit position
-        // Try current angle first
         if (TryGetValidOrbitPosition(orbitAngle, orbitRadius, out orbitTargetPosition))
         {
-            // Found valid position at current angle
+            // Valid
         }
         else
         {
-            // Current angle is blocked (in a wall), search for a free spot
-            bool found = false;
-            
-            // Checks 8 directions (0, 45, 90, etc.)
-            for (int i = 0; i < 8; i++)
-            {
+             // Search logic... (simplified from previous iteration for brevity, assuming TryGetValid handles some)
+             // Actually, let's keep the search logic to be safe
+             bool found = false;
+             for (int i = 0; i < 8; i++)
+             {
                 float testAngle = i * 45f;
                 if (TryGetValidOrbitPosition(testAngle, orbitRadius, out orbitTargetPosition))
                 {
-                    orbitAngle = testAngle; // Update our orbit angle to this new safe spot
+                    orbitAngle = testAngle;
                     found = true;
                     break;
                 }
-            }
-            
-            if (!found)
-            {
-                // If standard radius failed, try closer
-                 for (int i = 0; i < 8; i++)
-                {
-                    float testAngle = i * 45f;
-                    if (TryGetValidOrbitPosition(testAngle, orbitRadius * 0.5f, out orbitTargetPosition))
-                    {
-                        orbitAngle = testAngle;
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            
-            if (!found)
-            {
-                 // Worst case: Return to player's position (or really close to it)
-                 orbitTargetPosition = target.position;
-            }
+             }
+             
+             if (!found) orbitTargetPosition = target.position; // Fallback
         }
 
-        Debug.Log($"OrbiterEnemy: Returning to orbit at {orbitTargetPosition}");
+        Debug.Log($"OrbiterEnemy: Returning to {orbitTargetPosition}");
+    }
+
+    void UpdateReturn()
+    {
+        RequestPath(orbitTargetPosition);
+        
+        // Check if we reached it
+        if (Vector3.Distance(transform.position, orbitTargetPosition) < 1.0f)
+        {
+            currentState = OrbiterState.Orbiting;
+            dartTimer = dartInterval;
+        }
     }
 
     bool TryGetValidOrbitPosition(float angle, float radius, out Vector3 position)
@@ -184,18 +200,5 @@ public class OrbiterEnemy : EnemyAI
         Vector3 offset = new Vector3(Mathf.Cos(radians), Mathf.Sin(radians), 0) * radius;
         position = target.position + offset;
         return IsPositionValid(position);
-    }
-
-    void UpdateReturn()
-    {
-        // Return to orbit position
-        transform.position = Vector3.MoveTowards(transform.position, orbitTargetPosition, dartSpeed * Time.deltaTime);
-        
-        // Check if we're back in orbit
-        if (Vector3.Distance(transform.position, orbitTargetPosition) < 0.3f)
-        {
-            currentState = OrbiterState.Orbiting;
-            dartTimer = dartInterval;
-        }
     }
 }

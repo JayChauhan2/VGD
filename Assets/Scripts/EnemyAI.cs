@@ -208,6 +208,9 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
+    // Flag to control if enemy stops when no path is available
+    protected bool stopWhenNoPath = true;
+
     void Update()
     {
         if (!IsActive) return;
@@ -222,7 +225,7 @@ public class EnemyAI : MonoBehaviour
 
         if (path == null || targetIndex >= path.Count) 
         {
-            if (rb != null) rb.linearVelocity = Vector2.zero;
+            if (stopWhenNoPath && rb != null) rb.linearVelocity = Vector2.zero;
         }
         else
         {

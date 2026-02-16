@@ -158,7 +158,7 @@ public class GameHUD : MonoBehaviour
     // --- Marker System ---
     private class Marker
     {
-        public RectTransform rect;
+        public GameObject obj;
         public Transform target;
         public Vector3 offset;
         public float timer;
@@ -166,7 +166,8 @@ public class GameHUD : MonoBehaviour
     }
     
     private List<Marker> activeMarkers = new List<Marker>();
-    private GameObject hudCanvasObj; 
+    private GameObject hudCanvasObj;
+    private GameObject markerContainer;
 
     public void ShowEnemyMarker(Transform target, Vector3 offset, float duration)
     {
@@ -178,17 +179,19 @@ public class GameHUD : MonoBehaviour
             return;
         }
 
-        if (hudCanvasObj == null)
+        if (markerContainer == null)
         {
-             Debug.LogError("[GameHUD] HUD Canvas is missing! Cannot create marker.");
-             return;
+             markerContainer = new GameObject("MarkerContainer");
         }
         
-        GameObject markerObj = new GameObject("EnemyMarker_UI");
-        markerObj.transform.SetParent(hudCanvasObj.transform, false);
+        GameObject markerObj = new GameObject("EnemyMarker_World");
+        markerObj.transform.SetParent(markerContainer.transform);
         
-        Image img = markerObj.AddComponent<Image>();
-        img.color = Color.red;
+        SpriteRenderer sr = markerObj.AddComponent<SpriteRenderer>();
+        sr.color = Color.red;
+        // Set sorting layer to Object as requested
+        sr.sortingLayerName = "Object";
+        sr.sortingOrder = 100; // High order to sit on top of enemies
         
         Sprite circle = Resources.Load<Sprite>("Sprites/Circle");
         if (circle == null)
@@ -216,16 +219,16 @@ public class GameHUD : MonoBehaviour
             tex.Apply();
             circle = Sprite.Create(tex, new Rect(0,0,size,size), new Vector2(0.5f, 0.5f));
         }
-        img.sprite = circle;
+        sr.sprite = circle;
 
-        RectTransform rt = markerObj.GetComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(10, 10); 
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.zero;
-        rt.pivot = new Vector2(0.5f, 0.5f);
+        // Position initially
+        if (target != null)
+        {
+            markerObj.transform.position = target.position + offset;
+        }
         
         Marker m = new Marker();
-        m.rect = rt;
+        m.obj = markerObj;
         m.target = target;
         m.offset = offset;
         m.duration = duration;
@@ -236,16 +239,13 @@ public class GameHUD : MonoBehaviour
 
     private void UpdateMarkers()
     {
-        Camera cam = Camera.main;
-        if (cam == null) return;
-
         for (int i = activeMarkers.Count - 1; i >= 0; i--)
         {
             Marker m = activeMarkers[i];
             
             if (m.target == null)
             {
-                if (m.rect != null) Destroy(m.rect.gameObject);
+                if (m.obj != null) Destroy(m.obj);
                 activeMarkers.RemoveAt(i);
                 continue;
             }
@@ -253,30 +253,15 @@ public class GameHUD : MonoBehaviour
             m.timer += Time.deltaTime;
             if (m.timer >= m.duration)
             {
-                if (m.rect != null) Destroy(m.rect.gameObject);
+                if (m.obj != null) Destroy(m.obj);
                 activeMarkers.RemoveAt(i);
                 continue;
             }
             
-            Vector3 worldPos = m.target.position + m.offset;
-            Vector3 screenPos = cam.WorldToScreenPoint(worldPos);
-            
-            if (screenPos.z < 0)
+            // Sync Position
+            if (m.obj != null)
             {
-                 m.rect.gameObject.SetActive(false);
-            }
-            else
-            {
-                 if (screenPos.x > 0 && screenPos.x < Screen.width && screenPos.y > 0 && screenPos.y < Screen.height)
-                 {
-                     m.rect.gameObject.SetActive(true);
-                     m.rect.anchoredPosition = new Vector2(screenPos.x, screenPos.y);
-                 }
-                 else
-                 {
-                     m.rect.gameObject.SetActive(true);
-                     m.rect.anchoredPosition = new Vector2(screenPos.x, screenPos.y);
-                 }
+                m.obj.transform.position = m.target.position + m.offset;
             }
         }
     }

@@ -494,7 +494,7 @@ public class EnemyAI : MonoBehaviour
         if (coinCount > 0) Debug.Log($"EnemyAI: Dropped {coinCount} items (Roll: {roll:F3})");
     }
 
-    public void MarkAsDetected()
+    public virtual void MarkAsDetected()
     {
         // Debug.Log($"EnemyAI: MarkAsDetected called on {gameObject.name}");
         

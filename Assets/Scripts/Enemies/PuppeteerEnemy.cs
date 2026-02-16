@@ -135,12 +135,22 @@ public class PuppeteerEnemy : EnemyAI
 
         // Always update tethers
         UpdateTethers();
+    }
+
+    // --- Manual Animation Handling ---
+    
+    // Override UpdateAnimation to ignore the velocity passed by EnemyAI (which is 0 because we handle movement manually)
+    // Override UpdateAnimation to use base logic but add custom parameter
+    protected override void UpdateAnimation(Vector2 velocity)
+    {
+        // Use base EnemyAI animation logic for Speed and Flip
+        base.UpdateAnimation(velocity);
         
-        // Manual Animation Handling (velocity calculation)
-        Vector3 displacement = transform.position - lastPosition;
-        Vector2 velocity = displacement / Time.deltaTime;
-        lastPosition = transform.position;
-        UpdateAnimation(velocity);
+        // Add our custom parameter
+        if (animator != null)
+        {
+            animator.SetBool("IsSummoning", isSummoning);
+        }
     }
 
     // --- State Logic ---
@@ -313,39 +323,14 @@ public class PuppeteerEnemy : EnemyAI
             retargetTimer = RETARGET_INTERVAL;
             if (pathfinding != null && pathfinding.IsGridReady)
             {
+                // Set the path for EnemyAI to follow
                 path = pathfinding.FindPath(transform.position, hidingSpot);
                 targetIndex = 0;
             }
         }
-
-        // Follow Path
-        if (path == null) return;
-
-        if (targetIndex >= path.Count)
-        {
-            // End of path
-            if (rb != null) rb.linearVelocity = Vector2.zero;
-            return;
-        }
-
-        Vector3 currentWaypoint = path[targetIndex].worldPosition;
-        Vector2 dir = (currentWaypoint - transform.position).normalized;
         
-        // Move
-        if (rb != null)
-        {
-             rb.linearVelocity = dir * speed;
-        }
-        else
-        {
-             transform.position += (Vector3)dir * speed * Time.deltaTime;
-        }
-
-        // Check waypoint distance
-        if (Vector3.Distance(transform.position, currentWaypoint) < 0.2f)
-        {
-            targetIndex++;
-        }
+        // EnemyAI.Update() handles the actual movement along 'path'
+        // We don't need to manually move RB here
     }
 
     void MovePuppetsToConfusion(bool confused)
@@ -370,26 +355,22 @@ public class PuppeteerEnemy : EnemyAI
 
     void UpdateTethers()
     {
-        for (int i = 0; i < puppets.Count && i < tethers.Length; i++)
+        if (tethers == null) return;
+        
+        for (int i = 0; i < tethers.Length; i++)
         {
-            if (tethers[i] != null)
+            if (tethers[i] == null) continue;
+            
+            // If puppet is dead/missing, disable tether
+            if (i >= puppets.Count || puppets[i] == null)
             {
-                if (puppets[i] != null)
-                {
-                    tethers[i].enabled = true;
-                    tethers[i].SetPosition(0, transform.position);
-                    tethers[i].SetPosition(1, puppets[i].transform.position);
-                    
-                    // Dim tether if confused
-                    Color color = isSummoning ? new Color(0.6f, 0.4f, 0.8f, 0.5f) : new Color(0.3f, 0.3f, 0.3f, 0.2f);
-                    tethers[i].startColor = color;
-                    tethers[i].endColor = new Color(color.r, color.g, color.b, 0.1f);
-                }
-                else
-                {
-                    tethers[i].enabled = false;
-                }
+                tethers[i].enabled = false;
+                continue;
             }
+            
+            tethers[i].enabled = true;
+            tethers[i].SetPosition(0, transform.position);
+            tethers[i].SetPosition(1, puppets[i].transform.position);
         }
     }
 

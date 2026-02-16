@@ -26,10 +26,23 @@ public class TeleporterEnemy : EnemyAI
     private void OnEnable()
     {
         // Restart behavior if re-enabled (and not dead)
-        if (currentHealth > 0 && behaviorCoroutine == null && recoveryCoroutine == null)
+        if (currentHealth > 0)
         {
+             // Force a fresh start.
+             // If we were hidden, this will reset visibility eventually (in BehaviorLoop).
+             // But let's also ensure no old coroutines are blocking us.
+             behaviorCoroutine = null;
+             recoveryCoroutine = null;
              StartBehavior();
         }
+    }
+
+    private void OnDisable()
+    {
+        // When disabled, Unity stops all coroutines on this MonoBehaviour.
+        // We MUST clear our references so OnEnable knows they are gone.
+        behaviorCoroutine = null;
+        recoveryCoroutine = null;
     }
 
     protected override void OnEnemyStart()
@@ -65,10 +78,31 @@ public class TeleporterEnemy : EnemyAI
         recoveryCoroutine = null;
     }
 
+    // Watchdog
+    private float hiddenTimer = 0f;
+
     // Override Update to disable default movement logic from EnemyAI
     protected override void OnEnemyUpdate()
     {
         // No movement logic needed here
+        
+        // WATCHDOG: If hidden for too long (stuck?), force appear
+        if (isHidden)
+        {
+            hiddenTimer += Time.deltaTime;
+            if (hiddenTimer > 3.0f) // Max expected hide time ~2s
+            {
+                Debug.LogWarning("TeleporterEnemy: Watchdog triggered! Force appearing stuck enemy.");
+                Appear();
+                hiddenTimer = 0f;
+                // Restart behavior just in case
+                if (behaviorCoroutine == null) StartBehavior();
+            }
+        }
+        else
+        {
+            hiddenTimer = 0f;
+        }
     }
 
     IEnumerator BehaviorLoop()
@@ -127,7 +161,7 @@ public class TeleporterEnemy : EnemyAI
         }
         
         var healthBar = GetComponentInChildren<EnemyHealthBar>();
-        if (healthBar != null) healthBar.gameObject.SetActive(visible);
+        if (healthBar != null) healthBar.SetVisibility(visible);
     }
 
     void TeleportNearPlayer()
@@ -196,19 +230,45 @@ public class TeleporterEnemy : EnemyAI
         base.TakeDamage(damage);
         
         // Reactive Teleport!
-        if (currentHealth > 0)
+        if (currentHealth > 0 && isActiveAndEnabled)
         {
-            // Debug.Log("TeleporterEnemy: Hit! Vanishing immediately.");
-            
-            // Stop ALL current routies so we don't have duplicates
-            StopAllBehaviorCoroutines();
-            
-            // Disappear immediately
-            Disappear();
-            
-            // Start recovery
-            recoveryCoroutine = StartCoroutine(RecoverFromHit());
+             // Log the hit
+             // Debug.Log($"TeleporterEnemy: Took damage! Health: {currentHealth}. Initiating reactive teleport.");
+
+             StopAllBehaviorCoroutines();
+             
+             // CRITICAL FIX: Start the recovery coroutine *FIRST*
+             // If this fails (e.g. object inactive), we will catch it and NOT Disappear.
+             // This ensures we never get stuck in an invisible state.
+             try 
+             {
+                 if (gameObject.activeInHierarchy)
+                 {
+                     recoveryCoroutine = StartCoroutine(RecoverFromHit());
+                     
+                     // Only if the coroutine started successfully do we hide
+                     if (recoveryCoroutine != null)
+                     {
+                        Disappear();
+                     }
+                 }
+                 else
+                 {
+                     Debug.LogWarning("TeleporterEnemy: Object inactive, cannot start recovery. Staying visible.");
+                 }
+             }
+             catch (System.Exception e)
+             {
+                 Debug.LogWarning($"TeleporterEnemy: Failed to start recovery coroutine: {e.Message}");
+                 // Do NOT Disappear if we failed to start the recovery logic
+             }
         }
+    }
+
+    protected override void OnEnemyDeath()
+    {
+        Debug.Log("TeleporterEnemy: Dead!");
+        StopAllBehaviorCoroutines();
     }
 
     IEnumerator RecoverFromHit()

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class MinimapManager : MonoBehaviour
 {
     [Header("Configuration")]
-    [SerializeField] private Vector2 roomIconSize = new Vector2(20, 12);
+    [SerializeField] private Vector2 roomIconSize = new Vector2(32, 16);
     [SerializeField] private float spacing = 2f;
     [SerializeField] private Color defaultRoomColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
     [SerializeField] private Color currentRoomColor = new Color(0f, 1f, 0f, 0.8f);

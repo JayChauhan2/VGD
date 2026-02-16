@@ -24,8 +24,8 @@ public class RoomManager : MonoBehaviour
 
 
 
-    public int roomWidth = 20; 
-    public int roomHeight = 12;
+    public int roomWidth = 32; 
+    public int roomHeight = 16;
 
     int gridSizeX = 10;
     int gridSizeY = 10;
@@ -71,12 +71,7 @@ public class RoomManager : MonoBehaviour
             if (pathfindingGrid == null) Debug.LogWarning("RoomManager: PathfindingGrid still not found after auto-search.");
         }
 
-        // Ensure RoomDecorator exists
-        if (RoomDecorator.Instance == null)
-        {
-            GameObject decoratorObj = new GameObject("RoomDecorator");
-            decoratorObj.AddComponent<RoomDecorator>();
-        }
+
 
         GenerateLevel();
     }

@@ -15,7 +15,7 @@ public class Room : MonoBehaviour
     public static List<Room> AllRooms = new List<Room>();
 
     // Approximate size (should match RoomManager)
-    public Vector2 roomSize = new Vector2(20, 12); 
+    public Vector2 roomSize = new Vector2(32, 16); 
 
     // Components
     public PressureController Pressure { get; private set; }
@@ -178,14 +178,7 @@ public class Room : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        // Decorate this room
-        if (RoomDecorator.Instance != null)
-        {
-            RoomDecorator.Instance.Decorate(this);
-        }
-    }
+
 
     public void RegisterEnemy(EnemyAI enemy)
     {

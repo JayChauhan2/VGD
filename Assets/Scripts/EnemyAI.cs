@@ -427,7 +427,7 @@ public class EnemyAI : MonoBehaviour
             Vector2 size = parentRoom.roomSize;
             return new Bounds(center, new Vector3(size.x, size.y, 1f));
         }
-        return new Bounds(transform.position, Vector3.one * 20f);
+        return new Bounds(transform.position, new Vector3(32f, 16f, 1f));
     }
     // Helper method to check if a position is valid (not inside a wall)
     protected bool IsPositionValid(Vector3 position, float radius = 0.3f)

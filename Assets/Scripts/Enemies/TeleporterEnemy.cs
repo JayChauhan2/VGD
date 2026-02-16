@@ -11,6 +11,10 @@ public class TeleporterEnemy : EnemyAI
     public float maxTimeAfterShot = 0.5f;
     public float hideDuration = 2.0f;    // Time invisible
     
+    [Header("Animation Settings")]
+    public float appearAnimDuration = 1.0f;
+    public float disappearAnimDuration = 1.0f;
+    
     [Header("Projectile Settings")]
     public float projectileSpeed = 7f;
     public float projectileDamage = 10f;
@@ -24,6 +28,9 @@ public class TeleporterEnemy : EnemyAI
     // References
     private Collider2D[] myColliders;
     private SpriteRenderer[] allRenderers;
+    private Animator animator;
+    private int appearHash;
+    private int disappearHash;
 
     private void OnEnable()
     {
@@ -55,6 +62,10 @@ public class TeleporterEnemy : EnemyAI
         // Grab ALL renderers (body + beak + whatever else)
         allRenderers = GetComponentsInChildren<SpriteRenderer>();
         
+        animator = GetComponent<Animator>();
+        appearHash = Animator.StringToHash("Appear");
+        disappearHash = Animator.StringToHash("Disappear");
+
         myColliders = GetComponentsInChildren<Collider2D>();
         
         if (projectilePrefab == null)
@@ -138,8 +149,8 @@ public class TeleporterEnemy : EnemyAI
 
         while (true)
         {
-            // 1. Appear near player
-            Appear();
+            // 1. Appear Sequence (Animation -> Visible)
+            yield return StartCoroutine(AppearSequence());
             
             // 2. Wait/Aim
             yield return new WaitForSeconds(timeToAim);
@@ -153,52 +164,80 @@ public class TeleporterEnemy : EnemyAI
             // 4. Vulnerable window after shot
             yield return new WaitForSeconds(Random.Range(minTimeAfterShot, maxTimeAfterShot));
             
-            // 5. Disappear
-            Disappear();
+            // 5. Disappear Sequence (Animation -> Invisible)
+            yield return StartCoroutine(DisappearSequence());
             
             // 6. Wait while hidden
             yield return new WaitForSeconds(hideDuration);
         }
     }
 
-    void Appear()
+    IEnumerator AppearSequence()
     {
         TeleportNearPlayer();
-        SetVisibility(true);
+        
+        // Show visuals so animation plays
+        SetRenderersEnabled(true);
+        
+        if (animator != null)
+        {
+            animator.SetTrigger(appearHash);
+            yield return new WaitForSeconds(appearAnimDuration);
+        }
+        
+        // Now fully interactive
+        SetCollidersEnabled(true);
+        isHidden = false;
+        
+        var healthBar = GetComponentInChildren<EnemyHealthBar>();
+        if (healthBar != null) healthBar.SetVisibility(true);
+    }
+
+    IEnumerator DisappearSequence()
+    {
+        if (animator != null)
+        {
+            animator.SetTrigger(disappearHash);
+            yield return new WaitForSeconds(disappearAnimDuration);
+        }
+        
+        // Now fully hidden
+        SetRenderersEnabled(false);
+        SetCollidersEnabled(false);
+        isHidden = true;
+        
+        var healthBar = GetComponentInChildren<EnemyHealthBar>();
+        if (healthBar != null) healthBar.SetVisibility(false);
+    }
+
+    void SetRenderersEnabled(bool enabled)
+    {
+        if (allRenderers != null)
+        {
+            foreach (var sr in allRenderers) sr.enabled = enabled;
+        }
+        else if (spriteRenderer != null)
+        {
+            spriteRenderer.enabled = enabled;
+        }
+    }
+
+    void SetCollidersEnabled(bool enabled)
+    {
+        if (myColliders != null)
+        {
+            foreach (var col in myColliders) col.enabled = enabled;
+        }
+    }
+
+    void Appear()
+    {
+        StartCoroutine(AppearSequence()); // Backward compatibility or manual call
     }
 
     void Disappear()
     {
-        SetVisibility(false);
-    }
-
-    void SetVisibility(bool visible)
-    {
-        isHidden = !visible;
-        
-        if (allRenderers != null)
-        {
-            foreach (var sr in allRenderers)
-            {
-                sr.enabled = visible;
-            }
-        }
-        else if (spriteRenderer != null)
-        {
-             // Fallback if array not init
-             spriteRenderer.enabled = visible;
-        }
-        
-        if (myColliders != null)
-        {
-            foreach (var col in myColliders)
-            {
-                col.enabled = visible;
-            }
-        }
-        
-        var healthBar = GetComponentInChildren<EnemyHealthBar>();
-        if (healthBar != null) healthBar.SetVisibility(visible);
+         StartCoroutine(DisappearSequence()); // Backward compatibility or manual call
     }
 
     void TeleportNearPlayer()

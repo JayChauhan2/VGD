@@ -14,7 +14,7 @@ public class EnemyDeathSettings : ScriptableObject
     [Tooltip("Or just drag explosion sprite frames here for simple animation")]
     public Sprite[] explosionFrames;
     
-    public float explosionDuration = 0.25f;
+    public float explosionDuration = 0.5f;
     public float explosionScale = 1.0f;
     
     [Header("Ghost Settings")]
@@ -27,8 +27,8 @@ public class EnemyDeathSettings : ScriptableObject
     
     public float ghostRiseSpeed = 2.5f;
     public float ghostDuration = 0.5f;
-    public float sineWaveAmplitude = 0.3f;
-    public float sineWaveFrequency = 4.5f;
+    public float sineWaveAmplitude = 0.15f;
+    public float sineWaveFrequency = 2.5f;
     public Color ghostTint = new Color(0.8f, 0.8f, 1f, 1f);
     
     // Singleton instance

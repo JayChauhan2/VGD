@@ -22,9 +22,10 @@ public class EnemyDeathEffect : MonoBehaviour
     public float ghostScale = 0.4f;           // Scale of ghost sprite
     
     public float ghostRiseSpeed = 2.5f;        // Units per second upward
+    [Tooltip("Note: This is overridden to match explosionDuration so they end together")]
     public float ghostDuration = 0.5f;         // Total float time
-    public float sineWaveAmplitude = 0.3f;     // How far left/right (smaller for quick effect)
-    public float sineWaveFrequency = 4.5f;     // Cycles per second (faster wobble)
+    public float sineWaveAmplitude = 0.15f;    // Reduced from 0.3 (less wobble width)
+    public float sineWaveFrequency = 2.5f;     // Reduced from 4.5 (slower wobble)
     public Color ghostTint = new Color(0.8f, 0.8f, 1f, 1f); // Slight blue tint
     
     [Header("Sorting")]
@@ -35,18 +36,21 @@ public class EnemyDeathEffect : MonoBehaviour
     /// <summary>
     /// Static method to easily play death effect from anywhere.
     /// </summary>
-    public static void PlayDeathEffect(Vector3 position, Sprite enemySprite = null)
+    public static void PlayDeathEffect(Vector3 position, Sprite enemySprite = null, float enemyScale = 1.0f)
     {
         // Create temporary GameObject to run the effect
         GameObject effectObj = new GameObject("EnemyDeathEffect");
         effectObj.transform.position = position;
         
         EnemyDeathEffect effect = effectObj.AddComponent<EnemyDeathEffect>();
+        effect.baseScale = enemyScale; // Store enemy scale
         // Don't set ghostSprite here - let LoadSettingsFromAsset handle it
         // Only use enemySprite as fallback if settings has no sprite
         effect.StartEffect();
     }
     
+    private float baseScale = 1.0f; // Scale multiplier from enemy size
+
     private void StartEffect()
     {
         StartCoroutine(PlayEffectSequence());
@@ -68,8 +72,10 @@ public class EnemyDeathEffect : MonoBehaviour
             }
             
             explosionDuration = settings.explosionDuration;
-            explosionScale = settings.explosionScale;
-            ghostScale = settings.ghostScale;
+            // Multiply settings scale by enemy scale
+            explosionScale = settings.explosionScale * baseScale;
+            ghostScale = settings.ghostScale * baseScale;
+            
             ghostRiseSpeed = settings.ghostRiseSpeed;
             ghostDuration = settings.ghostDuration;
             sineWaveAmplitude = settings.sineWaveAmplitude;

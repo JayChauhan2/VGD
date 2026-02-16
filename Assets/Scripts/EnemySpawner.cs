@@ -126,6 +126,13 @@ public class EnemySpawner : MonoBehaviour
             {
                 activeSpawns.Add(enemyScript);
                 
+                // Add Spawn Protection (Forcefield) if not a Mimic
+                if (newEnemyObj.GetComponent<MimicEnemy>() == null)
+                {
+                    SpawnProtection protection = newEnemyObj.AddComponent<SpawnProtection>();
+                    protection.duration = 3.0f; // 3 seconds invincibility
+                }
+                
                 // Register with Room if possible so it counts towards clearing the room
                 if (currentRoom != null)
                 {

@@ -125,6 +125,14 @@ public class EnemyAI : MonoBehaviour
 
     public virtual void TakeDamage(float damage)
     {
+        // Check for Spawn Protection (Forcefield)
+        var protection = GetComponent<SpawnProtection>();
+        if (protection != null && protection.IsActive)
+        {
+            // Invincible!
+            return;
+        }
+
         currentHealth -= damage;
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         Debug.Log($"Enemy Health: {currentHealth}/{maxHealth}");

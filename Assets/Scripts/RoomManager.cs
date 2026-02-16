@@ -7,6 +7,9 @@ public class RoomManager : MonoBehaviour
 
     public GameObject coinPrefab;
     public GameObject mimicPrefab;
+    [Header("Global Assets")]
+    public GameObject enemyForcefieldPrefab; // Assigned by User
+    public float enemyForcefieldScale = 1.0f;
     [SerializeField] PathfindingGrid pathfindingGrid;
 
     [Header("Room Prefabs")]

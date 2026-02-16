@@ -148,6 +148,9 @@ public class EnemyAI : MonoBehaviour
 
     protected virtual void Die()
     {
+        // Play death animation effect (explosion + ghost)
+        EnemyDeathEffect.PlayDeathEffect(transform.position, spriteRenderer?.sprite);
+        
         DropLoot();
         // Virtual hook for subclasses (called before room notification)
         OnEnemyDeath();

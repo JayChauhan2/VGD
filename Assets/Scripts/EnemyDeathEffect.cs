@@ -17,6 +17,10 @@ public class EnemyDeathEffect : MonoBehaviour
     [Header("Ghost Settings")]
     [Tooltip("Optional ghost sprite. If null, uses the enemy's sprite.")]
     public Sprite ghostSprite;
+    
+    [Range(0.1f, 2.0f)]
+    public float ghostScale = 0.4f;           // Scale of ghost sprite
+    
     public float ghostRiseSpeed = 2.5f;        // Units per second upward
     public float ghostDuration = 0.5f;         // Total float time
     public float sineWaveAmplitude = 0.3f;     // How far left/right (smaller for quick effect)
@@ -38,7 +42,8 @@ public class EnemyDeathEffect : MonoBehaviour
         effectObj.transform.position = position;
         
         EnemyDeathEffect effect = effectObj.AddComponent<EnemyDeathEffect>();
-        effect.ghostSprite = enemySprite; // Use enemy's sprite if provided
+        // Don't set ghostSprite here - let LoadSettingsFromAsset handle it
+        // Only use enemySprite as fallback if settings has no sprite
         effect.StartEffect();
     }
     
@@ -53,12 +58,18 @@ public class EnemyDeathEffect : MonoBehaviour
         {
             var settings = EnemyDeathSettings.Instance;
             
-            // Only override if not already set
+            // Load from settings (settings take priority)
             if (explosionPrefab == null) explosionPrefab = settings.explosionPrefab;
-            if (ghostSprite == null) ghostSprite = settings.ghostSprite;
+            
+            // ALWAYS use settings ghost sprite if available (don't use enemy sprite)
+            if (settings.ghostSprite != null)
+            {
+                ghostSprite = settings.ghostSprite;
+            }
             
             explosionDuration = settings.explosionDuration;
             explosionScale = settings.explosionScale;
+            ghostScale = settings.ghostScale;
             ghostRiseSpeed = settings.ghostRiseSpeed;
             ghostDuration = settings.ghostDuration;
             sineWaveAmplitude = settings.sineWaveAmplitude;
@@ -72,7 +83,7 @@ public class EnemyDeathEffect : MonoBehaviour
         // Load settings from ScriptableObject if available
         LoadSettingsFromAsset();
         
-        // 1. Spawn Explosion
+        // 1. Spawn Explosion (it handles its own destruction)
         GameObject explosion = SpawnExplosion();
         
         // 2. Spawn Ghost (starts immediately, overlaps with explosion)
@@ -177,8 +188,8 @@ public class EnemyDeathEffect : MonoBehaviour
         sr.sortingLayerName = sortingLayer;
         sr.sortingOrder = ghostSortingOrder;
         
-        // Slightly smaller than original
-        ghost.transform.localScale = Vector3.one * 0.8f;
+        // Use scale from settings
+        ghost.transform.localScale = Vector3.one * ghostScale;
         
         return ghost;
     }

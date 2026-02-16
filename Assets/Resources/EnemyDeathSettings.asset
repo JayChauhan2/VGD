@@ -17,8 +17,9 @@ MonoBehaviour:
   explosionDuration: 0.25
   explosionScale: 1
   ghostSprite: {fileID: 7011265459045433248, guid: 6b8fac36ca72b1d47aaed854128cab87, type: 3}
+  ghostScale: 0.4
   ghostRiseSpeed: 2.5
   ghostDuration: 0.5
   sineWaveAmplitude: 0.3
   sineWaveFrequency: 4.5
-  ghostTint: {r: 0.8, g: 0.8, b: 1, a: 1}
+  ghostTint: {r: 1, g: 1, b: 1, a: 1}

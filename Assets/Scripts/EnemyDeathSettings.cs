@@ -21,6 +21,10 @@ public class EnemyDeathSettings : ScriptableObject
     [Tooltip("Optional: Custom ghost sprite. Leave empty to use enemy's sprite")]
     public Sprite ghostSprite;
     
+    [Range(0.1f, 2.0f)]
+    [Tooltip("Scale of the ghost sprite (0.4 = small, 1.0 = normal size)")]
+    public float ghostScale = 0.4f;
+    
     public float ghostRiseSpeed = 2.5f;
     public float ghostDuration = 0.5f;
     public float sineWaveAmplitude = 0.3f;

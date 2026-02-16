@@ -13,6 +13,11 @@ public class GameHUD : MonoBehaviour
     public int fontSize = 24;
     public Color textColor = Color.black;
 
+    [Header("Scaling Settings")]
+    public Vector2 referenceResolution = new Vector2(1920, 1080);
+    [Range(0, 1)] public float matchWidthOrHeight = 0.5f; // 0=Width, 1=Height
+    [Range(0.5f, 3.0f)] public float uiScale = 1.0f; // Multiplier for overall UI size
+
     [Header("Heart Assets")]
     public Sprite fullHeartSprite;
     public Sprite halfHeartSprite;
@@ -20,7 +25,6 @@ public class GameHUD : MonoBehaviour
     public Vector2 heartSize = new Vector2(32, 32);
 
     private Text coinText;
-    // private Text healthText; // Removed in favor of Heart System
     private Text bombText;
     private int coinCount = 0;
     private PlayerHealth playerHealth;
@@ -153,6 +157,19 @@ public class GameHUD : MonoBehaviour
         UpdateHealthDisplay();
         UpdateBombDisplay();
         UpdateMarkers();
+        UpdateCanvasScaler();
+    }
+    
+    private void UpdateCanvasScaler()
+    {
+        if (currentScaler != null)
+        {
+            // Inverse scaling: Smaller reference = Bigger UI
+            // Avoid divide by zero
+            float scale = Mathf.Max(uiScale, 0.1f);
+            currentScaler.referenceResolution = referenceResolution / scale;
+            currentScaler.matchWidthOrHeight = matchWidthOrHeight;
+        }
     }
 
     // --- Marker System ---
@@ -266,6 +283,8 @@ public class GameHUD : MonoBehaviour
         }
     }
 
+    private CanvasScaler currentScaler;
+
     private void CreateUI()
     {
         GameObject canvasObj = new GameObject("GameHUDCanvas");
@@ -274,7 +293,13 @@ public class GameHUD : MonoBehaviour
         Canvas canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 101; 
-        canvasObj.AddComponent<CanvasScaler>();
+        
+        currentScaler = canvasObj.AddComponent<CanvasScaler>();
+        currentScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        currentScaler.referenceResolution = referenceResolution;
+        currentScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        currentScaler.matchWidthOrHeight = matchWidthOrHeight;
+
         canvasObj.AddComponent<GraphicRaycaster>();
         DontDestroyOnLoad(canvasObj);
 

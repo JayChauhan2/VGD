@@ -635,6 +635,9 @@ MonoBehaviour:
   healthPosition: {x: -20, y: -50}
   fontSize: 24
   textColor: {r: 0, g: 0, b: 0, a: 1}
+  referenceResolution: {x: 1920, y: 1080}
+  matchWidthOrHeight: 0.5
+  uiScale: 1.5
   fullHeartSprite: {fileID: 1564688358316481467, guid: 6629f81ef3c6cf64c8e0112718a39b29, type: 3}
   halfHeartSprite: {fileID: 332659931, guid: 6629f81ef3c6cf64c8e0112718a39b29, type: 3}
   emptyHeartSprite: {fileID: -1642634638, guid: 6629f81ef3c6cf64c8e0112718a39b29, type: 3}
@@ -1867,8 +1870,8 @@ MonoBehaviour:
   m_UiScaleMode: 0
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
-  m_ScreenMatchMode: 0
+  m_ReferenceResolution: {x: 1920, y: 1080}
+  m_ScreenMatchMode: 1
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96

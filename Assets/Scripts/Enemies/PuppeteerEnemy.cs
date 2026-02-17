@@ -25,6 +25,9 @@ public class PuppeteerEnemy : EnemyAI
         maxHealth = 165f;
         currentHealth = maxHealth;
         
+        // Puppeteer is a ranged summoner, should not deal touch damage
+        touchDamageRange = 0f;
+        
         // Don't let base class zero our velocity when we have no path (we handle our own movement)
         stopWhenNoPath = false;
         
@@ -121,16 +124,30 @@ public class PuppeteerEnemy : EnemyAI
     private float underAttackTimer = 0f;
     private const float UNDER_ATTACK_DURATION = 3.0f; // Run for 3 seconds after being shot
 
+    // State stability to prevent jittering
+    private float stateTimer = 0f;
+    private const float MIN_STATE_DURATION = 0.5f; // Minimum time in a state before switching
+
     // Store flee state for Update override
     private bool shouldFleeDirectly = false;
     
+    // Cache flee direction to prevent jitter near walls
+    private Vector2 cachedFleeDirection = Vector2.zero;
+    private float fleeDirectionUpdateTimer = 0f;
+    private const float FLEE_DIRECTION_UPDATE_INTERVAL = 0.15f; // Update flee direction every 150ms
+    
+    // Track actual velocity for animation (since base class may see zero velocity when we clear path)
+    private Vector2 actualVelocity = Vector2.zero;
+    
     protected override void OnEnemyUpdate()
     {
-        // Update attack timer
+        // Update timers
         if (underAttackTimer > 0)
         {
             underAttackTimer -= Time.deltaTime;
         }
+        
+        stateTimer += Time.deltaTime;
 
         // Clean up destroyed puppets
         puppets.RemoveAll(p => p == null);
@@ -155,7 +172,8 @@ public class PuppeteerEnemy : EnemyAI
     
     protected override void UpdateAnimation(Vector2 velocity)
     {
-        base.UpdateAnimation(velocity);
+        // Use actualVelocity instead of the passed velocity (which may be zero when path is cleared)
+        base.UpdateAnimation(actualVelocity);
         
         if (animator != null)
         {
@@ -163,45 +181,103 @@ public class PuppeteerEnemy : EnemyAI
         }
     }
 
-    // Override Update to apply flee movement AFTER base pathfinding
-    void Update()
+    // Apply flee movement in LateUpdate AFTER base Update() physics
+    void LateUpdate()
     {
-        if (!IsActive) return;
-        if (IsKnockedBack) return;
+        if (!IsActive || IsKnockedBack) return;
         
-        // Call base OnEnemyUpdate (which calls our state machine)
-        OnEnemyUpdate();
-        
-        // Base pathfinding movement
-        Vector2 velocity = Vector2.zero;
-        if (path != null && targetIndex < path.Count)
-        {
-            Vector3 currentWaypoint = path[targetIndex].worldPosition;
-            
-            if (rb != null)
-            {
-                Vector2 dir = (currentWaypoint - transform.position).normalized;
-                velocity = dir * speed;
-                rb.linearVelocity = velocity;
-            }
-            
-            if (Vector3.Distance(transform.position, currentWaypoint) < 0.1f)
-            {
-                targetIndex++;
-            }
-        }
-        
-        // FALLBACK: Apply direct flee if flagged (overrides pathfinding)
+        // FALLBACK: Apply smart flee if flagged (overrides base pathfinding velocity)
         if (shouldFleeDirectly && target != null && rb != null)
         {
-            Vector2 fleeDir = (transform.position - target.position).normalized;
-            velocity = fleeDir * speed;
-            rb.linearVelocity = velocity;
-            Debug.Log($"PuppeteerEnemy: Fleeing directly! Velocity: {velocity}");
+            // Update flee direction periodically, not every frame (prevents jitter)
+            fleeDirectionUpdateTimer -= Time.deltaTime;
+            if (fleeDirectionUpdateTimer <= 0f || cachedFleeDirection == Vector2.zero)
+            {
+                cachedFleeDirection = GetSmartFleeDirection();
+                fleeDirectionUpdateTimer = FLEE_DIRECTION_UPDATE_INTERVAL;
+            }
+            
+            Vector2 fleeVelocity = cachedFleeDirection * speed;
+            rb.linearVelocity = fleeVelocity;
+            
+            // Store velocity for animation
+            actualVelocity = fleeVelocity;
+        }
+        else
+        {
+            // Reset cache when not fleeing
+            cachedFleeDirection = Vector2.zero;
+            fleeDirectionUpdateTimer = 0f;
+            
+            // Use rigidbody velocity for animation (from pathfinding)
+            if (rb != null)
+            {
+                actualVelocity = rb.linearVelocity;
+            }
+        }
+    }
+
+    // Smart flee that avoids walls
+    Vector2 GetSmartFleeDirection()
+    {
+        if (target == null) return Vector2.zero;
+        
+        // Primary flee direction: away from player
+        Vector2 awayFromPlayer = (transform.position - target.position).normalized;
+        
+        // Check if path ahead is clear
+        int mask = (obstacleLayers.value != 0) ? obstacleLayers.value : LayerMask.GetMask("Obstacle");
+        float checkDistance = 1.5f;
+        
+        RaycastHit2D hitAhead = Physics2D.Raycast(transform.position, awayFromPlayer, checkDistance, mask);
+        
+        // If clear, flee directly away
+        if (hitAhead.collider == null)
+        {
+            return awayFromPlayer;
         }
         
-        UpdateAnimation(velocity);
-        CheckTouchDamage();
+        // Wall detected! Try perpendicular directions
+        Vector2 perpLeft = new Vector2(-awayFromPlayer.y, awayFromPlayer.x);
+        Vector2 perpRight = new Vector2(awayFromPlayer.y, -awayFromPlayer.x);
+        
+        RaycastHit2D hitLeft = Physics2D.Raycast(transform.position, perpLeft, checkDistance, mask);
+        RaycastHit2D hitRight = Physics2D.Raycast(transform.position, perpRight, checkDistance, mask);
+        
+        // Choose the clearer perpendicular direction
+        if (hitLeft.collider == null && hitRight.collider == null)
+        {
+            // Both clear, pick one that moves us away from player more
+            float leftScore = Vector2.Dot(perpLeft, awayFromPlayer);
+            float rightScore = Vector2.Dot(perpRight, awayFromPlayer);
+            return (leftScore > rightScore) ? perpLeft : perpRight;
+        }
+        else if (hitLeft.collider == null)
+        {
+            return perpLeft;
+        }
+        else if (hitRight.collider == null)
+        {
+            return perpRight;
+        }
+        
+        // Completely cornered, try to slide along the wall
+        if (hitAhead.collider != null)
+        {
+            Vector2 wallNormal = hitAhead.normal;
+            Vector2 slideDir = Vector2.Perpendicular(wallNormal);
+            
+            // Pick the slide direction that moves us away from player
+            if (Vector2.Dot(slideDir, awayFromPlayer) < 0)
+            {
+                slideDir = -slideDir;
+            }
+            
+            return slideDir;
+        }
+        
+        // Last resort: just move away from player even if blocked
+        return awayFromPlayer;
     }
 
     // --- State Logic ---
@@ -223,6 +299,7 @@ public class PuppeteerEnemy : EnemyAI
     void TransitionToState(State newState)
     {
         currentState = newState;
+        stateTimer = 0f; // Reset timer on state change
         Debug.Log($"PuppeteerEnemy: Transitioned to {newState}");
 
         switch (currentState)
@@ -272,8 +349,9 @@ public class PuppeteerEnemy : EnemyAI
         // Conditions: 
         // - We are hidden from player (Line of Sight blocked)
         // - AND We are NOT under active attack (Timer <= 0)
+        // - AND We've been hiding for minimum duration (prevent oscillation)
         bool hasLOS = CheckLineOfSight();
-        if (!hasLOS && underAttackTimer <= 0)
+        if (!hasLOS && underAttackTimer <= 0 && stateTimer >= MIN_STATE_DURATION)
         {
             // We are hidden and safe! Switch to summon.
             shouldFleeDirectly = false;
@@ -302,16 +380,31 @@ public class PuppeteerEnemy : EnemyAI
             }
         }
 
-        // 3. Set flag for fallback flee if no valid path and player can see us
-        shouldFleeDirectly = (path == null || path.Count == 0) && hasLOS && target != null;
+        // 3. Determine movement mode
+        // Use direct flee if: no valid path AND (player can see us OR we're under attack)
+        bool isInDanger = hasLOS || underAttackTimer > 0;
+        bool needDirectFlee = (path == null || path.Count == 0) && isInDanger && target != null;
+        
+        if (needDirectFlee)
+        {
+            // Clear path so base Update() doesn't apply conflicting movement
+            path = null;
+            shouldFleeDirectly = true;
+        }
+        else
+        {
+            // Use pathfinding normally
+            shouldFleeDirectly = false;
+        }
     }
 
     void UpdateSummoningState()
     {
-        // If player spots us, run!
-        if (CheckLineOfSight())
+        // If player spots us OR we're being shot at, AND we've been summoning for minimum duration, run!
+        bool isInDanger = CheckLineOfSight() || underAttackTimer > 0;
+        if (isInDanger && stateTimer >= MIN_STATE_DURATION)
         {
-            // Debug.Log("PuppeteerEnemy: Player saw me! running!");
+            Debug.Log("PuppeteerEnemy: Player saw me or shot at me! Running!");
             TransitionToState(State.Hiding);
         }
     }

@@ -1289,8 +1289,9 @@ MonoBehaviour:
   pingInterval: 4.37
   edgeWidth: 12.82
   rippleColor: {r: 0, g: 1, b: 1, a: 1}
-  worldDarkness: 0
+  worldDarkness: 1
   fadeOutDuration: 2.3
+  pixelSize: 13
   playerRadius: 2.5
   enemyLayerMask:
     serializedVersion: 2

@@ -14,6 +14,7 @@ Shader "Hidden/Echolocation"
         _OrthographicSize ("Ortho Size", Float) = 5
         _AspectRatio ("Aspect Ratio", Float) = 1.77
         _IsOrtho ("Is Orthographic", Float) = 0
+        _PixelSize ("Pixel Size", Float) = 1
     }
     SubShader
     {
@@ -60,6 +61,7 @@ Shader "Hidden/Echolocation"
             float _OrthographicSize;
             float _AspectRatio;
             float _IsOrtho;
+            float _PixelSize;
 
             Varyings vert (Attributes input)
             {
@@ -75,13 +77,22 @@ Shader "Hidden/Echolocation"
 
             float4 frag (Varyings input) : SV_Target
             {
+                // --- Pixelation Logic ---
+                float2 uv = input.uv;
+                if (_PixelSize > 1.0)
+                {
+                    float2 screenParams = _ScreenParams.xy;
+                    float2 pixelCounts = screenParams / _PixelSize;
+                    uv = floor(uv * pixelCounts) / pixelCounts;
+                }
+
                 float3 worldPos;
                 
                 // --- World Position Reconstruction ---
                 if (_IsOrtho > 0.5)
                 {
                     // --- 2D Orthographic Logic ---
-                    float2 uvCentered = input.uv - 0.5;
+                    float2 uvCentered = uv - 0.5;
                     float height = _OrthographicSize * 2.0;
                     float width = height * _AspectRatio;
                     
@@ -91,8 +102,8 @@ Shader "Hidden/Echolocation"
                 else
                 {
                     // --- 3D Depth Logic (Fallback) ---
-                    float depth = SampleSceneDepth(input.uv);
-                    worldPos = ComputeWorldSpacePosition(input.uv, depth, UNITY_MATRIX_I_VP);
+                    float depth = SampleSceneDepth(uv);
+                    worldPos = ComputeWorldSpacePosition(uv, depth, UNITY_MATRIX_I_VP);
                 }
 
                 // --- Darkness & Reveal Logic ---

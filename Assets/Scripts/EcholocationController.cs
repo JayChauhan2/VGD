@@ -15,6 +15,7 @@ public class EcholocationController : MonoBehaviour
     [Range(0f, 1f)]
     public float worldDarkness = 0.9f;
     public float fadeOutDuration = 0.5f; // Time for ripple to fade after reaching max radius
+    public float pixelSize = 1f; // Controls pixelation level (1 = off)
     
     private Transform centerTransform; // The actual transform to use for position
     private Vector3 pulseOrigin; // The fixed position where the current pulse started
@@ -97,6 +98,7 @@ public class EcholocationController : MonoBehaviour
         {
             echolocationMaterial.SetVector("_Center", pulseOrigin);
             echolocationMaterial.SetFloat("_Darkness", worldDarkness);
+            echolocationMaterial.SetFloat("_PixelSize", pixelSize);
             
             // --- Player Visibility Update ---
             if (centerTransform != null)

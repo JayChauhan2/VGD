@@ -93,7 +93,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 16
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -172,9 +172,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 136
-        width: 65
-        height: 16
+        y: 128
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -193,10 +193,10 @@ TextureImporter:
       name: laserframe_1
       rect:
         serializedVersion: 2
-        x: 63
-        y: 136
-        width: 66
-        height: 16
+        x: 64
+        y: 128
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -215,10 +215,10 @@ TextureImporter:
       name: laserframe_2
       rect:
         serializedVersion: 2
-        x: 127
-        y: 136
-        width: 65
-        height: 16
+        x: 128
+        y: 128
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -238,9 +238,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 104
-        width: 65
-        height: 16
+        y: 96
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -259,10 +259,10 @@ TextureImporter:
       name: laserframe_4
       rect:
         serializedVersion: 2
-        x: 63
-        y: 104
-        width: 66
-        height: 16
+        x: 64
+        y: 96
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -281,10 +281,10 @@ TextureImporter:
       name: laserframe_5
       rect:
         serializedVersion: 2
-        x: 127
-        y: 104
-        width: 65
-        height: 16
+        x: 128
+        y: 96
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -304,9 +304,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 72
-        width: 65
-        height: 16
+        y: 64
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -325,10 +325,10 @@ TextureImporter:
       name: laserframe_7
       rect:
         serializedVersion: 2
-        x: 63
-        y: 72
-        width: 66
-        height: 16
+        x: 64
+        y: 64
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -347,10 +347,10 @@ TextureImporter:
       name: laserframe_8
       rect:
         serializedVersion: 2
-        x: 127
-        y: 72
-        width: 65
-        height: 16
+        x: 128
+        y: 64
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -370,9 +370,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 40
-        width: 65
-        height: 16
+        y: 32
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -391,10 +391,10 @@ TextureImporter:
       name: laserframe_10
       rect:
         serializedVersion: 2
-        x: 63
-        y: 40
-        width: 66
-        height: 16
+        x: 64
+        y: 32
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -413,10 +413,10 @@ TextureImporter:
       name: laserframe_11
       rect:
         serializedVersion: 2
-        x: 127
-        y: 40
-        width: 65
-        height: 16
+        x: 128
+        y: 32
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -436,9 +436,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 8
-        width: 65
-        height: 16
+        y: 0
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -457,10 +457,10 @@ TextureImporter:
       name: laserframe_13
       rect:
         serializedVersion: 2
-        x: 63
-        y: 8
-        width: 66
-        height: 16
+        x: 64
+        y: 0
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -479,10 +479,10 @@ TextureImporter:
       name: laserframe_14
       rect:
         serializedVersion: 2
-        x: 127
-        y: 8
-        width: 65
-        height: 16
+        x: 128
+        y: 0
+        width: 64
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -501,7 +501,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: cfeb201c92de74e47b71804889e49816
     internalID: 0
     vertices: []
     indices: 
@@ -509,7 +509,9 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":32.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
       laserframe_0: -490370006327018391
       laserframe_1: -3410814745792984150

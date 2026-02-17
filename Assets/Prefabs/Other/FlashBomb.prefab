@@ -103,6 +103,11 @@ MonoBehaviour:
   explosionDelay: 1.5
   explosionRadius: 2
   damagePercent: 0.5
+  useNormalizedTiming: 1
+  explosionTimingNormalized: 0.467
+  explosionTimingSeconds: 0.5
+  explosionFreezeDuration: 0.25
+  swellAmount: 2
   flashDuration: 0.3
   maxFlashScale: 6.25
   explosionEffectPrefab: {fileID: 6891237635396914281, guid: 3e672f28f1b777b428497fb254af6173, type: 3}

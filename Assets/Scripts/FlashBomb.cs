@@ -9,6 +9,14 @@ public class FlashBomb : MonoBehaviour
     public float explosionRadius = 2f; // Matched to visual (Radius 2)
     public float damagePercent = 0.5f; // 50% of enemy max health
     
+    [Header("Explosion Animation Settings")]
+    public bool useNormalizedTiming = true; // Toggle: True = use 0.0-1.0, False = use seconds
+    [Range(0.1f, 1.0f)]
+    public float explosionTimingNormalized = 0.7f; // % of animation
+    public float explosionTimingSeconds = 0.5f;   // Specific time in seconds
+    public float explosionFreezeDuration = 0.5f; // Duration of the freeze
+    public float swellAmount = 1.5f; // How much it scales up during animation
+    
     [Header("Visual Settings")]
     public float flashDuration = 0.3f;
     public float maxFlashScale = 6.25f; // Scale 6.25 * 0.64(unit) = 4.0 diameter = 2.0 radius
@@ -65,39 +73,43 @@ public class FlashBomb : MonoBehaviour
         if (hasExploded) return;
         hasExploded = true;
         
+        float effectDuration = 0f;
+
         // Visual Effect
         if (explosionEffectPrefab != null)
         {
             // Instantiate custom effect
             GameObject explosionInstance = Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
             
-            float duration = flashDuration; // Default fallback
+            // Calculate base duration
+            float baseDuration = flashDuration; // Default fallback
             
             // Try to get duration from Animator
             Animator anim = explosionInstance.GetComponent<Animator>();
             if (anim != null)
             {
-                // Force an update to ensure state info is ready
                 anim.Update(0f);
                 AnimatorStateInfo stateInfo = anim.GetCurrentAnimatorStateInfo(0);
-                if (stateInfo.length > 0)
-                {
-                    duration = stateInfo.length;
-                }
+                if (stateInfo.length > 0) baseDuration = stateInfo.length;
             }
-            // If no animator (or invalid length), try ParticleSystem
             else 
             {
                 ParticleSystem ps = explosionInstance.GetComponent<ParticleSystem>();
                 if (ps != null)
                 {
-                    duration = ps.main.duration;
-                    if (!ps.main.loop) duration += ps.main.startLifetime.constant;
+                    baseDuration = ps.main.duration;
+                    if (!ps.main.loop) baseDuration += ps.main.startLifetime.constant;
                 }
             }
+
+            // Start custom animation sequence (Swell + Freeze) on the instance
+            StartCoroutine(AnimateExplosionEffect(explosionInstance, anim, baseDuration));
             
-            // Destroy the effect after the detected duration
-            Destroy(explosionInstance, duration);
+            // Total time needed before destruction
+            effectDuration = baseDuration + explosionFreezeDuration;
+            
+            // EXPLICITLY schedule destruction of the visual effect to prevent looping if the coroutine dies
+            Destroy(explosionInstance, effectDuration);
             
             // Hide the bomb itself immediately
             if (spriteRenderer != null) spriteRenderer.enabled = false;
@@ -106,6 +118,7 @@ public class FlashBomb : MonoBehaviour
         {
             // Fallback to default white flash effect
             StartCoroutine(FlashEffect());
+            effectDuration = flashDuration;
         }
         
         // Camera shake
@@ -115,7 +128,21 @@ public class FlashBomb : MonoBehaviour
         }
         
         // Deal damage and knockback to all enemies AND player in radius
-        // Use logic radius matching visual
+        // ... (Damage Logic Reduced for brevity in replacement, will keep original logic below)
+        
+        // Destroy after effects complete
+        // Use meaningful max of all durations PLUS A BUFFER to ensure coroutines finish
+        float destroyDelay = Mathf.Max(effectDuration, shakeDuration) + 0.1f;
+        
+        Destroy(gameObject, destroyDelay);
+        
+        // ... (Calls logic for damage/knockback)
+        ApplyExplosionImpact();
+    }
+
+    // Helper to keep Explode() clean
+    void ApplyExplosionImpact()
+    {
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, explosionRadius);
         Debug.Log($"FlashBomb: Found {hits.Length} objects in blast radius");
         
@@ -136,7 +163,6 @@ public class FlashBomb : MonoBehaviour
             float distancePercent = 1f - Mathf.Clamp01(distance / explosionRadius);
             
             // Check for enemy
-            // Check for enemy
             EnemyAI enemy = hit.GetComponent<EnemyAI>();
             if (enemy == null) enemy = hit.GetComponentInParent<EnemyAI>();
             
@@ -149,9 +175,6 @@ public class FlashBomb : MonoBehaviour
                 enemy.TakeDamage(damage);
                 
                 // Apply knockback (stronger when closer)
-                // Increased base force from 10 to 30
-                // Since we switched to Direct Velocity in EnemyAI, 30 is a speed of 30 units/s.
-                // That's very fast. Let's keep it but maybe dampen distance factor less?
                 float knockbackForce = 20f * distancePercent; // Tuned for velocity mode
                 
                 // Use the new method to pause AI and apply force
@@ -176,13 +199,63 @@ public class FlashBomb : MonoBehaviour
                 }
             }
         }
+    }
+    IEnumerator AnimateExplosionEffect(GameObject instance, Animator anim, float duration)
+    {
+        float elapsed = 0f;
+        Vector3 originalScale = instance.transform.localScale;
+        Vector3 targetScale = originalScale * swellAmount;
         
-        // Destroy after adequate time for shakes/effects to finish
-        // If using custom prefab, we can destroy self sooner (after shake)
-        // If using default flash, we need to wait for flashDuration
-        float destroyDelay = (explosionEffectPrefab != null) ? shakeDuration : Mathf.Max(flashDuration, shakeDuration);
+        // 1. Play until Freeze Point (Swell Up)
+        float freezeTime = useNormalizedTiming ? (duration * explosionTimingNormalized) : explosionTimingSeconds;
         
-        Destroy(gameObject, destroyDelay);
+        // Safety clamp
+        if (freezeTime > duration) freezeTime = duration;
+        if (freezeTime < 0) freezeTime = 0;
+        
+        while (elapsed < freezeTime)
+        {
+            if (instance == null) yield break;
+            
+            elapsed += Time.deltaTime;
+            float t = elapsed / freezeTime;
+            
+            // Swell: Up (Sin curve 0->1) but effectively just Lerp up for the first part?
+            // Bomber logic: Sin(t * PI) for full Up/Down.
+            // Let's do a simple swell up then down over the full duration? 
+            // Or swell UP to the freeze point? 
+            // "size scale-up and then the explosion freezes" -> Implies Scale UP -> Freeze.
+            
+            // Let's scale UP to swellAmount
+            instance.transform.localScale = Vector3.Lerp(originalScale, targetScale, t);
+            
+            yield return null;
+        }
+        
+        // 2. Freeze
+        if (anim != null) anim.speed = 0f;
+        yield return new WaitForSeconds(explosionFreezeDuration);
+        if (anim != null && instance != null) anim.speed = 1f;
+        
+        // 3. Finish Animation (Scale Down?)
+        // If we want it to "swell", maybe we should scale down after?
+        // Let's scale back down to original over the remaining time.
+        float remainingTime = duration - freezeTime;
+        elapsed = 0f;
+        
+        while (elapsed < remainingTime)
+        {
+            if (instance == null) yield break;
+            
+            elapsed += Time.deltaTime;
+            float t = elapsed / remainingTime;
+            
+            instance.transform.localScale = Vector3.Lerp(targetScale, originalScale, t);
+            yield return null;
+        }
+        
+        // Ensure instance is destroyed
+        if (instance != null) Destroy(instance);
     }
 
     IEnumerator FlashEffect()

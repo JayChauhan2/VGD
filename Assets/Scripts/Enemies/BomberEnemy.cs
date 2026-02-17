@@ -16,6 +16,10 @@ public class BomberEnemy : EnemyAI
     public float shockwaveSwellAmount = 1.5f; // Multiplier for custom shockwave prefab scale
     public float bodySwellAmount = 1.5f; // Multiplier for the enemy body swell
     
+    [Header("Camera Shake")]
+    public float shakeIntensity = 1.0f;
+    public float shakeDuration = 0.4f;
+    
     private bool isExploding = false;
     private bool isFrozen = false; // Flag to pause visual effects
     private float explosionDuration = 0f;
@@ -58,6 +62,12 @@ public class BomberEnemy : EnemyAI
     {
         if (isExploding) return; // Invincible during explosion animation
         base.TakeDamage(damage);
+    }
+    
+    public override void ApplyKnockback(Vector2 force, float duration)
+    {
+        if (isExploding) return; // Immovable during explosion animation
+        base.ApplyKnockback(force, duration);
     }
 
     private IEnumerator ExplodeSequence()
@@ -269,10 +279,99 @@ public class BomberEnemy : EnemyAI
     {
         Debug.Log("BomberEnemy: EXPLODING!");
         
-        // Create explosion effect that IGNORES other bombers to prevent chain reactions
-        // UPDATE: User requested to damage other entities, so we enable friendly fire for chain reactions!
-        // We pass 'gameObject' as the source to ignore so we don't kill OURSELVES instantly.
-        ExplosionEffect.CreateExplosion(transform.position, explosionRadius, playerDamage, enemyDamage, false, gameObject);
+        // 1. Camera Shake (Exact same as FlashBomb)
+        if (CameraController.Instance != null)
+        {
+            StartCoroutine(CameraShake());
+        }
+
+        // 2. Custom Explosion Logic (Exact same knockback as FlashBomb)
+        ApplyBomberExplosionImpact();
+    }
+    
+    // Adapted from FlashBomb.ApplyExplosionImpact
+    void ApplyBomberExplosionImpact()
+    {
+        // Use the Bomber's radius
+        float currentExplosionRadius = explosionRadius; 
+
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, currentExplosionRadius);
+        Debug.Log($"BomberEnemy: Found {hits.Length} objects in blast radius ({currentExplosionRadius})");
+        
+        foreach (Collider2D hit in hits)
+        {
+            // Ignore ourselves
+            if (hit.gameObject == gameObject) continue;
+            
+            // Calculate knockback direction and distance-based force
+            Vector2 diff = hit.transform.position - transform.position;
+            Vector2 direction = diff.normalized;
+            
+            // Handle case where bomb creates exactly on top of entity (prevent 0 direction)
+            if (direction == Vector2.zero)
+            {
+                 direction = Random.insideUnitCircle.normalized;
+                 if (direction == Vector2.zero) direction = Vector2.right;
+            }
+            
+            float distance = diff.magnitude;
+            float distancePercent = 1f - Mathf.Clamp01(distance / currentExplosionRadius);
+            
+            // Check for enemy (Friendly Fire!)
+            EnemyAI enemy = hit.GetComponent<EnemyAI>();
+            if (enemy == null) enemy = hit.GetComponentInParent<EnemyAI>();
+            
+            if (enemy != null && enemy != this) // Don't damage self (we die anyway)
+            {
+                // Deal damage (Using Bomber's enemyDamage setting)
+                enemy.TakeDamage(enemyDamage);
+                
+                // Apply knockback (FlashBomb: 20f * distancePercent)
+                float knockbackForce = 20f * distancePercent; 
+                enemy.ApplyKnockback(direction * knockbackForce, 0.4f);
+            }
+            
+            // Check for player
+            PlayerHealth player = hit.GetComponent<PlayerHealth>();
+            if (player != null)
+            {
+                // Player takes damage (Using Bomber's playerDamage setting)
+                // We pass direction for the damage visual
+                player.TakeDamage(playerDamage, direction);
+                
+                // Explicitly apply strong bomb knockback to player (FlashBomb: 8f * distancePercent)
+                PlayerMovement pm = player.GetComponent<PlayerMovement>();
+                if (pm != null)
+                {
+                    float playerKnockbackForce = 8f * distancePercent; 
+                    pm.ApplyKnockback(direction * playerKnockbackForce, 0.3f); 
+                }
+            }
+        }
+    }
+
+    IEnumerator CameraShake()
+    {
+        float elapsed = 0f;
+        
+        while (elapsed < shakeDuration)
+        {
+            elapsed += Time.deltaTime;
+            
+            // Random shake offset that decreases over time
+            float intensity = shakeIntensity * (1f - elapsed / shakeDuration);
+            Vector3 shakeOffset = new Vector3(
+                Random.Range(-intensity, intensity),
+                Random.Range(-intensity, intensity),
+                0f
+            );
+            
+            CameraController.Instance.SetRecoilOffset(shakeOffset);
+            yield return null;
+        }
+        
+        // Reset camera
+        CameraController.Instance.SetRecoilOffset(Vector3.zero);
     }
     
     // ... OnEnemyUpdate logic remains ...

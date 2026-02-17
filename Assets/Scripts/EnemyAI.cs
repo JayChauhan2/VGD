@@ -530,7 +530,7 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    public void ApplyKnockback(Vector2 force, float duration)
+    public virtual void ApplyKnockback(Vector2 force, float duration)
     {
         // Allow knockback even if not active (e.g. idle enemy gets hit)
         // We rely on IsKnockedBack flag to pause AI, which works even if not active yet.

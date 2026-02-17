@@ -37,6 +37,7 @@ public class FlashBomb : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private bool hasExploded = false;
     private Vector3 targetPosition;
+    private int originalSortingOrder;
 
     void Start()
     {
@@ -56,7 +57,8 @@ public class FlashBomb : MonoBehaviour
             transform.localScale = Vector3.one * 0.5f;
         }
 
-        // Store the intended position (where it was instantiated)
+        // Store original sorting order and intended position
+        originalSortingOrder = spriteRenderer.sortingOrder;
         targetPosition = transform.position;
 
         // Start throw sequence immediately
@@ -73,6 +75,12 @@ public class FlashBomb : MonoBehaviour
         {
             // Start at player position (no upward offset)
             startPosition = player.transform.position;
+        }
+
+        // Set high sorting order for the throw (to render above player)
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.sortingOrder = 1000; // Arbitrary high number
         }
 
         // Store original scale to return to
@@ -141,6 +149,12 @@ public class FlashBomb : MonoBehaviour
         
         // Ensure final scale
         transform.localScale = baseScale;
+
+        // Restore original sorting order now that it's "on the ground"
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.sortingOrder = originalSortingOrder;
+        }
 
         // 4. Start Explosion Countdown (Existing Logic)
         StartCoroutine(ExplodeAfterDelay());

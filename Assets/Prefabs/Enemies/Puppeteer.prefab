@@ -77,8 +77,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1898995881
+  m_SortingLayer: 3
   m_SortingOrder: 0
   m_Sprite: {fileID: 6638242034439552986, guid: 3f1933f75197b5e408c5cef1f31ecf7b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -180,6 +180,9 @@ MonoBehaviour:
   puppetCount: 3
   keepDistanceFromPlayer: 6
   summonCooldown: 2
+  obstacleLayers:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!95 &253643884657430102
 Animator:
   serializedVersion: 7

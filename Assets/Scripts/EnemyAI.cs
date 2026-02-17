@@ -11,6 +11,9 @@ public class EnemyAI : MonoBehaviour
     [Header("Loot Settings")]
     public GameObject coinPrefab;
 
+    // Optional override for health bar position
+    public virtual Vector3? HealthBarOffsetOverride => null;
+
     protected Pathfinding pathfinding;
     protected List<Node> path;
     protected int targetIndex;

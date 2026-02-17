@@ -8245,9 +8245,9 @@ MonoBehaviour:
   - {fileID: 1127242731612300559, guid: 5110fba8dd08f944e8ad76cf01375583, type: 3}
   spawnInterval: 3
   minSpawnInterval: 1
-  maxActiveEnemies: 5
+  maxActiveEnemies: 1
   spawnRadius: 2
-  enemiesPerSpawn: 3
+  enemiesPerSpawn: 1
 --- !u!1 &9038845682686392299
 GameObject:
   m_ObjectHideFlags: 0

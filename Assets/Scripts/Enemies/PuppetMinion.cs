@@ -7,13 +7,25 @@ public class PuppetMinion : EnemyAI
     private Vector3? confusionTarget;
     private float confusionTimer;
 
+    // Lower health bar for small minion
+    public override Vector3? HealthBarOffsetOverride => new Vector3(0, 0.25f, 0);
+
     protected override void OnEnemyStart()
     {
         // Set Puppet-specific stats (similar to Wanderer but owned by Puppeteer)
         maxHealth = 40f;
         currentHealth = maxHealth;
         // speed is handled by EnemyAI or can be overriden here
+
+        // Start in spawning state
+        isSpawning = true;
+        if (animator != null)
+        {
+            animator.Play("MiniPuppetSpawn");
+        }
     }
+
+    private bool isSpawning = false;
 
     public void SetConfusion(bool state)
     {
@@ -55,6 +67,25 @@ public class PuppetMinion : EnemyAI
         {
             // Override base behavior: Ignore player, move randomly
             HandleConfusionBehavior();
+        }
+        else if (isSpawning)
+        {
+            // Check if spawn animation is finished
+            if (animator != null)
+            {
+                AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+                // "MiniPuppetSpawn" is the name of the state
+                if (stateInfo.IsName("MiniPuppetSpawn") && stateInfo.normalizedTime >= 1.0f)
+                {
+                    isSpawning = false;
+                    animator.Play("MinionWalk");
+                }
+            }
+            else
+            {
+                // Fallback if no animator
+                isSpawning = false;
+            }
         }
         // If not confused, base EnemyAI.Update will handle standard pathfinding to target (Player)
     }
@@ -118,6 +149,8 @@ public class PuppetMinion : EnemyAI
     // The base EnemyAI.Update passes calculated path velocity, which is zero when confused (no path).
     protected override void UpdateAnimation(Vector2 ignoredVelocity)
     {
+        if (isSpawning) return; // Don't update animation while spawning
+
         Vector2 actualVelocity = Vector2.zero;
 
         if (rb != null)

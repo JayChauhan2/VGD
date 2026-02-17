@@ -48,7 +48,15 @@ public class EnemyHealthBar : MonoBehaviour
         // 1. Create Canvas GameObject
         GameObject canvasGO = new GameObject("HealthBarCanvas");
         canvasGO.transform.SetParent(transform);
-        canvasGO.transform.localPosition = offset;
+        
+        // Check for override
+        Vector3 finalOffset = offset;
+        if (enemyAI != null && enemyAI.HealthBarOffsetOverride.HasValue)
+        {
+            finalOffset = enemyAI.HealthBarOffsetOverride.Value;
+        }
+        canvasGO.transform.localPosition = finalOffset;
+        
         canvasGO.transform.localRotation = Quaternion.identity;
 
         healthCanvas = canvasGO.AddComponent<Canvas>();

@@ -25,6 +25,9 @@ public class PuppeteerEnemy : EnemyAI
         maxHealth = 165f;
         currentHealth = maxHealth;
         
+        // Don't let base class zero our velocity when we have no path (we handle our own movement)
+        stopWhenNoPath = false;
+        
         // Start by hiding (don't spawn yet)
         TransitionToState(State.Hiding);
         
@@ -118,6 +121,9 @@ public class PuppeteerEnemy : EnemyAI
     private float underAttackTimer = 0f;
     private const float UNDER_ATTACK_DURATION = 3.0f; // Run for 3 seconds after being shot
 
+    // Store flee state for Update override
+    private bool shouldFleeDirectly = false;
+    
     protected override void OnEnemyUpdate()
     {
         // Update attack timer
@@ -147,7 +153,56 @@ public class PuppeteerEnemy : EnemyAI
         UpdateTethers();
     }
     
-    // ... UpdateAnimation ...
+    protected override void UpdateAnimation(Vector2 velocity)
+    {
+        base.UpdateAnimation(velocity);
+        
+        if (animator != null)
+        {
+            animator.SetBool("IsSummoning", isSummoning);
+        }
+    }
+
+    // Override Update to apply flee movement AFTER base pathfinding
+    void Update()
+    {
+        if (!IsActive) return;
+        if (IsKnockedBack) return;
+        
+        // Call base OnEnemyUpdate (which calls our state machine)
+        OnEnemyUpdate();
+        
+        // Base pathfinding movement
+        Vector2 velocity = Vector2.zero;
+        if (path != null && targetIndex < path.Count)
+        {
+            Vector3 currentWaypoint = path[targetIndex].worldPosition;
+            
+            if (rb != null)
+            {
+                Vector2 dir = (currentWaypoint - transform.position).normalized;
+                velocity = dir * speed;
+                rb.linearVelocity = velocity;
+            }
+            
+            if (Vector3.Distance(transform.position, currentWaypoint) < 0.1f)
+            {
+                targetIndex++;
+            }
+        }
+        
+        // FALLBACK: Apply direct flee if flagged (overrides pathfinding)
+        if (shouldFleeDirectly && target != null && rb != null)
+        {
+            Vector2 fleeDir = (transform.position - target.position).normalized;
+            velocity = fleeDir * speed;
+            rb.linearVelocity = velocity;
+            Debug.Log($"PuppeteerEnemy: Fleeing directly! Velocity: {velocity}");
+        }
+        
+        UpdateAnimation(velocity);
+        CheckTouchDamage();
+    }
 
     // --- State Logic ---
     
@@ -168,7 +223,7 @@ public class PuppeteerEnemy : EnemyAI
     void TransitionToState(State newState)
     {
         currentState = newState;
-        // Debug.Log($"PuppeteerEnemy: Transitioned to {newState}");
+        Debug.Log($"PuppeteerEnemy: Transitioned to {newState}");
 
         switch (currentState)
         {
@@ -176,6 +231,15 @@ public class PuppeteerEnemy : EnemyAI
                 isSummoning = false;
                 FindBestHidingSpot(); 
                 MovePuppetsToConfusion(true);
+                
+                // IMMEDIATELY compute path so we don't stand still
+                retargetTimer = 0f;
+                if (pathfinding != null && pathfinding.IsGridReady)
+                {
+                    path = pathfinding.FindPath(transform.position, hidingSpot);
+                    targetIndex = 0;
+                    Debug.Log($"PuppeteerEnemy: Immediate path to {hidingSpot}, path valid: {path != null && path.Count > 0}");
+                }
                 break;
                 
             case State.Summoning:
@@ -208,9 +272,11 @@ public class PuppeteerEnemy : EnemyAI
         // Conditions: 
         // - We are hidden from player (Line of Sight blocked)
         // - AND We are NOT under active attack (Timer <= 0)
-        if (!CheckLineOfSight() && underAttackTimer <= 0)
+        bool hasLOS = CheckLineOfSight();
+        if (!hasLOS && underAttackTimer <= 0)
         {
             // We are hidden and safe! Switch to summon.
+            shouldFleeDirectly = false;
             TransitionToState(State.Summoning);
             return;
         }
@@ -235,6 +301,9 @@ public class PuppeteerEnemy : EnemyAI
                 targetIndex = 0;
             }
         }
+
+        // 3. Set flag for fallback flee if no valid path and player can see us
+        shouldFleeDirectly = (path == null || path.Count == 0) && hasLOS && target != null;
     }
 
     void UpdateSummoningState()
@@ -254,6 +323,9 @@ public class PuppeteerEnemy : EnemyAI
 
     // --- Helper Methods ---
 
+    // Added to allow configuring which layers block LOS (e.g. for new map tilesets)
+    public LayerMask obstacleLayers; 
+
     bool CheckLineOfSight()
     {
         if (target == null) return false; // Can't see null target
@@ -261,9 +333,11 @@ public class PuppeteerEnemy : EnemyAI
         float distance = Vector3.Distance(transform.position, target.position);
         Vector3 direction = (target.position - transform.position).normalized;
 
-        // Raycast to player
-        // Use "Obstacle" layer to check for walls
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, distance, LayerMask.GetMask("Obstacle"));
+        // Raycast to player using configurable mask
+        // If obstacleLayers is not set (Nothing/0), fallback to "Obstacle" string for backward compatibility
+        int mask = (obstacleLayers.value != 0) ? obstacleLayers.value : LayerMask.GetMask("Obstacle");
+
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, distance, mask);
 
         // If we hit nothing (or player isn't an obstacle), we have LOS
         // If we hit a wall, we are hidden.
@@ -314,7 +388,9 @@ public class PuppeteerEnemy : EnemyAI
             // Factor 1: Is it hidden from player? (Heavy Weight)
             float distToPlayer = Vector3.Distance(spot, target.position);
             Vector3 dirToPlayer = (target.position - spot).normalized;
-            RaycastHit2D hit = Physics2D.Raycast(spot, dirToPlayer, distToPlayer, LayerMask.GetMask("Obstacle"));
+            
+            int mask = (obstacleLayers.value != 0) ? obstacleLayers.value : LayerMask.GetMask("Obstacle");
+            RaycastHit2D hit = Physics2D.Raycast(spot, dirToPlayer, distToPlayer, mask);
             
             bool isHidden = hit.collider != null;
 

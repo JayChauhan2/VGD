@@ -119,6 +119,9 @@ public class FlashBomb : MonoBehaviour
             // Fallback to default white flash effect
             StartCoroutine(FlashEffect());
             effectDuration = flashDuration;
+            
+            // Standard damage for fallback
+            ApplyExplosionImpact(1f);
         }
         
         // Camera shake
@@ -135,16 +138,14 @@ public class FlashBomb : MonoBehaviour
         float destroyDelay = Mathf.Max(effectDuration, shakeDuration) + 0.1f;
         
         Destroy(gameObject, destroyDelay);
-        
-        // ... (Calls logic for damage/knockback)
-        ApplyExplosionImpact();
     }
 
     // Helper to keep Explode() clean
-    void ApplyExplosionImpact()
+    void ApplyExplosionImpact(float radiusModifier)
     {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, explosionRadius);
-        Debug.Log($"FlashBomb: Found {hits.Length} objects in blast radius");
+        float currentExplosionRadius = explosionRadius * radiusModifier;
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, currentExplosionRadius);
+        Debug.Log($"FlashBomb: Found {hits.Length} objects in blast radius ({currentExplosionRadius})");
         
         foreach (Collider2D hit in hits)
         {
@@ -160,7 +161,7 @@ public class FlashBomb : MonoBehaviour
             }
             
             float distance = diff.magnitude;
-            float distancePercent = 1f - Mathf.Clamp01(distance / explosionRadius);
+            float distancePercent = 1f - Mathf.Clamp01(distance / currentExplosionRadius);
             
             // Check for enemy
             EnemyAI enemy = hit.GetComponent<EnemyAI>();
@@ -231,6 +232,9 @@ public class FlashBomb : MonoBehaviour
             
             yield return null;
         }
+        
+        // APPLY DAMAGE HERE (After delay, with scaling swell)
+        ApplyExplosionImpact(swellAmount);
         
         // 2. Freeze
         if (anim != null) anim.speed = 0f;

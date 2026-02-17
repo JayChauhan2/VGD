@@ -4,6 +4,7 @@ using System.Collections;
 public class SpawnProtection : MonoBehaviour
 {
     public float duration = 3.0f;
+    public float visualScale = 0.8f; // Manually settable scale for the visual
     public bool IsActive { get; private set; } = true;
     
     private GameObject forcefield;
@@ -26,8 +27,8 @@ public class SpawnProtection : MonoBehaviour
             forcefield = Instantiate(RoomManager.Instance.enemyForcefieldPrefab, transform);
             // Change 2: Ensure local position is zero
             forcefield.transform.localPosition = Vector3.zero;
-            // Change 3: REMOVED the line that was overriding scale with RoomManager.Instance.enemyForcefieldScale
-            // forcefield.transform.localScale = Vector3.one * RoomManager.Instance.enemyForcefieldScale;
+            // Force scale to visualScale (0.8f default)
+            forcefield.transform.localScale = Vector3.one * visualScale;
             
             // Adjust scale if needed? Or assume user prefab is correct size.
             // Let's ensure it's on the correct layer at least.

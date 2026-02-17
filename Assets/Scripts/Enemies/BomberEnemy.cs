@@ -13,6 +13,8 @@ public class BomberEnemy : EnemyAI
     public float explosionFreezeDuration = 0.5f; // How long to freeze animation at explosion point
     public bool showShockwave = true; // Toggle for the white explosion effect
     public GameObject explosionEffectPrefab; // Optional custom visual to replace procedural shockwave
+    public float shockwaveSwellAmount = 1.5f; // Multiplier for custom shockwave prefab scale
+    public float bodySwellAmount = 1.5f; // Multiplier for the enemy body swell
     
     private bool isExploding = false;
     private bool isFrozen = false; // Flag to pause visual effects
@@ -135,7 +137,7 @@ public class BomberEnemy : EnemyAI
     {
         // 1. Swell Effect (Scale Up and Down)
         Vector3 originalScale = transform.localScale;
-        Vector3 targetScale = originalScale * 1.5f;
+        Vector3 targetScale = originalScale * bodySwellAmount;
         float elapsed = 0f;
         
         // 2. White Shockwave Circle (Procedural OR Prefab)
@@ -143,6 +145,8 @@ public class BomberEnemy : EnemyAI
         SpriteRenderer sr = null;
         Animator shockwaveAnim = null;
         bool isProceduralShockwave = false;
+        
+        Vector3 originalShockwaveScale = Vector3.one; // For custom prefab scaling base
         
         if (showShockwave)
         {
@@ -152,6 +156,7 @@ public class BomberEnemy : EnemyAI
                 shockwave = Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
                 sr = shockwave.GetComponent<SpriteRenderer>(); 
                 shockwaveAnim = shockwave.GetComponent<Animator>();
+                originalShockwaveScale = shockwave.transform.localScale;
             }
             else
             {
@@ -172,10 +177,7 @@ public class BomberEnemy : EnemyAI
             Destroy(shockwave, duration + 0.5f);
         }
         
-        // Calculate scale to match explosion radius
-        // Sprite is 64x64. At 100 PPU, world size is 0.64.
-        // We want world size = explosionRadius * 2 (diameter).
-        // scale * 0.64 = explosionRadius * 2  =>  scale = (explosionRadius * 2) / 0.64
+        // Calculate procedural scale (radius based)
         float maxShockwaveScale = (explosionRadius * 2f) / 0.64f; 
 
         while (elapsed < duration)
@@ -203,17 +205,9 @@ public class BomberEnemy : EnemyAI
             // Shockwave Logic
             if (shockwave != null)
             {
-                // Only scale/fade the procedural shockwave
-                // If it's a custom prefab, we let its internal animation (if any) handle things, 
-                // OR we could scale it if desired, but user asked for "transparency 100%" specifically.
-                // Let's assume custom prefab wants to handle its own Transform animation (FlashBomb does).
-                // But FlashBomb DOES execute scaling ("Swell") on the custom instance.
-                // If the user wants it to look like an explosion, maybe we SHOULD scale it?
-                // But definitely DON'T touch alpha.
-                
                 if (isProceduralShockwave && sr != null)
                 {
-                    // Expand and Fade
+                    // Expand and Fade (Standard White Circle)
                     float waveScale = Mathf.Lerp(0.5f, maxShockwaveScale, t);
                     shockwave.transform.localScale = Vector3.one * waveScale;
                     
@@ -222,17 +216,14 @@ public class BomberEnemy : EnemyAI
                 }
                 else
                 {
-                     // For custom prefab: 
-                     // If it's meant to be the "explosion", it should probably expand?
-                     // Let's expand it to match the explosion radius too, but WITHOUT fade.
-                     // UNLESS the prefab already handles its own size (like ParticleSystem).
-                     // FlashBomb scales custom prefab. Let's replicate that behavior.
+                     // CUSTOM PREFAB Scaling
+                     // Use shockwaveSwellAmount as multiplier (like FlashBomb)
+                     // Target Scale = Original * SwellAmount
+                     // Lerp from Original to Target
+                     Vector3 targetSwell = originalShockwaveScale * shockwaveSwellAmount;
+                     shockwave.transform.localScale = Vector3.Lerp(originalShockwaveScale, targetSwell, t);
                      
-                     // Check if we should scale it? Assuming yes for consistency with "Explosion Radius".
-                     float waveScale = Mathf.Lerp(0.5f, maxShockwaveScale, t);
-                     shockwave.transform.localScale = Vector3.one * waveScale;
-                     
-                     // DO NOT TOUCH COLOR/ALPHA
+                     // No alpha change
                 }
             }
             

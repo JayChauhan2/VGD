@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1299928572387882687
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5810123716084620248}
+  - component: {fileID: 3180609315460112588}
+  - component: {fileID: 8410271049769413041}
+  m_Layer: 0
+  m_Name: DONTTOUCH
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5810123716084620248
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299928572387882687}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3180609315460112588
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299928572387882687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12e1bcc29a4cff5429c8f8324ed4f4f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  topDoorObj: {fileID: 0}
+  bottomDoorObj: {fileID: 0}
+  leftDoorObj: {fileID: 0}
+  rightDoorObj: {fileID: 0}
+  roomSize: {x: 20, y: 12}
+--- !u!114 &8410271049769413041
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299928572387882687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f9dc91f8137d7144ac66fd78c326abc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentPressure: 0
+  maxPressure: 100
+  passiveIncreaseRate: 2
+  killReduction: 4
+  damageIncrease: 12
+  idleIncreaseMultiplier: 1.5
+  lowThreshold: 30
+  midThreshold: 60
+  highThreshold: 85
+  roomStabilized: 0
+  isStressActive: 0
+  stabilizationTime: 25
+  minimumSurvivalTime: 15

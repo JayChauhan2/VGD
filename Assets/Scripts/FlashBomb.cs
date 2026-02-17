@@ -12,6 +12,7 @@ public class FlashBomb : MonoBehaviour
     [Header("Visual Settings")]
     public float flashDuration = 0.3f;
     public float maxFlashScale = 6.25f; // Scale 6.25 * 0.64(unit) = 4.0 diameter = 2.0 radius
+    public GameObject explosionEffectPrefab; // Optional custom visual
     
     [Header("Camera Shake")]
     public float shakeIntensity = 1.0f;
@@ -22,13 +23,21 @@ public class FlashBomb : MonoBehaviour
 
     void Start()
     {
-        // Create visual representation
-        spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
-        spriteRenderer.sprite = CreateCircleSprite();
-        spriteRenderer.color = new Color(1f, 1f, 1f, 0.3f); // White, semi-transparent
-        spriteRenderer.sortingLayerName = "Object"; // Set sorting layer as requested
-        spriteRenderer.sortingOrder = 10; // Ensure it draws on TOP of other obstacles
-        transform.localScale = Vector3.one * 0.5f;
+        // Try to get existing visual representation (for custom prefabs)
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        
+        // Only if none exists, create procedural one
+        if (spriteRenderer == null)
+        {
+            spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+            spriteRenderer.sprite = CreateCircleSprite();
+            spriteRenderer.color = new Color(1f, 1f, 1f, 0.3f); // White, semi-transparent
+            spriteRenderer.sortingLayerName = "Object"; // Set sorting layer as requested
+            spriteRenderer.sortingOrder = 10; // Ensure it draws on TOP of other obstacles
+            
+            // Only apply scale if we created the visual (assume prefab is scaled correctly)
+            transform.localScale = Vector3.one * 0.5f;
+        }
         
         // Start explosion countdown
         StartCoroutine(ExplodeAfterDelay());
@@ -56,8 +65,48 @@ public class FlashBomb : MonoBehaviour
         if (hasExploded) return;
         hasExploded = true;
         
-        // White flash effect
-        StartCoroutine(FlashEffect());
+        // Visual Effect
+        if (explosionEffectPrefab != null)
+        {
+            // Instantiate custom effect
+            GameObject explosionInstance = Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
+            
+            float duration = flashDuration; // Default fallback
+            
+            // Try to get duration from Animator
+            Animator anim = explosionInstance.GetComponent<Animator>();
+            if (anim != null)
+            {
+                // Force an update to ensure state info is ready
+                anim.Update(0f);
+                AnimatorStateInfo stateInfo = anim.GetCurrentAnimatorStateInfo(0);
+                if (stateInfo.length > 0)
+                {
+                    duration = stateInfo.length;
+                }
+            }
+            // If no animator (or invalid length), try ParticleSystem
+            else 
+            {
+                ParticleSystem ps = explosionInstance.GetComponent<ParticleSystem>();
+                if (ps != null)
+                {
+                    duration = ps.main.duration;
+                    if (!ps.main.loop) duration += ps.main.startLifetime.constant;
+                }
+            }
+            
+            // Destroy the effect after the detected duration
+            Destroy(explosionInstance, duration);
+            
+            // Hide the bomb itself immediately
+            if (spriteRenderer != null) spriteRenderer.enabled = false;
+        }
+        else
+        {
+            // Fallback to default white flash effect
+            StartCoroutine(FlashEffect());
+        }
         
         // Camera shake
         if (CameraController.Instance != null)
@@ -128,8 +177,12 @@ public class FlashBomb : MonoBehaviour
             }
         }
         
-        // Destroy after flash completes
-        Destroy(gameObject, flashDuration);
+        // Destroy after adequate time for shakes/effects to finish
+        // If using custom prefab, we can destroy self sooner (after shake)
+        // If using default flash, we need to wait for flashDuration
+        float destroyDelay = (explosionEffectPrefab != null) ? shakeDuration : Mathf.Max(flashDuration, shakeDuration);
+        
+        Destroy(gameObject, destroyDelay);
     }
 
     IEnumerator FlashEffect()

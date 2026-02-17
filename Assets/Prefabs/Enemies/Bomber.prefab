@@ -204,3 +204,5 @@ MonoBehaviour:
   explosionDelay: 0.5
   explosionTimingNormalized: 0.667
   explosionFreezeDuration: 0.15
+  showShockwave: 1
+  explosionEffectPrefab: {fileID: 6891237635396914281, guid: 3e672f28f1b777b428497fb254af6173, type: 3}

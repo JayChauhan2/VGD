@@ -11,6 +11,8 @@ public class BomberEnemy : EnemyAI
     [Range(0.1f, 1.0f)]
     public float explosionTimingNormalized = 0.7f; // When in the animation to explode (0.0 to 1.0)
     public float explosionFreezeDuration = 0.5f; // How long to freeze animation at explosion point
+    public bool showShockwave = true; // Toggle for the white explosion effect
+    public GameObject explosionEffectPrefab; // Optional custom visual to replace procedural shockwave
     
     private bool isExploding = false;
     private bool isFrozen = false; // Flag to pause visual effects
@@ -136,34 +138,58 @@ public class BomberEnemy : EnemyAI
         Vector3 targetScale = originalScale * 1.5f;
         float elapsed = 0f;
         
-        // 2. White Shockwave Circle
-        GameObject shockwave = new GameObject("Shockwave");
-        shockwave.transform.position = transform.position;
-        SpriteRenderer sr = shockwave.AddComponent<SpriteRenderer>();
-        sr.sprite = CreateCircleSprite();
-        sr.color = new Color(1f, 1f, 1f, 0.8f);
-        sr.sortingLayerName = "Object";
-        sr.sortingOrder = 10;
-        shockwave.transform.localScale = Vector3.one * 0.5f;
+        // 2. White Shockwave Circle (Procedural OR Prefab)
+        GameObject shockwave = null;
+        SpriteRenderer sr = null;
+        Animator shockwaveAnim = null;
+        bool isProceduralShockwave = false;
         
-        shockwave.transform.localScale = Vector3.one * 0.5f;
+        if (showShockwave)
+        {
+            if (explosionEffectPrefab != null)
+            {
+                // Instantiate Custom Prefab
+                shockwave = Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
+                sr = shockwave.GetComponent<SpriteRenderer>(); 
+                shockwaveAnim = shockwave.GetComponent<Animator>();
+            }
+            else
+            {
+                // Create Procedural Sprite
+                shockwave = new GameObject("Shockwave");
+                shockwave.transform.position = transform.position;
+                sr = shockwave.AddComponent<SpriteRenderer>();
+                sr.sprite = CreateCircleSprite();
+                sr.color = new Color(1f, 1f, 1f, 0.8f);
+                sr.sortingLayerName = "Object";
+                sr.sortingOrder = 10;
+                shockwave.transform.localScale = Vector3.one * 0.5f;
+                // Mark procedural: We control its alpha/scale manually
+                isProceduralShockwave = true;
+            }
+            
+            // Safety: Ensure shockwave is destroyed even if this coroutine steps
+            Destroy(shockwave, duration + 0.5f);
+        }
         
         // Calculate scale to match explosion radius
         // Sprite is 64x64. At 100 PPU, world size is 0.64.
         // We want world size = explosionRadius * 2 (diameter).
         // scale * 0.64 = explosionRadius * 2  =>  scale = (explosionRadius * 2) / 0.64
         float maxShockwaveScale = (explosionRadius * 2f) / 0.64f; 
-        
-        // Safety: Ensure shockwave is destroyed even if this coroutine stops (e.g. enemy dies)
-        Destroy(shockwave, duration + 0.1f);
 
         while (elapsed < duration)
         {
             // Pause while frozen
             if (isFrozen)
             {
+                if (shockwaveAnim != null) shockwaveAnim.speed = 0f;
                 yield return null;
                 continue;
+            }
+            else
+            {
+                if (shockwaveAnim != null) shockwaveAnim.speed = 1f;
             }
 
             elapsed += Time.deltaTime;
@@ -174,18 +200,47 @@ public class BomberEnemy : EnemyAI
             float swell = Mathf.Sin(t * Mathf.PI); 
             transform.localScale = Vector3.Lerp(originalScale, targetScale, swell);
             
-            // Shockwave: Expand and Fade
-            float waveScale = Mathf.Lerp(0.5f, maxShockwaveScale, t);
-            shockwave.transform.localScale = Vector3.one * waveScale;
-            
-            float alpha = Mathf.Lerp(0.8f, 0f, t);
-            sr.color = new Color(1f, 1f, 1f, alpha);
+            // Shockwave Logic
+            if (shockwave != null)
+            {
+                // Only scale/fade the procedural shockwave
+                // If it's a custom prefab, we let its internal animation (if any) handle things, 
+                // OR we could scale it if desired, but user asked for "transparency 100%" specifically.
+                // Let's assume custom prefab wants to handle its own Transform animation (FlashBomb does).
+                // But FlashBomb DOES execute scaling ("Swell") on the custom instance.
+                // If the user wants it to look like an explosion, maybe we SHOULD scale it?
+                // But definitely DON'T touch alpha.
+                
+                if (isProceduralShockwave && sr != null)
+                {
+                    // Expand and Fade
+                    float waveScale = Mathf.Lerp(0.5f, maxShockwaveScale, t);
+                    shockwave.transform.localScale = Vector3.one * waveScale;
+                    
+                    float alpha = Mathf.Lerp(0.8f, 0f, t);
+                    sr.color = new Color(1f, 1f, 1f, alpha);
+                }
+                else
+                {
+                     // For custom prefab: 
+                     // If it's meant to be the "explosion", it should probably expand?
+                     // Let's expand it to match the explosion radius too, but WITHOUT fade.
+                     // UNLESS the prefab already handles its own size (like ParticleSystem).
+                     // FlashBomb scales custom prefab. Let's replicate that behavior.
+                     
+                     // Check if we should scale it? Assuming yes for consistency with "Explosion Radius".
+                     float waveScale = Mathf.Lerp(0.5f, maxShockwaveScale, t);
+                     shockwave.transform.localScale = Vector3.one * waveScale;
+                     
+                     // DO NOT TOUCH COLOR/ALPHA
+                }
+            }
             
             yield return null;
         }
         
         transform.localScale = originalScale;
-        Destroy(shockwave);
+        if (shockwave != null) Destroy(shockwave);
     }
     
     private Sprite CreateCircleSprite()

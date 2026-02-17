@@ -93,6 +93,11 @@ public class EnemyDeathEffect : MonoBehaviour
             
             if (explosionPrefab == null) explosionPrefab = settings.explosionPrefab;
             
+            // Clamp baseScale to prevent absurdly large death effects
+            // Some enemies may have large prefab scales (e.g., Puppet Minions)
+            // We want the death effect to scale somewhat, but not be huge
+            float clampedBaseScale = Mathf.Clamp(baseScale, 0.3f, 1.5f);
+            
             // LOGIC CHANGE:
             // If isGhostDeath == true -> Use Settings Ghost Sprite
             // If isGhostDeath == false -> Use fallbackEnemySprite (the enemy's actual sprite)
@@ -108,15 +113,15 @@ public class EnemyDeathEffect : MonoBehaviour
             {
                 // Use the enemy's own sprite (boring death)
                 ghostSprite = fallbackEnemySprite;
-                // Use the standard effect scale for enemy sprite
-                ghostScale = settings.ghostScale * baseScale;
+                // Use the standard effect scale for enemy sprite (with clamped base scale)
+                ghostScale = settings.ghostScale * clampedBaseScale;
             }
             
             // ... rest of settings ...
             
             explosionDuration = settings.explosionDuration;
-            // Multiply settings scale by enemy scale
-            explosionScale = settings.explosionScale * baseScale;
+            // Multiply settings scale by clamped enemy scale
+            explosionScale = settings.explosionScale * clampedBaseScale;
             // Removed: ghostScale = settings.ghostScale * baseScale; (Handled in if/else above)
             
             ghostRiseSpeed = settings.ghostRiseSpeed;

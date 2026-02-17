@@ -63,12 +63,9 @@ public class PuppetMinion : EnemyAI
 
     protected override void OnEnemyUpdate()
     {
-        if (isConfused)
-        {
-            // Override base behavior: Ignore player, move randomly
-            HandleConfusionBehavior();
-        }
-        else if (isSpawning)
+        // PRIORITY 1: Always check spawn completion first (even if confused)
+        // This prevents getting stuck in spawn animation when Puppeteer is interrupted
+        if (isSpawning)
         {
             // Check if spawn animation is finished
             if (animator != null)
@@ -79,6 +76,12 @@ public class PuppetMinion : EnemyAI
                 {
                     isSpawning = false;
                     animator.Play("MinionWalk");
+                    
+                    // If we were set to confused during spawning, apply the visual now
+                    if (isConfused && spriteRenderer != null)
+                    {
+                        spriteRenderer.color = Color.gray;
+                    }
                 }
             }
             else
@@ -86,8 +89,18 @@ public class PuppetMinion : EnemyAI
                 // Fallback if no animator
                 isSpawning = false;
             }
+            
+            // Don't do anything else while spawning (stay still)
+            return;
         }
-        // If not confused, base EnemyAI.Update will handle standard pathfinding to target (Player)
+        
+        // PRIORITY 2: Handle confusion behavior (only after spawning is done)
+        if (isConfused)
+        {
+            // Override base behavior: Ignore player, move randomly
+            HandleConfusionBehavior();
+        }
+        // If not confused and not spawning, base EnemyAI.Update will handle standard pathfinding to target (Player)
     }
 
     private void HandleConfusionBehavior()

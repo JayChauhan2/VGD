@@ -8242,7 +8242,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyPrefabs:
-  - {fileID: 7028453128543359274, guid: 62d2575ace768b747af5cb58f2bcbc94, type: 3}
+  - {fileID: 1127242731612300559, guid: 5110fba8dd08f944e8ad76cf01375583, type: 3}
   spawnInterval: 3
   minSpawnInterval: 1
   maxActiveEnemies: 5

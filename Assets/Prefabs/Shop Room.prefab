@@ -8672,6 +8672,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: Shop Room
       objectReference: {fileID: 0}
+    - target: {fileID: 3180609315460112588, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: roomSize.x
+      value: 32
+      objectReference: {fileID: 0}
+    - target: {fileID: 3180609315460112588, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: roomSize.y
+      value: 18
+      objectReference: {fileID: 0}
+    - target: {fileID: 5810123716084620248, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 5810123716084620248, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 5810123716084620248, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.6
+      objectReference: {fileID: 0}
     - target: {fileID: 5810123716084620248, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -8711,6 +8731,10 @@ PrefabInstance:
     - target: {fileID: 5810123716084620248, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5810123716084620248, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

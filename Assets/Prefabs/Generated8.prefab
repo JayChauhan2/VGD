@@ -9896,6 +9896,14 @@ PrefabInstance:
       propertyPath: m_SortingLayerID
       value: 1898995881
       objectReference: {fileID: 0}
+    - target: {fileID: 3180609315460112588, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: roomSize.x
+      value: 32
+      objectReference: {fileID: 0}
+    - target: {fileID: 3180609315460112588, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: roomSize.y
+      value: 18
+      objectReference: {fileID: 0}
     - target: {fileID: 3330017180762919768, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: m_SortingLayer
       value: 3

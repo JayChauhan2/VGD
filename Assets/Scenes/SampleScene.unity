@@ -152,6 +152,7 @@ MonoBehaviour:
   familiarType: 0
   characteristic: 0
   smoothTime: 0.1
+  maxSpeed: 20
   isWild: 1
   pickupRange: 1.5
   fallbackPlayer: {fileID: 0}
@@ -259,6 +260,7 @@ MonoBehaviour:
   familiarType: 0
   characteristic: 0
   smoothTime: 0.1
+  maxSpeed: 20
   isWild: 1
   pickupRange: 1.5
   fallbackPlayer: {fileID: 0}
@@ -366,6 +368,7 @@ MonoBehaviour:
   familiarType: 0
   characteristic: 0
   smoothTime: 0.1
+  maxSpeed: 20
   isWild: 1
   pickupRange: 1.5
   fallbackPlayer: {fileID: 0}
@@ -1049,6 +1052,7 @@ MonoBehaviour:
   familiarType: 0
   characteristic: 0
   smoothTime: 0.1
+  maxSpeed: 20
   isWild: 1
   pickupRange: 1.5
   fallbackPlayer: {fileID: 0}
@@ -1444,7 +1448,7 @@ MonoBehaviour:
   firstRoomPrefab: {fileID: 1299928572387882687, guid: deae6b6425f70c4419fd4b236779d814, type: 3}
   shopRoomPrefab: {fileID: 1299928572387882687, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
   generatedRoomPrefabs:
-  - {fileID: 2167945867662251604, guid: ad0ee1855b9e3c54bbee740bd3fac092, type: 3}
+  - {fileID: 2167945867662251604, guid: ead560bc08016974cad360743600edd4, type: 3}
   isTestingMode: 1
   testingRoomPrefab: {fileID: 2167945867662251604, guid: ad0ee1855b9e3c54bbee740bd3fac092, type: 3}
   roomWidth: 32
@@ -1513,6 +1517,7 @@ MonoBehaviour:
   familiarType: 0
   characteristic: 0
   smoothTime: 0.1
+  maxSpeed: 20
   isWild: 1
   pickupRange: 1.5
   fallbackPlayer: {fileID: 0}

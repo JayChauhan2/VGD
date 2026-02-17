@@ -49,7 +49,7 @@ MonoBehaviour:
   bottomDoorObj: {fileID: 0}
   leftDoorObj: {fileID: 0}
   rightDoorObj: {fileID: 0}
-  roomSize: {x: 20, y: 12}
+  roomSize: {x: 32, y: 18}
 --- !u!114 &8410271049769413041
 MonoBehaviour:
   m_ObjectHideFlags: 0

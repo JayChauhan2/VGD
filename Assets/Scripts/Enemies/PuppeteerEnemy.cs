@@ -68,6 +68,34 @@ public class PuppeteerEnemy : EnemyAI
             Vector3 offset = new Vector3(Mathf.Cos(radians), Mathf.Sin(radians), 0) * 2f;
             Vector3 spawnPosition = transform.position + offset;
             
+            // CRASH FIX: Validate spawn position (must be inside room and not in a wall)
+            if (!IsPositionValid(spawnPosition))
+            {
+                Debug.LogWarning($"PuppeteerEnemy: Initial spawn position {spawnPosition} is invalid! Trying alternatives...");
+                
+                // Try closer to Puppeteer
+                spawnPosition = transform.position + offset * 0.5f;
+                
+                if (!IsPositionValid(spawnPosition))
+                {
+                    // Try opposite direction (towards room center)
+                    spawnPosition = transform.position - offset * 0.5f;
+                    
+                    if (!IsPositionValid(spawnPosition))
+                    {
+                        // Last resort: spawn very close to Puppeteer
+                        spawnPosition = transform.position + offset.normalized * 0.3f;
+                        
+                        if (!IsPositionValid(spawnPosition))
+                        {
+                            // Ultimate fallback: spawn at Puppeteer's position (they'll move away)
+                            Debug.LogWarning($"PuppeteerEnemy: Could not find valid spawn position for puppet {i}, spawning at Puppeteer location");
+                            spawnPosition = transform.position;
+                        }
+                    }
+                }
+            }
+            
             // Create puppet from PREFAB
             GameObject puppetObj = Instantiate(puppetPrefab, spawnPosition, Quaternion.identity);
             puppetObj.name = $"Puppet_{i}";
@@ -85,7 +113,7 @@ public class PuppeteerEnemy : EnemyAI
             // Create tether visual
             CreateTether(i, puppetObj);
             
-            Debug.Log($"PuppeteerEnemy: Spawned puppet {i}");
+            Debug.Log($"PuppeteerEnemy: Spawned puppet {i} at {spawnPosition}");
         }
     }
 

@@ -207,4 +207,20 @@ public class PuppetMinion : EnemyAI
         }
         Destroy(gameObject);
     }
+    public override void DropLoot()
+    {
+        // Recursion Prevention:
+        // Do NOT drop loot if the coinPrefab is actually a Puppeteer or Minion prefab
+        // This stops infinite loops if someone accidentally assigns an enemy as loot
+        if (coinPrefab != null)
+        {
+            if (coinPrefab.GetComponent<PuppetMinion>() != null || coinPrefab.GetComponent<PuppeteerEnemy>() != null)
+            {
+                Debug.LogError($"PuppetMinion: SAFETY BLOCK! Loot prefab {coinPrefab.name} contains an enemy script. Dropping nothing to prevent crash.");
+                return;
+            }
+        }
+        
+        base.DropLoot();
+    }
 }

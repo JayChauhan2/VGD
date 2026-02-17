@@ -58,64 +58,64 @@ public class PuppeteerEnemy : EnemyAI
             return;
         }
         
-        tethers = new LineRenderer[puppetCount];
-        
-        for (int i = 0; i < puppetCount; i++)
+        try
         {
-            // Calculate spawn position around puppeteer
-            float angle = (360f / puppetCount) * i;
-            float radians = angle * Mathf.Deg2Rad;
-            Vector3 offset = new Vector3(Mathf.Cos(radians), Mathf.Sin(radians), 0) * 2f;
-            Vector3 spawnPosition = transform.position + offset;
-            
-            // CRASH FIX: Validate spawn position (must be inside room and not in a wall)
-            if (!IsPositionValid(spawnPosition))
+            // CRASH FIX: cache the tether material to avoid memory leak
+            if (tetherMaterial == null)
             {
-                Debug.LogWarning($"PuppeteerEnemy: Initial spawn position {spawnPosition} is invalid! Trying alternatives...");
+                tetherMaterial = new Material(Shader.Find("Sprites/Default"));
+            }
+
+            tethers = new LineRenderer[puppetCount];
+            
+            for (int i = 0; i < puppetCount; i++)
+            {
+                // Calculate spawn position around puppeteer
+                float angle = (360f / puppetCount) * i;
+                float radians = angle * Mathf.Deg2Rad;
+                Vector3 offset = new Vector3(Mathf.Cos(radians), Mathf.Sin(radians), 0) * 2f;
+                Vector3 spawnPosition = transform.position + offset;
                 
-                // Try closer to Puppeteer
-                spawnPosition = transform.position + offset * 0.5f;
-                
+                // CRASH FIX: Validate spawn position (must be inside room and not in a wall)
                 if (!IsPositionValid(spawnPosition))
                 {
-                    // Try opposite direction (towards room center)
-                    spawnPosition = transform.position - offset * 0.5f;
-                    
+                    // Try closer...
+                    spawnPosition = transform.position + offset * 0.5f;
                     if (!IsPositionValid(spawnPosition))
                     {
-                        // Last resort: spawn very close to Puppeteer
-                        spawnPosition = transform.position + offset.normalized * 0.3f;
-                        
-                        if (!IsPositionValid(spawnPosition))
-                        {
-                            // Ultimate fallback: spawn at Puppeteer's position (they'll move away)
-                            Debug.LogWarning($"PuppeteerEnemy: Could not find valid spawn position for puppet {i}, spawning at Puppeteer location");
-                            spawnPosition = transform.position;
-                        }
+                        spawnPosition = transform.position; // Fallback
                     }
                 }
+                
+                // Create puppet from PREFAB
+                GameObject puppetObj = Instantiate(puppetPrefab, spawnPosition, Quaternion.identity);
+                puppetObj.name = $"Puppet_{i}";
+                
+                // Get valid PuppetMinion script
+                PuppetMinion puppet = puppetObj.GetComponent<PuppetMinion>();
+                if (puppet == null) puppet = puppetObj.AddComponent<PuppetMinion>();
+                
+                // Register with room
+                parentRoom.RegisterEnemy(puppet);
+                
+                // Store reference
+                puppets.Add(puppet);
+                
+                // Create tether visual
+                CreateTether(i, puppetObj);
+                
+                Debug.Log($"PuppeteerEnemy: Spawned puppet {i} at {spawnPosition}");
             }
-            
-            // Create puppet from PREFAB
-            GameObject puppetObj = Instantiate(puppetPrefab, spawnPosition, Quaternion.identity);
-            puppetObj.name = $"Puppet_{i}";
-            
-            // Get valid PuppetMinion script
-            PuppetMinion puppet = puppetObj.GetComponent<PuppetMinion>();
-            if (puppet == null) puppet = puppetObj.AddComponent<PuppetMinion>();
-            
-            // Register with room
-            parentRoom.RegisterEnemy(puppet);
-            
-            // Store reference
-            puppets.Add(puppet);
-            
-            // Create tether visual
-            CreateTether(i, puppetObj);
-            
-            Debug.Log($"PuppeteerEnemy: Spawned puppet {i} at {spawnPosition}");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"PuppeteerEnemy: CRASH PREVENTED during SpawnPuppets! Error: {e.Message}\nStack Trace: {e.StackTrace}");
+            // Ensure we don't end up in infinite spawning loop if this fails
+            hasSpawned = true; 
         }
     }
+
+    private static Material tetherMaterial; // Static cache
 
     void CreateTether(int index, GameObject puppet)
     {
@@ -130,7 +130,7 @@ public class PuppeteerEnemy : EnemyAI
         lr.startColor = new Color(0.6f, 0.4f, 0.8f, 0.5f);
         lr.endColor = new Color(0.6f, 0.4f, 0.8f, 0.2f);
         lr.sortingOrder = -1;
-        lr.material = new Material(Shader.Find("Sprites/Default")); // Ensure visibility
+        lr.material = tetherMaterial; // Use cached material
         
         tethers[index] = lr;
     }

@@ -31,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1.9, y: 0.79, z: 0}
-  m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
+  m_LocalScale: {x: 0.27, y: 0.27, z: 0.27}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -171,8 +171,11 @@ MonoBehaviour:
   speed: 3
   pathUpdateDelay: 0.2
   coinPrefab: {fileID: 8510305196089219782, guid: cd3293d4e8023324fa2758c06ec6026a, type: 3}
+  usePathfinding: 1
+  CountTowardsRoomClear: 1
   maxHealth: 100
   damageCooldown: 1
+  touchDamageRange: 0.8
   revealDistance: 2.5
   attackSpeed: 4
 --- !u!95 &4934423459621901310

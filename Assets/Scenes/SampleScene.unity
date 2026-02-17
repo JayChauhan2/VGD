@@ -492,7 +492,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 3.4
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -597,10 +597,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   smoothTime: 0.2
-  defaultSize: 10
+  defaultSize: 3.4
   zoomMultiplier: 0.95
   zoomFollowAmount: 0.05
   zoomSmoothTime: 0.2
+  autoAdjustSize: 0
   recoilSmoothTime: 0.1
 --- !u!1 &649123534
 GameObject:
@@ -1078,7 +1079,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 5.91, y: 3.47, z: -1.8092}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalScale: {x: 0.45, y: 0.45, z: 0.45}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 687766235}
@@ -1304,6 +1305,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   coinPrefab: {fileID: 8510305196089219782, guid: cd3293d4e8023324fa2758c06ec6026a, type: 3}
   mimicPrefab: {fileID: 2889202060155188467, guid: bc83e5cad2a848542a5a01820f3e3978, type: 3}
+  ghostEnemyPrefab: {fileID: 0}
   enemyForcefieldPrefab: {fileID: 3639917087683709169, guid: f67373ff934d9464d814b59be4030ef6, type: 3}
   enemyForcefieldScale: 1
   pathfindingGrid: {fileID: 1986833165}
@@ -1311,10 +1313,10 @@ MonoBehaviour:
   shopRoomPrefab: {fileID: 1299928572387882687, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
   generatedRoomPrefabs:
   - {fileID: 2167945867662251604, guid: ad0ee1855b9e3c54bbee740bd3fac092, type: 3}
-  isTestingMode: 0
+  isTestingMode: 1
   testingRoomPrefab: {fileID: 2167945867662251604, guid: ad0ee1855b9e3c54bbee740bd3fac092, type: 3}
   roomWidth: 32
-  roomHeight: 16
+  roomHeight: 18
   doorExitOffset: 2
   teleportCooldown: 0.5
 --- !u!4 &1234879618

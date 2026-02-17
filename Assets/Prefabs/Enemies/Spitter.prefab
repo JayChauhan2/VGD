@@ -31,8 +31,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 5.398, y: 3.485, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.45000002, y: 0.45000002, z: 0}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -193,11 +193,15 @@ MonoBehaviour:
   speed: 3
   pathUpdateDelay: 0.2
   coinPrefab: {fileID: 0}
+  usePathfinding: 1
+  CountTowardsRoomClear: 1
   maxHealth: 35
   damageCooldown: 1
+  touchDamageRange: 0.8
   shootRange: 8
   shootInterval: 2
   projectileSpeed: 6
   projectileDamage: 8
+  contactDamage: 5
   projectilePrefab: {fileID: 5280232475391161418, guid: 0d7935bddd81e91459fc38480d1a3686, type: 3}
   aimDuration: 0.5

@@ -42,13 +42,25 @@ public class CameraController : MonoBehaviour
     private Vector3 currentZoomOffset = Vector3.zero;
     private Vector3 zoomFollowVelocity = Vector3.zero;
 
+    [Header("Camera Settings")]
+    public bool autoAdjustSize = true;
+
     void Start()
     {
         cam = GetComponent<Camera>();
         if (cam != null)
         {
-            if (cam.orthographic) defaultSize = cam.orthographicSize;
-            else defaultSize = 6f; // Fallback
+            // Initial setup
+            if (cam.orthographic) 
+            {
+                // If autoAdjust is OFF, trust current camera size as default?
+                // Or just trust the inspector value. Let's trust inspector value.
+                // defaultSize is already set by inspector.
+            }
+            else 
+            {
+                defaultSize = 10f; 
+            }
         }
     }
 
@@ -72,15 +84,34 @@ public class CameraController : MonoBehaviour
         // 2. Smoothly move Recoil to target
         currentRecoilOffset = Vector3.SmoothDamp(currentRecoilOffset, targetRecoilOffset, ref recoilVelocity, recoilSmoothTime);
 
-        // 3. Handle Zoom & Shift
+        // 3. Determine Base Size
+        float baseSize = defaultSize;
+        if (autoAdjustSize && RoomManager.Instance != null)
+        {
+            float targetHeight = RoomManager.Instance.roomHeight;
+            float targetWidth = RoomManager.Instance.roomWidth;
+            
+            // Height requirement
+            float sizeBasedOnHeight = (targetHeight / 2f) + 1f; // +1 padding
+            
+            // Width requirement
+            if (cam != null)
+            {
+                float sizeBasedOnWidth = (targetWidth / 2f) / cam.aspect + 1f; // +1 padding
+                baseSize = Mathf.Max(sizeBasedOnHeight, sizeBasedOnWidth);
+                baseSize = Mathf.Max(baseSize, 10f); // Minimum size
+            }
+        }
+
+        // 4. Handle Zoom & Shift
         Vector3 targetZoomOffset = Vector3.zero;
-        float desiredSize = defaultSize;
+        float desiredSize = baseSize;
 
         if (cam != null)
         {
             if (Input.GetMouseButton(1)) // Right Click Held
             {
-                desiredSize = defaultSize * zoomMultiplier;
+                desiredSize = baseSize * zoomMultiplier;
                 
                 // Calculate Mouse Offset from Screen Center (World Space)
                 Vector3 mousePos = cam.ScreenToWorldPoint(Input.mousePosition);
@@ -101,7 +132,7 @@ public class CameraController : MonoBehaviour
             currentZoomOffset = Vector3.SmoothDamp(currentZoomOffset, targetZoomOffset, ref zoomFollowVelocity, zoomSmoothTime);
         }
 
-        // 4. Apply all
+        // 5. Apply all
         transform.position = internalPos + currentRecoilOffset + currentZoomOffset;
     }
 }

@@ -504,8 +504,8 @@ public class EnemyAI : MonoBehaviour
             float mimicRoll = Random.value;
             GameObject prefabToSpawn = coinPrefab;
             
-            // Each coin has a 1/5 (20%) chance to be a Mimic
-            if (mimicRoll < 0.2f && RoomManager.Instance != null && RoomManager.Instance.mimicPrefab != null)
+            // Each coin has a 1/8 (12.5%) chance to be a Mimic
+            if (mimicRoll < 0.125f && RoomManager.Instance != null && RoomManager.Instance.mimicPrefab != null)
             {
                 prefabToSpawn = RoomManager.Instance.mimicPrefab;
                 Debug.Log("EnemyAI: Spawning Mimic instead of Coin!");

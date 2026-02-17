@@ -71,16 +71,37 @@ public class EnemyDeathEffect : MonoBehaviour
         // OR, the user wants "Ghost Sprite will show for their death animation" ONLY if successful.
         // If not successful, "start of the enemy sprite floating up".
         
-        effect.isGhostDeath = isGhostSuccess;
-        effect.fallbackEnemySprite = enemySprite;
-        
-        effect.StartEffect();
+        try
+        {
+            effect.isGhostDeath = isGhostSuccess;
+            effect.fallbackEnemySprite = enemySprite;
+            
+            effect.StartEffect();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"EnemyDeathEffect Error: {e.Message}");
+            Destroy(effectObj);
+        }
     }
     
     private float baseScale = 1.0f; 
     private bool isGhostDeath = false;
     private float explosionScaleOverride = -1f;
     private Sprite fallbackEnemySprite;
+    private System.Collections.Generic.List<Texture2D> createdTextures = new System.Collections.Generic.List<Texture2D>();
+
+    private void OnDestroy()
+    {
+        if (createdTextures != null)
+        {
+            foreach (var tex in createdTextures)
+            {
+                 if (tex != null) Destroy(tex);
+            }
+            createdTextures.Clear();
+        }
+    }
 
     private void StartEffect()
     {

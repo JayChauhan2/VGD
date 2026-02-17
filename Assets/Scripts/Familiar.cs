@@ -26,7 +26,9 @@ public class Familiar : MonoBehaviour
 
     [Header("Settings")]
     [Tooltip("Time it takes to reach the target. Lower is faster/closer.")]
-    public float smoothTime = 0.1f;
+    public float smoothTime = 0.3f;
+    [Tooltip("Maximum speed the familiar can travel.")]
+    public float maxSpeed = 20f;
     [Tooltip("If true, this familiar waits to be picked up.")]
     public bool isWild = true;
     public float pickupRange = 3f;
@@ -164,6 +166,6 @@ public class Familiar : MonoBehaviour
         }
 
         // Apply movement
-        transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref currentVelocity, smoothTime);
+        transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref currentVelocity, smoothTime, maxSpeed);
     }
 }

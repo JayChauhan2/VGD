@@ -22,8 +22,12 @@ public class EnemyDeathSettings : ScriptableObject
     public Sprite ghostSprite;
     
     [Range(0.1f, 2.0f)]
-    [Tooltip("Scale of the ghost sprite (0.4 = small, 1.0 = normal size)")]
+    [Tooltip("Scale of the enemy's sprite when floating up (0.4 = small, 1.0 = normal size)")]
     public float ghostScale = 0.4f;
+
+    [Range(0.1f, 3.0f)]
+    [Tooltip("Scale of the actual ghost sprite if one appears (e.g. 1.0 for full size)")]
+    public float specificGhostScale = 1.0f;
     
     public float ghostRiseSpeed = 2.5f;
     public float ghostDuration = 0.5f;

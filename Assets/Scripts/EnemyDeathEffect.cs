@@ -101,11 +101,15 @@ public class EnemyDeathEffect : MonoBehaviour
             {
                 // Use the cool ghost sprite
                 if (settings.ghostSprite != null) ghostSprite = settings.ghostSprite;
+                // Use specific scale for the ghost sprite
+                ghostScale = settings.specificGhostScale;
             }
             else
             {
                 // Use the enemy's own sprite (boring death)
                 ghostSprite = fallbackEnemySprite;
+                // Use the standard effect scale for enemy sprite
+                ghostScale = settings.ghostScale * baseScale;
             }
             
             // ... rest of settings ...
@@ -113,7 +117,7 @@ public class EnemyDeathEffect : MonoBehaviour
             explosionDuration = settings.explosionDuration;
             // Multiply settings scale by enemy scale
             explosionScale = settings.explosionScale * baseScale;
-            ghostScale = settings.ghostScale * baseScale;
+            // Removed: ghostScale = settings.ghostScale * baseScale; (Handled in if/else above)
             
             ghostRiseSpeed = settings.ghostRiseSpeed;
             ghostDuration = settings.ghostDuration;

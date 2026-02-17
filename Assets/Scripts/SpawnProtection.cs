@@ -22,10 +22,12 @@ public class SpawnProtection : MonoBehaviour
         // Option 1: Use Global Prefab if assigned in RoomManager
         if (RoomManager.Instance != null && RoomManager.Instance.enemyForcefieldPrefab != null)
         {
-            forcefield = Instantiate(RoomManager.Instance.enemyForcefieldPrefab, transform.position, Quaternion.identity);
-            forcefield.transform.SetParent(transform);
+            // Change 1: Instantiate as child directly
+            forcefield = Instantiate(RoomManager.Instance.enemyForcefieldPrefab, transform);
+            // Change 2: Ensure local position is zero
             forcefield.transform.localPosition = Vector3.zero;
-            forcefield.transform.localScale = Vector3.one * RoomManager.Instance.enemyForcefieldScale;
+            // Change 3: REMOVED the line that was overriding scale with RoomManager.Instance.enemyForcefieldScale
+            // forcefield.transform.localScale = Vector3.one * RoomManager.Instance.enemyForcefieldScale;
             
             // Adjust scale if needed? Or assume user prefab is correct size.
             // Let's ensure it's on the correct layer at least.

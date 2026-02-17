@@ -18,6 +18,7 @@ MonoBehaviour:
   explosionScale: 2
   ghostSprite: {fileID: 7011265459045433248, guid: 6b8fac36ca72b1d47aaed854128cab87, type: 3}
   ghostScale: 1
+  specificGhostScale: 0.25
   ghostRiseSpeed: 2.5
   ghostDuration: 0.5
   sineWaveAmplitude: 0.08

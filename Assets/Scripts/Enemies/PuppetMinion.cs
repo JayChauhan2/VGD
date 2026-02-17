@@ -169,4 +169,28 @@ public class PuppetMinion : EnemyAI
         
         base.UpdateAnimation(actualVelocity);
     }
+
+    protected override void Die()
+    {
+        // Puppet minions have a large prefab scale (2.0) to make the small sprite visible
+        // But we want the death effect to be appropriately sized for a small enemy
+        // So we scale the death effect by 1/4.444 to compensate
+        float correctedScale = transform.localScale.x / 4.444f;
+        
+        EnemyDeathEffect.PlayDeathEffect(transform.position, spriteRenderer?.sprite, correctedScale, parentRoom);
+        
+        DropLoot();
+        OnEnemyDeath();
+        
+        if (parentRoom != null)
+        {
+            Debug.Log($"PuppetMinion: Dying, telling Room {parentRoom.name} I am dead.");
+            parentRoom.EnemyDefeated(this);
+        }
+        else
+        {
+            Debug.LogError("PuppetMinion: Dying but I have NO PARENT ROOM! I cannot unlock doors.");
+        }
+        Destroy(gameObject);
+    }
 }

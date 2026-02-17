@@ -36,7 +36,7 @@ public class EnemyDeathEffect : MonoBehaviour
     /// <summary>
     /// Static method to easily play death effect from anywhere.
     /// </summary>
-    public static void PlayDeathEffect(Vector3 position, Sprite enemySprite = null, float enemyScale = 1.0f, Room room = null)
+    public static void PlayDeathEffect(Vector3 position, Sprite enemySprite = null, float enemyScale = 1.0f, Room room = null, float explosionScaleOverride = -1f)
     {
         // 25% Chance to become a ghost
         // If successful:
@@ -62,6 +62,7 @@ public class EnemyDeathEffect : MonoBehaviour
         
         EnemyDeathEffect effect = effectObj.AddComponent<EnemyDeathEffect>();
         effect.baseScale = enemyScale; // Store enemy scale
+        effect.explosionScaleOverride = explosionScaleOverride;
         
         // If it was a ghost success, we want to ensure we use the ghost sprite.
         // If it was NOT a success, we pass the enemy sprite as fallback.
@@ -78,6 +79,7 @@ public class EnemyDeathEffect : MonoBehaviour
     
     private float baseScale = 1.0f; 
     private bool isGhostDeath = false;
+    private float explosionScaleOverride = -1f;
     private Sprite fallbackEnemySprite;
 
     private void StartEffect()
@@ -120,8 +122,17 @@ public class EnemyDeathEffect : MonoBehaviour
             // ... rest of settings ...
             
             explosionDuration = settings.explosionDuration;
-            // Multiply settings scale by clamped enemy scale
-            explosionScale = settings.explosionScale * clampedBaseScale;
+            
+            // Multiply settings scale by clamped enemy scale OR use override if provided
+            if (explosionScaleOverride > 0)
+            {
+                explosionScale = explosionScaleOverride;
+            }
+            else
+            {
+                explosionScale = settings.explosionScale * clampedBaseScale;
+            }
+
             // Removed: ghostScale = settings.ghostScale * baseScale; (Handled in if/else above)
             
             ghostRiseSpeed = settings.ghostRiseSpeed;

@@ -186,11 +186,12 @@ public class PuppetMinion : EnemyAI
     protected override void Die()
     {
         // Puppet minions have a large prefab scale (2.0) to make the small sprite visible
-        // But we want the death effect to be appropriately sized for a small enemy
-        // So we scale the death effect by 1/4.444 to compensate
-        float correctedScale = transform.localScale.x / 4.444f;
+        // User requesting 4.444x larger DEATH SPRITE (which means using original scale)
+        // BUT keeping the explosion small (so we pass an override for explosion)
+        float spriteScale = transform.localScale.x;
+        float smallExplosionScale = spriteScale / 4.444f;
         
-        EnemyDeathEffect.PlayDeathEffect(transform.position, spriteRenderer?.sprite, correctedScale, parentRoom);
+        EnemyDeathEffect.PlayDeathEffect(transform.position, spriteRenderer?.sprite, spriteScale, parentRoom, smallExplosionScale);
         
         DropLoot();
         OnEnemyDeath();

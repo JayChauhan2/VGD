@@ -72,6 +72,13 @@ public class BomberEnemy : EnemyAI
 
     private IEnumerator ExplodeSequence()
     {
+        // Disable Forcefield if present (so it doesn't scale with us)
+        var protection = GetComponent<SpawnProtection>();
+        if (protection != null)
+        {
+            Destroy(protection); // This triggers OnDestroy in SpawnProtection which removes visual
+        }
+        
         isExploding = true;
         SetActive(false); // Disable AI (Movement, Touch Damage, etc.) completely
         

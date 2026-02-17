@@ -1,10 +1,25 @@
 fileFormatVersion: 2
-guid: 68a6d9e2f3ffea441b82cd11fa4232ac
+guid: a7f41413ed6f59b47a1eb02821c8bbe7
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -2300745721987000922
-    second: familiars_0
+      213: 3688199628667500246
+    second: familiars (1)_0
+  - first:
+      213: 4732962013956808456
+    second: familiars (1)_1
+  - first:
+      213: -7878337587390793326
+    second: familiars (1)_2
+  - first:
+      213: 5837485691939166601
+    second: familiars (1)_3
+  - first:
+      213: 7761421608732101950
+    second: familiars (1)_4
+  - first:
+      213: 674090655019036340
+    second: familiars (1)_5
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -51,7 +66,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 16
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -126,13 +141,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: familiars_0
+      name: familiars (1)_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 8
-        height: 8
+        width: 10
+        height: 10
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,152 +156,130 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6a5177aa4fb1210e0800000000000000
-      internalID: -2300745721987000922
+      spriteID: 6d63477750e1f2330800000000000000
+      internalID: 3688199628667500246
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: familiars_1
+      name: familiars (1)_1
       rect:
         serializedVersion: 2
-        x: 8
+        x: 10
         y: 0
-        width: 8
-        height: 8
+        width: 10
+        height: 10
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 768ae2d3269ead44aa09a6d2d5ecdac0
-      internalID: -1800574786
+      spriteID: 80f105910ebdea140800000000000000
+      internalID: 4732962013956808456
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: familiars_2
+      name: familiars (1)_2
       rect:
         serializedVersion: 2
-        x: 16
+        x: 20
         y: 0
-        width: 8
-        height: 8
+        width: 10
+        height: 10
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 8aee6ff41a8092247b4cd6f278940fcd
-      internalID: -1455688643
+      spriteID: 299b6fa94b58aa290800000000000000
+      internalID: -7878337587390793326
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: familiars_3
+      name: familiars (1)_3
       rect:
         serializedVersion: 2
-        x: 24
+        x: 30
         y: 0
-        width: 8
-        height: 8
+        width: 10
+        height: 10
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 04ccf4926586d6d47bb098f138cc61b2
-      internalID: -1893721962
+      spriteID: 9899579fe4ae20150800000000000000
+      internalID: 5837485691939166601
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: familiars_4
-      rect:
-        serializedVersion: 2
-        x: 32
-        y: 0
-        width: 8
-        height: 8
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: ece5464a699c2e5449ebe710746665de
-      internalID: 1259931939
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: familiars_5
+      name: familiars (1)_4
       rect:
         serializedVersion: 2
         x: 40
         y: 0
-        width: 8
-        height: 8
+        width: 10
+        height: 10
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 907d4de41c53df64a9c760b28225cfad
-      internalID: 996061966
+      spriteID: e3d8484d4db16bb60800000000000000
+      internalID: 7761421608732101950
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: familiars_6
+      name: familiars (1)_5
       rect:
         serializedVersion: 2
-        x: 48
+        x: 50
         y: 0
-        width: 8
-        height: 8
+        width: 10
+        height: 10
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 7e452eb04770b57458875b880705af93
-      internalID: -941664194
+      spriteID: 4bee1d611e9da5900800000000000000
+      internalID: 674090655019036340
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: familiars_7
+      name: familiars (1)_6
       rect:
         serializedVersion: 2
-        x: 56
+        x: 60
         y: 0
-        width: 8
-        height: 8
+        width: 10
+        height: 10
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -295,20 +288,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f07a95920ea316146ad10277c12f5ea9
-      internalID: -1859212943
+      spriteID: a0e9fe81a8fbfd7408fc5cecda985bf1
+      internalID: 1483169125
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: familiars_8
+      name: familiars (1)_7
       rect:
         serializedVersion: 2
-        x: 64
+        x: 70
         y: 0
-        width: 8
-        height: 8
+        width: 10
+        height: 10
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -317,20 +310,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 8af9e8a0ee36cf842976783c0b032a93
-      internalID: 2115171388
+      spriteID: 56acad822fc49434bb601e8cfbc6f76f
+      internalID: -216505821
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: familiars_9
+      name: familiars (1)_8
       rect:
         serializedVersion: 2
-        x: 72
+        x: 80
         y: 0
-        width: 8
-        height: 8
+        width: 10
+        height: 10
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -339,8 +332,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 14b450cc5780e8d4ab5a8d4e7dff6b5d
-      internalID: -446382931
+      spriteID: cc487677e9950d649b29f30662358008
+      internalID: 781157281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: familiars (1)_9
+      rect:
+        serializedVersion: 2
+        x: 90
+        y: 0
+        width: 10
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7772aaecbace3854ab64b9cfae6941f0
+      internalID: 2026575032
       vertices: []
       indices: 
       edges: []
@@ -349,7 +364,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 6a8c9eb06699e27458cbe3d0918dee63
+    spriteID: 4f75b084e59b1ad46a6f89d33f549fcc
     internalID: 0
     vertices: []
     indices: 
@@ -359,18 +374,18 @@ TextureImporter:
     spriteCustomMetadata:
       entries:
       - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":8.0,"y":8.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":10.0,"y":10.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      familiars_0: -2300745721987000922
-      familiars_1: -1800574786
-      familiars_2: -1455688643
-      familiars_3: -1893721962
-      familiars_4: 1259931939
-      familiars_5: 996061966
-      familiars_6: -941664194
-      familiars_7: -1859212943
-      familiars_8: 2115171388
-      familiars_9: -446382931
+      familiars (1)_0: 3688199628667500246
+      familiars (1)_1: 4732962013956808456
+      familiars (1)_2: -7878337587390793326
+      familiars (1)_3: 5837485691939166601
+      familiars (1)_4: 7761421608732101950
+      familiars (1)_5: 674090655019036340
+      familiars (1)_6: 1483169125
+      familiars (1)_7: -216505821
+      familiars (1)_8: 781157281
+      familiars (1)_9: 2026575032
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

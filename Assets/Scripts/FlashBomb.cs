@@ -17,6 +17,14 @@ public class FlashBomb : MonoBehaviour
     public float explosionFreezeDuration = 0.5f; // Duration of the freeze
     public float swellAmount = 1.5f; // How much it scales up during animation
     
+    [Header("Throw Animation Settings")]
+    public float throwScaleAmount = 1.5f; // Peak scale multiplier during throw
+    public float throwDuration = 0.4f; // Total time for throw
+    public float spinSpeed = 1080f; // Degrees per second (3 spins = 1080)
+    public float bounceScaleAmount = 1.2f; // Peak scale multiplier during first bounce
+    public float bounceDuration = 0.2f; // Bounce time
+    public int bounceCount = 2; // Number of bounces
+
     [Header("Visual Settings")]
     public float flashDuration = 0.3f;
     public float maxFlashScale = 6.25f; // Scale 6.25 * 0.64(unit) = 4.0 diameter = 2.0 radius
@@ -28,6 +36,7 @@ public class FlashBomb : MonoBehaviour
     
     private SpriteRenderer spriteRenderer;
     private bool hasExploded = false;
+    private Vector3 targetPosition;
 
     void Start()
     {
@@ -46,8 +55,94 @@ public class FlashBomb : MonoBehaviour
             // Only apply scale if we created the visual (assume prefab is scaled correctly)
             transform.localScale = Vector3.one * 0.5f;
         }
+
+        // Store the intended position (where it was instantiated)
+        targetPosition = transform.position;
+
+        // Start throw sequence immediately
+        StartCoroutine(ThrowAndLandSequence());
+    }
+
+    IEnumerator ThrowAndLandSequence()
+    {
+        // 1. Determine Start Position
+        // We want it to look like it comes from the player if possible
+        Vector3 startPosition = targetPosition;
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            // Start at player position (no upward offset)
+            startPosition = player.transform.position;
+        }
+
+        // Store original scale to return to
+        Vector3 baseScale = transform.localScale;
+
+        // 2. Perform The Throw Arc (Scale-based "Z-axis" arc)
+        float elapsed = 0f;
         
-        // Start explosion countdown
+        while (elapsed < throwDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / throwDuration;
+            
+            // Linear movement to target
+            transform.position = Vector3.Lerp(startPosition, targetPosition, t);
+            
+            // Scale Arc: Parabola 0 -> 1 -> 0
+            float arcFactor = 4f * (t - (t * t)); 
+            
+            // Calculate scale: Base -> Peak -> Base
+            Vector3 peakScale = baseScale * throwScaleAmount;
+            transform.localScale = Vector3.Lerp(baseScale, peakScale, arcFactor);
+            
+            // Spin
+            float rotation = t * spinSpeed; // e.g. 0 to 1080
+            transform.rotation = Quaternion.Euler(0, 0, rotation);
+
+            yield return null;
+        }
+
+        // Ensure we land exactly at target and reset
+        transform.position = targetPosition;
+        transform.rotation = Quaternion.identity;
+        transform.localScale = baseScale;
+
+        // 3. Bounce Effect (Scale Bounce)
+        // Bounce in scale (a little jump towards camera)
+        float currentBounceScale = bounceScaleAmount; 
+        float currentBounceDuration = bounceDuration;
+        
+        for (int i = 0; i < bounceCount; i++)
+        {
+            elapsed = 0f;
+            while (elapsed < currentBounceDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / currentBounceDuration;
+                
+                // Bounce Parabola
+                float arcFactor = 4f * (t - (t * t));
+                
+                // Scale Bounce
+                Vector3 bouncePeakScale = baseScale * currentBounceScale;
+                transform.localScale = Vector3.Lerp(baseScale, bouncePeakScale, arcFactor);
+                
+                yield return null;
+            }
+            
+            // Prepare for next smaller bounce
+            float extraScale = currentBounceScale - 1.0f;
+            extraScale /= 2f;
+            currentBounceScale = 1.0f + extraScale;
+            
+            currentBounceDuration /= 1.5f;
+        }
+        
+        // Ensure final scale
+        transform.localScale = baseScale;
+
+        // 4. Start Explosion Countdown (Existing Logic)
         StartCoroutine(ExplodeAfterDelay());
     }
 
@@ -60,6 +155,7 @@ public class FlashBomb : MonoBehaviour
         while (elapsed < explosionDelay)
         {
             elapsed += Time.deltaTime;
+            // Existing pulse logic
             float pulse = 1f + Mathf.Sin(elapsed * 20f) * 0.2f;
             transform.localScale = initialScale * pulse;
             yield return null;

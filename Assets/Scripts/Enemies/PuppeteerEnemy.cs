@@ -139,6 +139,13 @@ public class PuppeteerEnemy : EnemyAI
     // Track actual velocity for animation (since base class may see zero velocity when we clear path)
     private Vector2 actualVelocity = Vector2.zero;
     
+    // Track if all puppets are dead (permanent panic mode)
+    private bool allPuppetsDead = false;
+    
+    // Random panic movement
+    private Vector3 panicTarget;
+    private float panicRetargetTimer = 0f;
+    
     protected override void OnEnemyUpdate()
     {
         // Update timers
@@ -151,6 +158,14 @@ public class PuppeteerEnemy : EnemyAI
 
         // Clean up destroyed puppets
         puppets.RemoveAll(p => p == null);
+        
+        // Check if all puppets are dead (only after spawning has happened)
+        if (hasSpawned && puppets.Count == 0 && !allPuppetsDead)
+        {
+            allPuppetsDead = true;
+            Debug.Log("PuppeteerEnemy: All puppets dead! Entering permanent panic mode!");
+            TransitionToState(State.Panic);
+        }
 
         // Update State Machine
         switch (currentState)
@@ -337,8 +352,19 @@ public class PuppeteerEnemy : EnemyAI
             case State.Panic:
                 isSummoning = false;
                 MovePuppetsToConfusion(true);
-                // Immediately transition to Hiding to run away
-                TransitionToState(State.Hiding); 
+                
+                // If all puppets are dead, STAY in panic mode permanently
+                // Otherwise, immediately transition to Hiding to run away
+                if (!allPuppetsDead)
+                {
+                    TransitionToState(State.Hiding);
+                }
+                else
+                {
+                    // Initialize panic target for random movement
+                    PickRandomPanicTarget();
+                    panicRetargetTimer = Random.Range(0.8f, 1.5f);
+                }
                 break;
         }
     }
@@ -411,7 +437,47 @@ public class PuppeteerEnemy : EnemyAI
 
     void UpdatePanicState()
     {
-        // Transient state, shouldn't stay here
+        // If all puppets are dead, stay in panic mode permanently
+        if (allPuppetsDead)
+        {
+            // Determine behavior based on distance to player
+            if (target != null)
+            {
+                float distanceToPlayer = Vector3.Distance(transform.position, target.position);
+                
+                // If player is close (within 12 units), flee directly
+                if (distanceToPlayer < 12f)
+                {
+                    // Flee from player using direct flee
+                    path = null; // Clear path
+                    shouldFleeDirectly = true;
+                }
+                else
+                {
+                    // Player is far away, panic run around randomly
+                    shouldFleeDirectly = false;
+                    
+                    // Update panic target periodically
+                    panicRetargetTimer -= Time.deltaTime;
+                    if (panicRetargetTimer <= 0f)
+                    {
+                        PickRandomPanicTarget();
+                        panicRetargetTimer = Random.Range(0.8f, 1.5f);
+                    }
+                    
+                    // Pathfind to panic target
+                    if (pathfinding != null && pathfinding.IsGridReady)
+                    {
+                        path = pathfinding.FindPath(transform.position, panicTarget);
+                        targetIndex = 0;
+                    }
+                }
+            }
+            return; // Stay in panic, don't transition out
+        }
+        
+        // Original behavior: Transient state when damaged during summoning
+        // (This shouldn't happen anymore since we transition immediately in TransitionToState)
     }
 
     // --- Helper Methods ---
@@ -506,6 +572,27 @@ public class PuppeteerEnemy : EnemyAI
 
         hidingSpot = bestSpot;
         // Debug.Log($"PuppeteerEnemy: New hiding spot: {hidingSpot} (Hidden Score: {bestScore})");
+    }
+
+    void PickRandomPanicTarget()
+    {
+        // Pick a random nearby point to run to (looks panicked and erratic)
+        Vector2 randomOffset = Random.insideUnitCircle * 4f;
+        Vector3 potentialTarget = transform.position + (Vector3)randomOffset;
+        
+        // Ensure it's valid (inside room and not in a wall)
+        if (IsPositionValid(potentialTarget))
+        {
+            panicTarget = potentialTarget;
+        }
+        else
+        {
+            // Fallback: try room center or just stay put
+            if (parentRoom != null)
+                panicTarget = parentRoom.transform.position;
+            else
+                panicTarget = transform.position;
+        }
     }
 
     // FollowPathToHidingSpot logic merged into UpdateHidingState

@@ -120,8 +120,8 @@ public class FlashBomb : MonoBehaviour
             StartCoroutine(FlashEffect());
             effectDuration = flashDuration;
             
-            // Standard damage for fallback
-            ApplyExplosionImpact(1f);
+            // Standard damage for fallback (no visual instance bounds)
+            ApplyExplosionImpact(null);
         }
         
         // Camera shake
@@ -129,9 +129,6 @@ public class FlashBomb : MonoBehaviour
         {
             StartCoroutine(CameraShake());
         }
-        
-        // Deal damage and knockback to all enemies AND player in radius
-        // ... (Damage Logic Reduced for brevity in replacement, will keep original logic below)
         
         // Destroy after effects complete
         // Use meaningful max of all durations PLUS A BUFFER to ensure coroutines finish
@@ -141,9 +138,21 @@ public class FlashBomb : MonoBehaviour
     }
 
     // Helper to keep Explode() clean
-    void ApplyExplosionImpact(float radiusModifier)
+    void ApplyExplosionImpact(GameObject visualInstance = null)
     {
-        float currentExplosionRadius = explosionRadius * radiusModifier;
+        float currentExplosionRadius = explosionRadius; // Default fallback
+
+        // If we have a visual instance, use its actual rendered bounds for perfect accuracy
+        if (visualInstance != null)
+        {
+            Renderer r = visualInstance.GetComponent<Renderer>();
+            if (r != null)
+            {
+                // Use the largest extent to cover the visual area (safe for non-circular sprites)
+                currentExplosionRadius = Mathf.Max(r.bounds.extents.x, r.bounds.extents.y);
+            }
+        }
+
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, currentExplosionRadius);
         Debug.Log($"FlashBomb: Found {hits.Length} objects in blast radius ({currentExplosionRadius})");
         
@@ -201,6 +210,7 @@ public class FlashBomb : MonoBehaviour
             }
         }
     }
+
     IEnumerator AnimateExplosionEffect(GameObject instance, Animator anim, float duration)
     {
         float elapsed = 0f;
@@ -234,7 +244,7 @@ public class FlashBomb : MonoBehaviour
         }
         
         // APPLY DAMAGE HERE (After delay, with scaling swell)
-        ApplyExplosionImpact(swellAmount);
+        ApplyExplosionImpact(instance);
         
         // 2. Freeze
         if (anim != null) anim.speed = 0f;

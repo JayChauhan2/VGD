@@ -8,19 +8,15 @@ using UnityEngine;
 /// 1. Create an empty GameObject in your scene (e.g. "CorruptionBar").
 /// 2. Attach this script to it.
 /// 3. Assign sprites in the Inspector:
-///      • Frame Sprite   → corruptionbarframe_0
+///      • Frame Frames   → Drag multiple sprites here (e.g. corruptionbarframe_0, _1...)
 ///      • Fill Sprite    → corruptionbar_0
-///      • Wave Frames    → corruptionliquid_0 … corruptionliquid_7  (8 sprites)
+///      • Wave Frames    → corruptionliquid_0 … corruptionliquid_7
 /// 4. Position the GameObject wherever you want the bar on screen.
-/// 5. Adjust fillMinLocalY / fillMaxLocalY at runtime in Play Mode to
-///    align the fill with the inside of the frame sprite.
+/// 5. Adjust fillMinLocalY / fillMaxLocalY at runtime in Play Mode.
 ///
 /// HOW IT WORKS:
 /// ─────────────────────────────────────────────────────────────────────
-/// • Three child SpriteRenderers are created automatically at runtime:
-///     Fill  (sorting order 10) – scales vertically with pressure
-///     Wave  (sorting order 11) – animated wave sitting on top of fill
-///     Frame (sorting order 12) – always on top, decorative border
+/// • Three child SpriteRenderers are created automatically at runtime.
 /// • Subscribes to Room.OnRoomEntered to track the active room's
 ///   PressureController and update the bar in real time.
 /// </summary>
@@ -29,13 +25,13 @@ public class CorruptionBarUI : MonoBehaviour
 {
     // ─── Sprites ────────────────────────────────────────────────────────
     [Header("Sprites")]
-    [Tooltip("The outer frame sprite (corruptionbarframe_0).")]
-    public Sprite frameSprite;
+    [Tooltip("Frame animation frames (drag multiple sprites here).")]
+    public Sprite[] frameFrames;
 
     [Tooltip("The fill/liquid body sprite (corruptionbar_0).")]
     public Sprite fillSprite;
 
-    [Tooltip("Wave animation frames in order (corruptionliquid_0 … 7).")]
+    [Tooltip("Wave animation frames (corruptionliquid_0 … 7).")]
     public Sprite[] waveFrames;
 
     // ─── Layout ─────────────────────────────────────────────────────────
@@ -49,16 +45,19 @@ public class CorruptionBarUI : MonoBehaviour
     [Tooltip("Local Y of the fill child when pressure = 100 (top of inner area).")]
     public float fillMaxLocalY = 2.0f;
 
-    [Tooltip("Extra vertical offset for the wave sprite (e.g. to make it overlap the fill slightly).")]
+    [Tooltip("Extra vertical offset for the wave sprite (constant tweak).")]
     public float waveVerticalOffset = 0f;
 
     [Tooltip("If the fill sprite has transparent pixels at the top, increase this value to subtract that empty space from the wave position (SCALES with bar).")]
     public float fillTopPadding = 0f;
 
     // ─── Animation ──────────────────────────────────────────────────────
-    [Header("Wave Animation")]
-    [Tooltip("How many wave frames to show per second.")]
+    [Header("Animation")]
+    [Tooltip("FPS for the liquid wave.")]
     public float waveAnimFPS = 8f;
+    
+    [Tooltip("FPS for the frame animation.")]
+    public float frameAnimFPS = 8f;
 
     // ─── Internal ────────────────────────────────────────────────────────
     private SpriteRenderer fillRenderer;
@@ -70,6 +69,9 @@ public class CorruptionBarUI : MonoBehaviour
 
     private float waveTimer;
     private int waveFrame;
+    
+    private float frameAnimTimer;
+    private int frameAnimIndex;
 
     // ────────────────────────────────────────────────────────────────────
     #region Unity Lifecycle
@@ -104,6 +106,7 @@ public class CorruptionBarUI : MonoBehaviour
     private void Update()
     {
         AnimateWave();
+        AnimateFrame();
         ApplyFill();
     }
 
@@ -146,7 +149,7 @@ public class CorruptionBarUI : MonoBehaviour
         }
 
         // 1. Frame (Order 12)
-        frameRenderer = GetOrCreateChild("Frame", 12, frameSprite);
+        frameRenderer = GetOrCreateChild("Frame", 12, frameFrames != null && frameFrames.Length > 0 ? frameFrames[0] : null);
 
         // 2. Fill (Order 10) - Direct Child
         fillRenderer = GetOrCreateChild("Fill", 10, fillSprite);
@@ -154,8 +157,6 @@ public class CorruptionBarUI : MonoBehaviour
         // 3. Wave (Order 11) - Direct Child
         waveRenderer = GetOrCreateChild("Wave", 11, waveFrames != null && waveFrames.Length > 0 ? waveFrames[0] : null);
     }
-
-    // ... (GetOrCreateChild logic remains unchanged)
 
     private SpriteRenderer GetOrCreateChild(string childName, int sortOrder, Sprite sprite)
     {
@@ -279,6 +280,24 @@ public class CorruptionBarUI : MonoBehaviour
             ApplyFill();
         }
     }
+    
+    /// <summary>
+    /// Cycles through frame animation sprites.
+    /// </summary>
+    private void AnimateFrame()
+    {
+        if (frameRenderer == null || frameFrames == null || frameFrames.Length == 0) return;
+
+        frameAnimTimer += Time.deltaTime;
+        float timePerFrame = 1f / Mathf.Max(frameAnimFPS, 0.1f);
+
+        if (frameAnimTimer >= timePerFrame)
+        {
+            frameAnimTimer -= timePerFrame;
+            frameAnimIndex = (frameAnimIndex + 1) % frameFrames.Length;
+            frameRenderer.sprite = frameFrames[frameAnimIndex];
+        }
+    }
 
     #endregion
 
@@ -295,8 +314,11 @@ public class CorruptionBarUI : MonoBehaviour
         }
 
         // Sync sprite assignments live
-        if (frameRenderer != null) frameRenderer.sprite = frameSprite;
+        if (frameRenderer != null && frameFrames != null && frameFrames.Length > 0)
+            frameRenderer.sprite = frameFrames[0];
+            
         if (fillRenderer  != null) fillRenderer.sprite  = fillSprite;
+        
         if (waveRenderer  != null && waveFrames != null && waveFrames.Length > 0)
             waveRenderer.sprite = waveFrames[0];
     }

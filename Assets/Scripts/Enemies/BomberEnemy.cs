@@ -6,7 +6,7 @@ public class BomberEnemy : EnemyAI
     [Header("Bomber Settings")]
     public float explosionRadius = 1.3f; // Reduced from 3f to match visual (approx 1.28f)
     public float playerDamage = 30f;
-    public float enemyDamage = 30f;
+    public float enemyDamage = 50f; // Set to 50 (Half of default EnemyAI maxHealth of 100)
     public float explosionDelay = 0.5f; // Time to wait for animation before exploding
     [Range(0.1f, 1.0f)]
     public float explosionTimingNormalized = 0.7f; // When in the animation to explode (0.0 to 1.0)
@@ -26,7 +26,7 @@ public class BomberEnemy : EnemyAI
 
     protected override void OnEnemyStart()
     {
-        maxHealth = 60f;
+        maxHealth = 100f;
         currentHealth = maxHealth;
         // speed = 3.5f; // Removed hardcoded speed to allow Inspector control
         

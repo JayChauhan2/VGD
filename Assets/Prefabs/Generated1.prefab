@@ -9403,7 +9403,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8410271049769413041, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: passiveIncreaseRate
-      value: 30.56
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8679660176662219319, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: m_SortingLayer

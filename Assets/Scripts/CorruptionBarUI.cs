@@ -49,8 +49,11 @@ public class CorruptionBarUI : MonoBehaviour
     [Tooltip("Local Y of the fill child when pressure = 100 (top of inner area).")]
     public float fillMaxLocalY = 2.0f;
 
-    [Tooltip("Pixels-per-unit scale applied to all children (matches your sprite PPU).")]
-    public float pixelsPerUnit = 16f;
+    [Tooltip("Extra vertical offset for the wave sprite (e.g. to make it overlap the fill slightly).")]
+    public float waveVerticalOffset = 0f;
+
+    [Tooltip("If the fill sprite has transparent pixels at the top, increase this value to subtract that empty space from the wave position (SCALES with bar).")]
+    public float fillTopPadding = 0f;
 
     // ─── Animation ──────────────────────────────────────────────────────
     [Header("Wave Animation")]
@@ -109,16 +112,50 @@ public class CorruptionBarUI : MonoBehaviour
     // ────────────────────────────────────────────────────────────────────
     #region Child Construction
 
-    /// <summary>
-    /// Creates (or finds) the three child SpriteRenderers.
-    /// Safe to call multiple times — won't duplicate children.
-    /// </summary>
+    [ContextMenu("Force Rebuild")]
+    public void RebuildChildren()
+    {
+        // Destroy existing for clean slate
+        var fillAnchor = transform.Find("FillAnchor");
+        if (fillAnchor != null) DestroyImmediate(fillAnchor.gameObject);
+
+        var existingFill = transform.Find("Fill");
+        if (existingFill != null) DestroyImmediate(existingFill.gameObject);
+        var existingWave = transform.Find("Wave");
+        if (existingWave != null) DestroyImmediate(existingWave.gameObject);
+        var existingFrame = transform.Find("Frame");
+        if (existingFrame != null) DestroyImmediate(existingFrame.gameObject);
+        
+        BuildChildren();
+    }
+
     private void BuildChildren()
     {
-        fillRenderer  = GetOrCreateChild("Fill",  10, fillSprite);
-        waveRenderer  = GetOrCreateChild("Wave",  11, waveFrames != null && waveFrames.Length > 0 ? waveFrames[0] : null);
+        // CLEANUP: If we have a FillAnchor (from previous failed attempt), dismantle it.
+        Transform anchor = transform.Find("FillAnchor");
+        if (anchor != null)
+        {
+            Transform anchorFill = anchor.Find("Fill");
+            if (anchorFill != null)
+            {
+                anchorFill.SetParent(transform, false);
+                anchorFill.localPosition = Vector3.zero;
+            }
+            if (Application.isPlaying) Destroy(anchor.gameObject);
+            else DestroyImmediate(anchor.gameObject);
+        }
+
+        // 1. Frame (Order 12)
         frameRenderer = GetOrCreateChild("Frame", 12, frameSprite);
+
+        // 2. Fill (Order 10) - Direct Child
+        fillRenderer = GetOrCreateChild("Fill", 10, fillSprite);
+
+        // 3. Wave (Order 11) - Direct Child
+        waveRenderer = GetOrCreateChild("Wave", 11, waveFrames != null && waveFrames.Length > 0 ? waveFrames[0] : null);
     }
+
+    // ... (GetOrCreateChild logic remains unchanged)
 
     private SpriteRenderer GetOrCreateChild(string childName, int sortOrder, Sprite sprite)
     {
@@ -184,33 +221,42 @@ public class CorruptionBarUI : MonoBehaviour
     {
         if (fillRenderer == null || waveRenderer == null) return;
 
-        // Y position of the top of the fill (lerped between min and max)
+        // 1. Calculate target world height of the fill based on pressure
+        //    fillTopY is the theoretical top of the sprite bounds
         float fillTopY = Mathf.Lerp(fillMinLocalY, fillMaxLocalY, currentPressureNorm);
+        float targetHeight = Mathf.Max(fillTopY - fillMinLocalY, 0f);
 
-        // Height of the fill in world units
-        float fillHeight = fillTopY - fillMinLocalY;
-        fillHeight = Mathf.Max(fillHeight, 0f);
+        // 2. Get the sprite's native size (in world units) from its bounds
+        float nativeHeight = fillSprite != null ? fillSprite.bounds.size.y : 1f;
 
-        // Scale the fill sprite vertically.
-        // The sprite is 6px tall at 16 PPU = 0.375 world units native.
-        // We scale it to match the desired height.
-        float nativeHeight = fillSprite != null
-            ? fillSprite.rect.height / pixelsPerUnit
-            : 1f;
+        // 3. Calculate scale required to reach target height
+        float scaleY = targetHeight > 0f ? targetHeight / nativeHeight : 0f;
+        
+        // 4. Position the Fill Sprite
+        //    We want the BOTTOM of the sprite (visual bottom) to be at fillMinLocalY.
+        //    The sprite's bottom relative to its pivot is bounds.min.y.
+        float fillBottomOffset = fillSprite != null ? fillSprite.bounds.min.y : -0.5f;
+        float fillPosY = fillMinLocalY - (fillBottomOffset * scaleY);
 
-        float scaleY = fillHeight > 0f ? fillHeight / nativeHeight : 0f;
-
-        // Position fill so its bottom sits at fillMinLocalY
-        float fillCenterY = fillMinLocalY + fillHeight * 0.5f;
-
-        fillRenderer.transform.localPosition = new Vector3(0f, fillCenterY, 0f);
+        fillRenderer.transform.localPosition = new Vector3(0f, fillPosY, 0f);
         fillRenderer.transform.localScale    = new Vector3(1f, scaleY, 1f);
 
-        // Position wave at the top of the fill
-        waveRenderer.transform.localPosition = new Vector3(0f, fillTopY, 0f);
+        // 5. Position the Wave Sprite
+        //    Target: Visual Top of the fill.
+        //    Visual Top = Bounds Top - (Padding * Scale).
+        //    Bounds Top = fillTopY.
+        float visualFillTop = fillTopY - (fillTopPadding * scaleY);
+        
+        Sprite currentWave = waveRenderer.sprite;
+        float waveBottomOffset = currentWave != null ? currentWave.bounds.min.y : -0.5f;
+        
+        // Wave Y = Visual Top + Offset - Wave Bottom Offset
+        float wavePosY = (visualFillTop + waveVerticalOffset) - waveBottomOffset;
 
-        // Hide wave when bar is empty
-        waveRenderer.enabled = fillHeight > 0.01f;
+        waveRenderer.transform.localPosition = new Vector3(0f, wavePosY, 0f);
+
+        // Hide wave when bar is essentially empty
+        waveRenderer.enabled = targetHeight > 0.01f;
     }
 
     /// <summary>
@@ -227,7 +273,10 @@ public class CorruptionBarUI : MonoBehaviour
         {
             waveTimer -= timePerFrame;
             waveFrame = (waveFrame + 1) % waveFrames.Length;
+            // Update the sprite
             waveRenderer.sprite = waveFrames[waveFrame];
+            // Re-apply position so the new frame's bounds are accounted for immediately
+            ApplyFill();
         }
     }
 

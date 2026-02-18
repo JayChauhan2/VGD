@@ -80,6 +80,17 @@ public class EnemyProjectile : MonoBehaviour
             return;
         }
         
+
+
+        // Damage Breakable Boxes
+        BreakableBox box = collision.GetComponent<BreakableBox>();
+        if (box != null)
+        {
+            box.TakeDamage(damage, direction);
+            Destroy(gameObject);
+            return;
+        }
+        
         // Destroy on walls (Obstacle Layer)
         if (collision.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
         {

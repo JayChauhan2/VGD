@@ -107,6 +107,14 @@ public class FamiliarAttack : MonoBehaviour
             {
                 enemy.TakeDamage(damagePerSecond * Time.deltaTime);
             }
+            else
+            {
+                BreakableBox box = hit.collider.GetComponent<BreakableBox>();
+                if (box != null)
+                {
+                    box.TakeDamage(damagePerSecond * Time.deltaTime, direction);
+                }
+            }
         }
         
         lr.SetPosition(1, endPos);

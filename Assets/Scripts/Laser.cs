@@ -263,6 +263,16 @@ public class Laser : MonoBehaviour
                 enemy.TakeDamage(damagePerSecond * Time.deltaTime);
                 isHitEnemy = true;
             }
+            else
+            {
+                // Check for BreakableBox
+                BreakableBox box = _hit.collider.GetComponent<BreakableBox>();
+                if (box != null)
+                {
+                    box.TakeDamage(damagePerSecond * Time.deltaTime, transform.right);
+                    isHitEnemy = true;
+                }
+            }
             
             // Projectile Hit
             EnemyProjectile proj = _hit.collider.GetComponent<EnemyProjectile>();

@@ -118,6 +118,18 @@ public class ExplosionEffect : MonoBehaviour
 
                 enemy.TakeDamage(finalDamage);
             }
+
+
+            // Damage Breakable Boxes
+            BreakableBox box = hitCollider.GetComponent<BreakableBox>();
+            if (box != null)
+            {
+                if (processedEntities.Contains(box.gameObject)) continue;
+                processedEntities.Add(box.gameObject);
+                
+                // Boxes take full enemy damage from explosions
+                box.TakeDamage(enemyDamage, (hitCollider.transform.position - transform.position).normalized);
+            }
         }
         
         Debug.Log($"Explosion at {transform.position} hit {hitColliders.Length} colliders ({processedEntities.Count} unique entities)");

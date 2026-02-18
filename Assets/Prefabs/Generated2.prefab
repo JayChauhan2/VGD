@@ -9439,19 +9439,19 @@ PrefabInstance:
     - target: {fileID: 3180609315460112588, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: topDoorObj
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1355434900722674598}
     - target: {fileID: 3180609315460112588, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: leftDoorObj
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 5322953675651364209}
     - target: {fileID: 3180609315460112588, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: rightDoorObj
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 8850569517716503594}
     - target: {fileID: 3180609315460112588, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: bottomDoorObj
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 5425998753874456130}
     - target: {fileID: 3517556107196172670, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: m_SortingLayer
       value: 3

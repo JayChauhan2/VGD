@@ -587,8 +587,8 @@ Transform:
   m_GameObject: {fileID: 1270060090548621078}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 15.5, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 2, z: 1}
+  m_LocalPosition: {x: 15.75, y: 0, z: 0}
+  m_LocalScale: {x: 0.5, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3961519953826267062}
@@ -741,11 +741,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12e1bcc29a4cff5429c8f8324ed4f4f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  topDoorObj: {fileID: 0}
-  bottomDoorObj: {fileID: 0}
-  leftDoorObj: {fileID: 0}
-  rightDoorObj: {fileID: 0}
+  topDoorObj: {fileID: 8855261559045782069}
+  bottomDoorObj: {fileID: 5170820766956105452}
+  leftDoorObj: {fileID: 1538998924522130889}
+  rightDoorObj: {fileID: 1270060090548621078}
   roomSize: {x: 32, y: 18}
+  AlwaysOpen: 0
 --- !u!114 &8410271049769413041
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -788,7 +789,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &5399600994494625947
 Transform:
   m_ObjectHideFlags: 0
@@ -799,7 +800,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -15.5, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 2, z: 1}
+  m_LocalScale: {x: 0.5, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3961519953826267062}

@@ -8680,6 +8680,10 @@ PrefabInstance:
       propertyPath: roomSize.y
       value: 18
       objectReference: {fileID: 0}
+    - target: {fileID: 5518020271441961741, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: m_Name
+      value: TopWallBoss
+      objectReference: {fileID: 0}
     - target: {fileID: 5810123716084620248, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.6

@@ -320,6 +320,7 @@ MonoBehaviour:
   leftDoorObj: {fileID: 266606325691403036}
   rightDoorObj: {fileID: 2377238178310032551}
   roomSize: {x: 20, y: 12}
+  AlwaysOpen: 0
 --- !u!114 &8410271049769413041
 MonoBehaviour:
   m_ObjectHideFlags: 0

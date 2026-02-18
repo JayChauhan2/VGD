@@ -1812,7 +1812,14 @@ MonoBehaviour:
   shopRoomPrefab: {fileID: 8188293462293973532, guid: 940d4cf196e001f4aa246d8d4b0fb23f, type: 3}
   generatedRoomPrefabs:
   - {fileID: 2167945867662251604, guid: ead560bc08016974cad360743600edd4, type: 3}
-  isTestingMode: 1
+  - {fileID: 6742139636335007028, guid: 4e508b7d8d5395b4dbceb42df1ce291d, type: 3}
+  - {fileID: 5436328670248218251, guid: bf00f8b99982713448d32f8f9400b422, type: 3}
+  - {fileID: 2589234175579720975, guid: a2358f9ce4c280642899b18c93669027, type: 3}
+  - {fileID: 3279371813678766083, guid: ed83adc3f19c8414f81b16600c4e30a0, type: 3}
+  - {fileID: 995838340202045091, guid: fbc2aaaca3e4859479de826e224a8102, type: 3}
+  - {fileID: 8833156095104678799, guid: 38fd1f7a735d00549afb59130b9872a6, type: 3}
+  - {fileID: 3685405747248696002, guid: e181a0a5332a36b428eebc11992f3311, type: 3}
+  isTestingMode: 0
   testingRoomPrefab: {fileID: 2167945867662251604, guid: ead560bc08016974cad360743600edd4, type: 3}
   roomWidth: 20
   roomHeight: 11

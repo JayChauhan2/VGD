@@ -216,6 +216,9 @@ public class Room : MonoBehaviour
         hasSpawners = true;
     }
 
+    // Flag to force doors to stay open (e.g. for Start Room or special rooms)
+    public bool AlwaysOpen = false;
+
     public void OnPlayerEnter()
     {
         // 1. Move Camera
@@ -232,29 +235,48 @@ public class Room : MonoBehaviour
         // Spawn any ghosts waiting for the player
         SpawnPendingGhosts();
 
-        // If we have enemies OR spawners, we lock.
-        // Even if activeEnemies is 0, if we have a spawner, it might spawn them next frame.
-        if ((GetLockingEnemyCount() > 0 || hasSpawners) && !IsCleared)
+        // 3. Decide on Doors & Activation
+        // Even if AlwaysOpen is true, we still want to activate enemies/spawners so the room feels alive.
+        // We just won't LOCK the doors.
+
+        bool shouldLock = false;
+        if (!IsCleared && !AlwaysOpen)
         {
-            LockDoors();
-            foreach (var enemy in activeEnemies)
-            {
-                if (enemy != null) enemy.SetActive(true);
-            }
-            
-            if (Pressure != null) Pressure.Activate();
+            // Normal locking logic: Lock if enemies or spawners exist
+             if (GetLockingEnemyCount() > 0 || hasSpawners)
+             {
+                 shouldLock = true;
+             }
         }
-        else if (!IsCleared) // No enemies, no spawners -> Auto Clear Logic?
+
+        // Activate Enemies
+        foreach (var enemy in activeEnemies)
         {
-             // If truly empty, mark cleared immediately
-             Debug.Log("Room: Empty room entered. marking cleared.");
-             IsCleared = true;
-             UnlockDoors();
-             OnRoomCleared?.Invoke(this); // Check win condition
+            if (enemy != null) enemy.SetActive(true);
+        }
+        
+        if (shouldLock)
+        {
+             LockDoors();
+             if (Pressure != null) Pressure.Activate();
         }
         else
         {
-            UnlockDoors();
+             // If we're not locking, we should probably just Unlock immediately.
+             // If the room was empty/cleared, we handle that below.
+             UnlockDoors();
+
+             // Special Case: Room had enemies but is "AlwaysOpen" -> We still activate pressure?
+             // Probably not pressure if it's the start room? 
+             // Let's say: If AlwaysOpen, no pressure, no locking.
+             
+             // BUT: If the room is empty (no enemies/spawners) and not cleared, we should clear it.
+             if (!IsCleared && GetLockingEnemyCount() == 0 && !hasSpawners)
+             {
+                  Debug.Log("Room: Empty room entered. marking cleared.");
+                  IsCleared = true;
+                  OnRoomCleared?.Invoke(this); 
+             }
         }
     }
 

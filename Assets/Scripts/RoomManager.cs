@@ -159,6 +159,9 @@ public class RoomManager : MonoBehaviour
         Room startRoom = roomComponentGrid[centerX, centerY];
         if (startRoom != null)
         {
+            // Ensure the first room never locks the player in
+            startRoom.AlwaysOpen = true; 
+            
             startRoom.OnPlayerEnter();
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player != null) player.transform.position = startRoom.transform.position;

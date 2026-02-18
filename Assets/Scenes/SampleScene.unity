@@ -1496,6 +1496,7 @@ GameObject:
   - component: {fileID: 1365168972}
   - component: {fileID: 1365168974}
   - component: {fileID: 1365168973}
+  - component: {fileID: 1365168975}
   m_Layer: 5
   m_Name: CorruptionBar
   m_TagString: Untagged
@@ -1560,6 +1561,38 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1365168971}
   m_CullTransparentMesh: 1
+--- !u!114 &1365168975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1365168971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73637f3e8dc655941b093819a737c990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  corruptionBarSprite: {fileID: -5670541320659253115, guid: 7b2ddcae0aee91c4586e8ea7cf3758e8, type: 3}
+  liquidSprites:
+  - {fileID: 5097786063004615103, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  - {fileID: -5674411513326073643, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  - {fileID: -7282818538113959424, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  - {fileID: -7612041258342711837, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  - {fileID: 392565593027928520, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  - {fileID: 7159423286996259094, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  - {fileID: -1373901321974426141, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  - {fileID: -5078132074661982132, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  - {fileID: 5097786063004615103, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  animationSpeed: 12
+  liquidScale: {x: 0.3, y: 0.3, z: 0.3}
+  liquidOffsetY: 4.78
+  liquidOffsetX: 0
+  liquidMinY: -46
+  fillPadding: {x: 6.19, y: 0}
+  renderOnTop: 0
+  debugMode: 0
+  debugFill: 0.5
 --- !u!1 &1528514266
 GameObject:
   m_ObjectHideFlags: 0

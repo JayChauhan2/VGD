@@ -97,7 +97,7 @@ public class Pathfinding : MonoBehaviour
         visited.Add(startNode);
 
         // Limit search depth to avoid infinite loops or huge performance hits
-        int maxDepth = 20; 
+
         int steps = 0;
 
         while (queue.Count > 0 && steps < 100) // heuristic limit

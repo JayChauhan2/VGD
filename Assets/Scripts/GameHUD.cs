@@ -58,8 +58,7 @@ public class GameHUD : MonoBehaviour
          Room.OnRoomCleared -= CheckWinCondition;
     }
     
-    private Slider pressureSlider;
-    private Image fillImage;
+
     private Room currentRoom;
 
     private void Start()
@@ -91,37 +90,7 @@ public class GameHUD : MonoBehaviour
     
     private void OnRoomEntered(Room room)
     {
-        if (currentRoom != null && currentRoom.Pressure != null)
-        {
-            currentRoom.Pressure.OnPressureChanged -= UpdatePressureUI;
-        }
-        
         currentRoom = room;
-        
-        if (currentRoom != null && currentRoom.Pressure != null)
-        {
-            currentRoom.Pressure.OnPressureChanged += UpdatePressureUI;
-            UpdatePressureUI(currentRoom.Pressure.currentPressure / currentRoom.Pressure.maxPressure);
-            
-            if (pressureSlider != null) pressureSlider.gameObject.SetActive(true);
-        }
-        else
-        {
-            if (pressureSlider != null) pressureSlider.gameObject.SetActive(false);
-        }
-    }
-    
-    private void UpdatePressureUI(float percent)
-    {
-        if (pressureSlider != null)
-        {
-            pressureSlider.value = percent;
-            
-            if (fillImage != null)
-            {
-                fillImage.color = Color.Lerp(Color.blue, Color.red, percent);
-            }
-        }
     }
 
     private void CheckWinCondition(Room room)
@@ -394,55 +363,7 @@ public class GameHUD : MonoBehaviour
         bombRect.pivot = Vector2.one;
         bombRect.anchoredPosition = new Vector2(coinPosition.x, coinPosition.y - 65); // Adjusted for hearts
         
-        // Pressure Slider
-        GameObject sliderObj = new GameObject("PressureSlider");
-        sliderObj.transform.SetParent(canvasObj.transform, false);
-        pressureSlider = sliderObj.AddComponent<Slider>();
-        
-        RectTransform sliderRect = sliderObj.GetComponent<RectTransform>();
-        sliderRect.anchorMin = Vector2.one;
-        sliderRect.anchorMax = Vector2.one;
-        sliderRect.pivot = Vector2.one;
-        sliderRect.sizeDelta = new Vector2(200, 20);
-        sliderRect.anchoredPosition = new Vector2(coinPosition.x, coinPosition.y - 90); // Adjusted
 
-        // Background
-        GameObject bgObj = new GameObject("Background");
-        bgObj.transform.SetParent(sliderObj.transform, false);
-        Image bgImg = bgObj.AddComponent<Image>();
-        bgImg.color = new Color(0.2f, 0.2f, 0.2f, 0.5f);
-        RectTransform bgRect = bgObj.GetComponent<RectTransform>();
-        bgRect.anchorMin = Vector2.zero;
-        bgRect.anchorMax = Vector2.one;
-        bgRect.offsetMin = Vector2.zero;
-        bgRect.offsetMax = Vector2.zero;
-
-        // Fill Area
-        GameObject fillArea = new GameObject("Fill Area");
-        fillArea.transform.SetParent(sliderObj.transform, false);
-        RectTransform fillAreaRect = fillArea.AddComponent<RectTransform>();
-        fillAreaRect.anchorMin = Vector2.zero;
-        fillAreaRect.anchorMax = Vector2.one;
-        fillAreaRect.offsetMin = new Vector2(5, 0); 
-        fillAreaRect.offsetMax = new Vector2(-5, 0);
-        
-        // Fill
-        GameObject fillObj = new GameObject("Fill");
-        fillObj.transform.SetParent(fillArea.transform, false);
-        fillImage = fillObj.AddComponent<Image>();
-        fillImage.color = Color.blue;
-        RectTransform fillRect = fillObj.GetComponent<RectTransform>();
-        fillRect.anchorMin = Vector2.zero;
-        fillRect.anchorMax = Vector2.one;
-        fillRect.offsetMin = Vector2.zero;
-        fillRect.offsetMax = Vector2.zero;
-        
-        pressureSlider.targetGraphic = bgImg;
-        pressureSlider.fillRect = fillRect;
-        pressureSlider.direction = Slider.Direction.LeftToRight;
-        pressureSlider.minValue = 0;
-        pressureSlider.maxValue = 1;
-        pressureSlider.value = 0;
         
         // Win Text
         GameObject winObj = new GameObject("WinText");

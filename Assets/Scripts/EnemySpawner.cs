@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine.Rendering.Universal;
 
 public class EnemySpawner : MonoBehaviour
 {
@@ -49,16 +48,6 @@ public class EnemySpawner : MonoBehaviour
         }
         
         Debug.Log($"EnemySpawner: Initialized in Room {(currentRoom != null ? currentRoom.name : "None")}");
-
-        // Add Purple Glow
-        Light2D spawnerLight = GetComponent<Light2D>();
-        if (spawnerLight == null) spawnerLight = gameObject.AddComponent<Light2D>();
-        
-        spawnerLight.lightType = Light2D.LightType.Point;
-        spawnerLight.color = new Color(0.6f, 0f, 1f, 1f); // Purple
-        spawnerLight.intensity = 1.2f;
-        spawnerLight.pointLightOuterRadius = 1.5f;
-        spawnerLight.falloffIntensity = 0.5f;
     }
 
     public void AdjustSpawnRate(float pressurePercent)

@@ -9,8 +9,8 @@ public class LightingManager : MonoBehaviour
 
     [Header("Settings")]
     public Material litMaterial;
-    public Color globalLightColor = Color.white; // Restore map visibility
-    public float globalLightIntensity = 1.2f; // Ensure scene is fully lit
+    public Color globalLightColor = new Color(0.1f, 0.1f, 0.2f, 1f); // Dark blue-ish night
+    public float globalLightIntensity = 0.5f; // Keep slightly brighter for testing
     
     public Color playerLightColor = new Color(1f, 0.9f, 0.7f, 1f); // Warm torch
     public float playerLightIntensity = 1.0f;

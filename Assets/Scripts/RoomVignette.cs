@@ -6,13 +6,13 @@ public class RoomVignette : MonoBehaviour
 
     [Header("Vignette Settings")]
     public Color overlayColor = Color.black;
-    [Range(0f, 1f)] public float clearCenterSize = 0.4f;
-    [Range(0.01f, 1f)] public float softness = 0.4f;
-    [Range(0f, 1f)] public float edgeDarkness = 1f; // Controls max opacity
+    [Range(0f, 1f)] public float clearCenterSize = 0.55f;
+    [Range(0.01f, 1f)] public float softness = 0.5f;
+    [Range(0f, 1f)] public float edgeDarkness = 0.6f; // Controls max opacity
     public int resolution = 256;
     
     [Header("Sorting")]
-    public string sortingLayerName = "Ground"; // Strictly Background
+    public string sortingLayerName = "Object"; // Strictly Background
     public int sortingOrder = 32000; // on Top of Floor tiles, but below Objects
 
     private Transform overlayTransform;

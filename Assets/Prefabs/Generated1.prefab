@@ -6624,11 +6624,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 30
-  debrisSprite: {fileID: 0}
   debrisColumns: 2
   debrisRows: 2
   healthBarOffset: {x: 0, y: 0.8, z: 0}
-  healthBarSize: {x: 0.8, y: 0.1}
+  healthBarSize: {x: 1, y: 0.03}
 --- !u!61 &6448121845836543023
 BoxCollider2D:
   m_ObjectHideFlags: 0

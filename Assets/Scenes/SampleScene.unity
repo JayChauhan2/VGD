@@ -519,7 +519,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 11
-  m_Sprite: {fileID: 5097786063004615103, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  m_Sprite: {fileID: -5078132074661982132, guid: c9185b05321cefc47a93553910df2005, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -2146,7 +2146,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1963082400}
-  - component: {fileID: 1963082399}
   m_Layer: 0
   m_Name: LightingManager
   m_TagString: Untagged
@@ -2154,25 +2153,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1963082399
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1963082398}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d462d8079c2658a46b28c0798052791d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  litMaterial: {fileID: 0}
-  globalLightColor: {r: 0.1, g: 0.1, b: 0.2, a: 1}
-  globalLightIntensity: 0.3
-  playerLightColor: {r: 1, g: 0.9, b: 0.7, a: 1}
-  playerLightIntensity: 1.2
-  playerLightRadius: 10
-  castShadows: 1
 --- !u!4 &1963082400
 Transform:
   m_ObjectHideFlags: 0

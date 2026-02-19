@@ -6,14 +6,14 @@ public class BreakableBox : MonoBehaviour
 {
     [Header("Box Settings")]
     public float maxHealth = 30f;
-    [Tooltip("The sprite to use for debris generation. MUST be Read/Write Enabled.")]
-    public Sprite debrisSprite;
+    // [Tooltip("The sprite to use for debris generation. MUST be Read/Write Enabled.")]
+    // public Sprite debrisSprite; // REMOVED: Using object's own sprite now
     public int debrisColumns = 2;
     public int debrisRows = 2;
 
     [Header("UI Settings")]
     public Vector3 healthBarOffset = new Vector3(0, 0.8f, 0);
-    public Vector2 healthBarSize = new Vector2(0.8f, 0.1f);
+    public Vector2 healthBarSize = new Vector2(0.6f, 0.03f);
 
     private float currentHealth;
     private bool healthBarVisible = false;
@@ -69,14 +69,16 @@ public class BreakableBox : MonoBehaviour
     void Die()
     {
         // 1. Visual Effects (Debris)
-        if (debrisSprite != null)
+        // 1. Visual Effects (Debris)
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr != null && sr.sprite != null)
         {
              // Use stored hit direction for debris
-            SpriteFragmenter.CreateDebris(debrisSprite, transform.position, transform.rotation, debrisColumns, debrisRows, 5f, lastHitDirection != Vector2.zero ? lastHitDirection : null);
+            SpriteFragmenter.CreateDebris(sr.sprite, transform.position, transform.rotation, debrisColumns, debrisRows, 5f, lastHitDirection != Vector2.zero ? lastHitDirection : null);
         }
         else
         {
-            Debug.LogWarning("BreakableBox: No Debris Sprite assigned!");
+            Debug.LogWarning("BreakableBox: No SpriteRenderer or Sprite found for Debris!");
         }
 
         // 2. Tile Removal - REMOVED per user request (was deleting floor)
@@ -173,8 +175,8 @@ public class BreakableBox : MonoBehaviour
         
         healthCanvas = healthCanvasGO.AddComponent<Canvas>();
         healthCanvas.renderMode = RenderMode.WorldSpace;
-        healthCanvas.sortingLayerName = "UI"; // Ensure visible
-        healthCanvas.sortingOrder = 10;
+        healthCanvas.sortingLayerName = "Object"; // Ensure visible
+        healthCanvas.sortingOrder = 6;
         
         CanvasScaler scaler = healthCanvasGO.AddComponent<CanvasScaler>();
         scaler.dynamicPixelsPerUnit = 100;

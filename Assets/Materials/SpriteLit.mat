@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Mat_Echolocation
-  m_Shader: {fileID: 4800000, guid: a78893ec40f235042a99e1c02c29f0bf, type: 3}
+  m_Name: SpriteLit
+  m_Shader: {fileID: 4800000, guid: 93902cb75529f7943b7194125b045163, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -19,11 +19,10 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _AlphaTex:
+    - _BaseMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -41,19 +40,13 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AspectRatio: 1.7777778
-    - _Darkness: 0
-    - _EdgeWidth: 12.82
-    - _EnableExternalAlpha: 0
-    - _IsOrtho: 1
-    - _OrthographicSize: 5.4
-    - _PixelSize: 6
-    - _Radius: 23.17006
-    - _ZWrite: 0
+    - _AlphaClip: 0
+    - _Blend: 0
+    - _Cull: 2
+    - _NormalMapQuality: 1
+    - _QueueOffset: 0
+    - _Surface: 0
     m_Colors:
-    - _CameraPos: {r: -6e-45, g: -6e-45, b: -12.89, a: 0}
-    - _Center: {r: 2.8007436, g: 3.2275052, b: 0, a: 0}
-    - _Color: {r: 0, g: 1, b: 1, a: 1}
-    - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
-  m_AllowLocking: 1

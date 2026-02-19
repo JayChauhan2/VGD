@@ -519,7 +519,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 11
-  m_Sprite: {fileID: -5078132074661982132, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  m_Sprite: {fileID: -7612041258342711837, guid: c9185b05321cefc47a93553910df2005, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1391,7 +1391,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 12
-  m_Sprite: {fileID: 1178000108287567050, guid: 22dd3387b88c5f44e83f47fb3f8537d2, type: 3}
+  m_Sprite: {fileID: 2900447590193464389, guid: 22dd3387b88c5f44e83f47fb3f8537d2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1828,8 +1828,17 @@ MonoBehaviour:
   unvisitedRoomColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
   visitedRoomColor: {r: 1, g: 1, b: 1, a: 1}
   currentRoomColor: {r: 1, g: 1, b: 1, a: 1}
-  isTestingMode: 1
+  isTestingMode: 0
   testingRoomPrefab: {fileID: 2167945867662251604, guid: ead560bc08016974cad360743600edd4, type: 3}
+  boxPrefab: {fileID: 3234879982250579851, guid: 9d84c4d0c62944030b97e9297a681f46, type: 3}
+  minBoxesPerRoom: 3
+  maxBoxesPerRoom: 8
+  boxSpawnChance: 1
+  obstacleLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  minBoxDistance: 1.5
+  boxGridOffset: {x: 0, y: 0}
   roomWidth: 20
   roomHeight: 11
   doorExitOffset: 2

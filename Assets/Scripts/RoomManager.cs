@@ -37,6 +37,14 @@ public class RoomManager : MonoBehaviour
     public bool isTestingMode;
     public GameObject testingRoomPrefab;
 
+    [Header("Box Spawning")]
+    public GameObject boxPrefab; // Drag BreakableBox prefab here
+    [Range(0, 20)] public int minBoxesPerRoom = 3;
+    [Range(0, 50)] public int maxBoxesPerRoom = 8;
+    [Range(0f, 1f)] public float boxSpawnChance = 1.0f; // Chance for a room to have boxes at all
+    public LayerMask obstacleLayer; // Assign "Obstacle" and "Default" (walls)
+    public float minBoxDistance = 1.5f; // Minimum distance between boxes
+    public Vector2 boxGridOffset = new Vector2(0.5f, 0.5f); // Use this to center boxes on tiles (e.g. 0.5, 0.5)
 
 
     public int roomWidth = 32; 
@@ -181,6 +189,16 @@ public class RoomManager : MonoBehaviour
 
                 // Add new neighbors
                 AddNeighborsToAvailable(spot, availableSpots);
+            }
+            
+            // 5b. Scatter Boxes in all generated rooms (except Start)
+            foreach(var roomObj in roomObjects)
+            {
+                Room r = roomObj.GetComponent<Room>();
+                if (r != null && r.RoomIndex != center) // Don't crash spawn boxes in Start Room
+                {
+                     ScatterBoxes(r);
+                }
             }
         }
 
@@ -354,6 +372,8 @@ public class RoomManager : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if (roomWidth <= 0 || roomHeight <= 0 || gridSizeX <= 0 || gridSizeY <= 0) return;
+
         Color gizmoColor = new Color(0, 1, 1, 0.05f);
         Gizmos.color = gizmoColor;
         for (int x = 0; x < gridSizeX; x++)
@@ -362,6 +382,148 @@ public class RoomManager : MonoBehaviour
             {
                 Vector3 position = GetPositionFromGridIndex(new Vector2Int(x, y));
                 Gizmos.DrawWireCube(position, new Vector3(roomWidth, roomHeight, 1));
+            }
+        }
+    }
+    
+    private void ScatterBoxes(Room room)
+    {
+        if (boxPrefab == null) return;
+        if (Random.value > boxSpawnChance) return;
+        
+        // Find the Grid component in the room
+        // This handles alignment perfectly regardless of Room scaling
+        Grid roomGrid = room.GetComponentInChildren<Grid>();
+        if (roomGrid == null)
+        {
+             Debug.LogWarning($"RoomManager: Could not find 'Grid' component in room {room.name}. Boxes might be unaligned.");
+        }
+        
+        // Disable box spawning near spawners
+        EnemySpawner[] spawners = room.GetComponentsInChildren<EnemySpawner>();
+        List<Vector3Int> spawnerCells = new List<Vector3Int>();
+        if (roomGrid != null)
+        {
+            foreach(var sp in spawners)
+            {
+                spawnerCells.Add(roomGrid.WorldToCell(sp.transform.position));
+            }
+        }
+        else
+        {
+            // Fallback if no grid: just treat spawner positions as "points to avoid" in world space
+            // Logic handled inside loop
+        }
+
+        // Determine Box Scale based on Room Scale to maintain World Size ~0.6
+        float roomScale = room.transform.localScale.x; 
+        float targetBoxWorldScale = 0.6f;
+        Vector3 boxLocalScale = Vector3.one;
+        if (Mathf.Abs(roomScale) > 0.01f)
+        {
+             boxLocalScale = Vector3.one * (targetBoxWorldScale / roomScale);
+        }
+
+        int count = Random.Range(minBoxesPerRoom, maxBoxesPerRoom + 1);
+        int attemptsPerBox = 10;
+        
+        List<Vector3> placedPositions = new List<Vector3>();
+        
+        // Bounds for random selection
+        // We still need to know "how many tiles" wide/high the room is.
+        // Assuming roomWidth/Height are correct tile counts.
+        float marginX = 2f; 
+        float marginY = 2f;
+        float halfW = Mathf.Max(1f, (roomWidth / 2f) - marginX);
+        float halfH = Mathf.Max(1f, (roomHeight / 2f) - marginY);
+
+        for (int i = 0; i < count; i++)
+        {
+            for (int attempt = 0; attempt < attemptsPerBox; attempt++)
+            {
+                // Random Cell Position (Integer)
+                int rx = Mathf.RoundToInt(Random.Range(-halfW, halfW));
+                int ry = Mathf.RoundToInt(Random.Range(-halfH, halfH));
+                Vector3Int cellPos = new Vector3Int(rx, ry, 0);
+                
+                Vector3 worldPos;
+                
+                if (roomGrid != null)
+                {
+                    // Use Grid to get precise world position of the cell center
+                    // Note: roomGrid is inside the room, so it handles the room's rotation/scale/position!
+                    worldPos = roomGrid.GetCellCenterWorld(cellPos);
+                }
+                else
+                {
+                    // Fallback manual calculation
+                    worldPos = room.transform.TransformPoint(new Vector3(rx, ry, 0));
+                }
+                
+                // 1. Check against obstacles
+                Collider2D hit = Physics2D.OverlapCircle(worldPos, 0.3f, obstacleLayer);
+                if (hit != null) continue; 
+                
+                bool tooClose = false;
+                foreach(var pos in placedPositions)
+                {
+                    if (Vector3.Distance(worldPos, pos) < (minBoxDistance * roomScale)) 
+                    {
+                        tooClose = true; 
+                        break;
+                    }
+                }
+                if (tooClose) continue;
+                
+                // 3. Clear path from doors? 
+                bool blockingDoor = false;
+                if (Mathf.Abs(rx) < 2f && Mathf.Abs(Mathf.Abs(ry) - (roomHeight/2f)) < 3f) blockingDoor = true;
+                if (Mathf.Abs(ry) < 2f && Mathf.Abs(Mathf.Abs(rx) - (roomWidth/2f)) < 3f) blockingDoor = true;
+                
+                if (blockingDoor) continue;
+
+                // 4. Check Spawner Adjacency
+                bool nearSpawner = false;
+                if (roomGrid != null)
+                {
+                    // Grid Logic: Check integer adjacency (Chebyshev distance <= 1)
+                    foreach(var spCell in spawnerCells)
+                    {
+                        if (Mathf.Abs(cellPos.x - spCell.x) <= 1 && Mathf.Abs(cellPos.y - spCell.y) <= 1)
+                        {
+                            nearSpawner = true;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    // Fallback World Distance Logic
+                    // "Adjacent" roughly means within 1 diagonals + buffer. 
+                    // If tile world size is ~0.6 (roomScale), diag is ~0.85. 
+                    // Let's use 1.5 * roomScale as safe avoidance radius.
+                    float avoidRadius = 1.5f * roomScale; 
+                    foreach(var sp in spawners)
+                    {
+                        if (Vector3.Distance(worldPos, sp.transform.position) < avoidRadius)
+                        {
+                            nearSpawner = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (nearSpawner) continue;
+
+                // Found a valid spot!
+
+                // Found a valid spot!
+                GameObject box = Instantiate(boxPrefab, worldPos, Quaternion.identity);
+                box.transform.SetParent(room.transform);
+                box.transform.localScale = boxLocalScale; 
+                placedPositions.Add(worldPos);
+                
+                break; // Next box
             }
         }
     }

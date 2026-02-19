@@ -142,7 +142,39 @@ public class MinimapManager : MonoBehaviour
         iconObj.transform.SetParent(container, false);
 
         Image img = iconObj.AddComponent<Image>();
-        img.color = defaultRoomColor;
+        
+        // --- Custom Sprite Logic ---
+        Sprite iconSprite = null;
+        if (RoomManager.Instance != null)
+        {
+            switch (room.type)
+            {
+                case Room.RoomType.Normal:
+                    iconSprite = RoomManager.Instance.normalRoomSprite;
+                    break;
+                case Room.RoomType.Mysterious:
+                    iconSprite = RoomManager.Instance.mysteriousRoomSprite;
+                    break;
+                case Room.RoomType.Boss:
+                    iconSprite = RoomManager.Instance.bossRoomSprite;
+                    break;
+            }
+        }
+
+        if (iconSprite != null)
+        {
+            img.sprite = iconSprite;
+            // Set initial color for unvisited
+            if (RoomManager.Instance != null)
+                img.color = RoomManager.Instance.unvisitedRoomColor;
+            else
+                img.color = defaultRoomColor; 
+        }
+        else
+        {
+            // Fallback if no sprite assigned
+            img.color = defaultRoomColor;
+        }
 
         RectTransform rect = iconObj.GetComponent<RectTransform>();
         rect.sizeDelta = roomIconSize;
@@ -185,11 +217,18 @@ public class MinimapManager : MonoBehaviour
             // Reset previous if needed (optional, effectively "visited" state)
             if (currentRoomIcon != null && currentRoomIcon != roomIcons[room])
             {
-                currentRoomIcon.color = visitedRoomColor;
+                // Mark previous as visited (lighter color)
+                if (RoomManager.Instance != null)
+                    currentRoomIcon.color = RoomManager.Instance.visitedRoomColor;
+                else
+                    currentRoomIcon.color = visitedRoomColor;
             }
 
             currentRoomIcon = roomIcons[room];
-            currentRoomIcon.color = currentRoomColor;
+            if (RoomManager.Instance != null)
+                currentRoomIcon.color = RoomManager.Instance.currentRoomColor;
+            else
+                currentRoomIcon.color = currentRoomColor;
         }
     }
 }

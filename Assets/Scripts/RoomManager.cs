@@ -16,7 +16,22 @@ public class RoomManager : MonoBehaviour
     [Header("Room Prefabs")]
     public GameObject firstRoomPrefab;
     public GameObject shopRoomPrefab;
+    public GameObject bossRoomPrefab;
+    
+    [Tooltip("Minimum number of random rooms to generate (excluding Start, Shop, Boss)")]
+    public int minRooms = 5;
+    [Tooltip("Maximum number of random rooms to generate. Will be capped by available prefabs.")]
+    public int maxRooms = 8;
+
     public GameObject[] generatedRoomPrefabs;
+
+    [Header("MiniMap Sprites")]
+    public Sprite normalRoomSprite;
+    public Sprite mysteriousRoomSprite;
+    public Sprite bossRoomSprite;
+    public Color unvisitedRoomColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+    public Color visitedRoomColor = Color.white;
+    public Color currentRoomColor = new Color(0f, 1f, 0f, 1f);
 
     [Header("Testing Mode")]
     public bool isTestingMode;
@@ -99,7 +114,36 @@ public class RoomManager : MonoBehaviour
             // 3. Prepare Deck
             List<GameObject> deck = new List<GameObject>();
             if (shopRoomPrefab != null) deck.Add(shopRoomPrefab);
-            if (generatedRoomPrefabs != null) deck.AddRange(generatedRoomPrefabs);
+            if (bossRoomPrefab != null) deck.Add(bossRoomPrefab);
+
+            if (generatedRoomPrefabs != null && generatedRoomPrefabs.Length > 0)
+            {
+                // Create a temporary list to shuffle and pick from
+                List<GameObject> pool = new List<GameObject>(generatedRoomPrefabs);
+                
+                // Shuffle pool
+                for (int i = 0; i < pool.Count; i++)
+                {
+                    GameObject temp = pool[i];
+                    int r = Random.Range(i, pool.Count);
+                    pool[i] = pool[r];
+                    pool[r] = temp;
+                }
+
+                // Determine how many to pick
+                int maxPossible = Mathf.Min(maxRooms, pool.Count);
+                int countToPick = Random.Range(minRooms, maxPossible + 1);
+                
+                // Clamp in case min > total available
+                countToPick = Mathf.Clamp(countToPick, 0, pool.Count);
+
+                Debug.Log($"RoomManager: Picking {countToPick} random rooms from pool of {pool.Count} (Min: {minRooms}, Max: {maxRooms})");
+
+                for (int i = 0; i < countToPick; i++)
+                {
+                    deck.Add(pool[i]);
+                }
+            }
 
             // Shuffle Deck
             for (int i = 0; i < deck.Count; i++)

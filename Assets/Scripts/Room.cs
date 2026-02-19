@@ -9,6 +9,9 @@ public class Room : MonoBehaviour
     [SerializeField] GameObject leftDoorObj;
     [SerializeField] GameObject rightDoorObj;
 
+    public enum RoomType { Normal, Mysterious, Boss }
+    public RoomType type;
+
     public Vector2Int RoomIndex { get; set; }
     
     // Global tracking for unmanaged rooms (manual placement)

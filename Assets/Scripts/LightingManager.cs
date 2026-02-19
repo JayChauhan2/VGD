@@ -114,6 +114,7 @@ public class LightingManager : MonoBehaviour
         {
             // Simple heuristic to avoid breaking UI or particles
             if (sr.gameObject.layer == LayerMask.NameToLayer("UI")) continue;
+            if (sr.gameObject.name == "VignetteOverlay") continue;
             
             // Check if material is default or unlit
             if (sr.sharedMaterial == null || sr.sharedMaterial.name.Contains("Default") || sr.sharedMaterial.shader.name.Contains("Unlit"))

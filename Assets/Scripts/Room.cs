@@ -48,9 +48,14 @@ public class Room : MonoBehaviour
         Pressure.Initialize(this);
         Pressure.OnPressureChanged += OnPressureChanged;
 
-        Effects = GetComponent<RoomEffectsController>();
         if (Effects == null) Effects = gameObject.AddComponent<RoomEffectsController>();
         Effects.Initialize();
+
+        // Add Vignette
+        if (GetComponent<RoomVignette>() == null)
+        {
+            gameObject.AddComponent<RoomVignette>();
+        }
     }
     
     private void OnDestroy()

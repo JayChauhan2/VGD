@@ -10,6 +10,7 @@ public class BreakableBox : MonoBehaviour
     // public Sprite debrisSprite; // REMOVED: Using object's own sprite now
     public int debrisColumns = 2;
     public int debrisRows = 2;
+    public float debrisScale = 0.3f;
 
     [Header("UI Settings")]
     public Vector3 healthBarOffset = new Vector3(0, 0.8f, 0);
@@ -74,7 +75,7 @@ public class BreakableBox : MonoBehaviour
         if (sr != null && sr.sprite != null)
         {
              // Use stored hit direction for debris
-            SpriteFragmenter.CreateDebris(sr.sprite, transform.position, transform.rotation, debrisColumns, debrisRows, 5f, lastHitDirection != Vector2.zero ? lastHitDirection : null);
+            SpriteFragmenter.CreateDebris(sr.sprite, transform.position, transform.rotation, debrisColumns, debrisRows, 5f, lastHitDirection != Vector2.zero ? lastHitDirection : null, debrisScale);
         }
         else
         {

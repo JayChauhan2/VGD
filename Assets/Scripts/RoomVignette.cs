@@ -12,8 +12,8 @@ public class RoomVignette : MonoBehaviour
     public int resolution = 256;
     
     [Header("Sorting")]
-    public string sortingLayerName = "Object"; // Changed from Default to Object to be above Ground
-    public int sortingOrder = -1; // Above floor, below objects (Player is 0)
+    public string sortingLayerName = "Ground"; // Strictly Background
+    public int sortingOrder = 32000; // on Top of Floor tiles, but below Objects
 
     private void Start()
     {

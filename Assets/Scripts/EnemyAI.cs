@@ -70,10 +70,15 @@ public class EnemyAI : MonoBehaviour
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         
         // Ensure visibility by forcing the sorting layer
-        if (spriteRenderer != null)
         {
             spriteRenderer.sortingLayerName = "Object";
             // Removed hardcoded sortingOrder = 5 to allow dynamic depth sorting
+        }
+
+        // Add Shadow
+        if (GetComponent<SimpleShadow>() == null)
+        {
+            gameObject.AddComponent<SimpleShadow>();
         }
         
         // If room not already assigned (e.g. by Spawner), try to find it

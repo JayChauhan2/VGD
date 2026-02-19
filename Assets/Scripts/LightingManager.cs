@@ -10,10 +10,10 @@ public class LightingManager : MonoBehaviour
     [Header("Settings")]
     public Material litMaterial;
     public Color globalLightColor = new Color(0.1f, 0.1f, 0.2f, 1f); // Dark blue-ish night
-    public float globalLightIntensity = 0.3f;
+    public float globalLightIntensity = 0.5f; // Keep slightly brighter for testing
     
     public Color playerLightColor = new Color(1f, 0.9f, 0.7f, 1f); // Warm torch
-    public float playerLightIntensity = 1.2f;
+    public float playerLightIntensity = 1.0f;
     public float playerLightRadius = 10f;
 
     [Header("Shadows")]
@@ -102,6 +102,12 @@ public class LightingManager : MonoBehaviour
             playerLight.pointLightOuterRadius = playerLightRadius;
             playerLight.falloffIntensity = 0.5f;
             playerLight.shadowsEnabled = castShadows;
+
+            // Add Ground Shadow
+            if (player.GetComponent<SimpleShadow>() == null)
+            {
+                player.AddComponent<SimpleShadow>();
+            }
         }
     }
 
@@ -115,6 +121,8 @@ public class LightingManager : MonoBehaviour
             // Simple heuristic to avoid breaking UI or particles
             if (sr.gameObject.layer == LayerMask.NameToLayer("UI")) continue;
             if (sr.gameObject.name == "VignetteOverlay") continue;
+            if (sr.gameObject.name == "BlobShadow") continue;
+            if (sr.GetComponent<SimpleShadow>() != null) continue;
             
             // Check if material is default or unlit
             if (sr.sharedMaterial == null || sr.sharedMaterial.name.Contains("Default") || sr.sharedMaterial.shader.name.Contains("Unlit"))

@@ -52,7 +52,13 @@ public class PlayerHealth : MonoBehaviour
              Debug.LogWarning("PlayerHealth: No SpriteRenderer found on player for sorting reference.");
         }
 
-        CreateForcefieldVisual();
+        // Ensure a SimpleShadow is attached
+        if (GetComponent<SimpleShadow>() == null)
+        {
+            var shadow = gameObject.AddComponent<SimpleShadow>();
+            shadow.debugMode = false; 
+            // Debug.Log("PlayerHealth: Added SimpleShadow component.");
+        }
     }
 
     private void CreateForcefieldVisual()

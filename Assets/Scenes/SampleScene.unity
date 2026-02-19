@@ -519,7 +519,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 11
-  m_Sprite: {fileID: -7612041258342711837, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  m_Sprite: {fileID: -5674411513326073643, guid: c9185b05321cefc47a93553910df2005, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1391,7 +1391,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 12
-  m_Sprite: {fileID: 2900447590193464389, guid: 22dd3387b88c5f44e83f47fb3f8537d2, type: 3}
+  m_Sprite: {fileID: 1178000108287567050, guid: 22dd3387b88c5f44e83f47fb3f8537d2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1564,7 +1564,7 @@ MonoBehaviour:
   pingInterval: 4.37
   edgeWidth: 12.82
   rippleColor: {r: 0, g: 1, b: 1, a: 1}
-  worldDarkness: 0
+  worldDarkness: 1
   fadeOutDuration: 2.3
   pixelSize: 6
   playerRadius: 2.5
@@ -1805,6 +1805,17 @@ MonoBehaviour:
   coinPrefab: {fileID: 8510305196089219782, guid: cd3293d4e8023324fa2758c06ec6026a, type: 3}
   mimicPrefab: {fileID: 2889202060155188467, guid: bc83e5cad2a848542a5a01820f3e3978, type: 3}
   ghostEnemyPrefab: {fileID: 0}
+  globalEnemyPrefabs:
+  - {fileID: 7028453128543359274, guid: 62d2575ace768b747af5cb58f2bcbc94, type: 3}
+  - {fileID: 5699475636102151368, guid: 6e557ceba2355e042936a32683f92416, type: 3}
+  - {fileID: 1127242731612300559, guid: 5110fba8dd08f944e8ad76cf01375583, type: 3}
+  - {fileID: 6454240620750936782, guid: c318244b93c821e44b56ba9a1eecd99c, type: 3}
+  - {fileID: 6710552969564480974, guid: 0be9697145e0bdb499f8950f19318f10, type: 3}
+  - {fileID: 5519339948328738516, guid: 33ef4870d891f7846b726665cbe5f7fc, type: 3}
+  - {fileID: 7541073774401616530, guid: 4f566d1292110014394511de38b4d60e, type: 3}
+  - {fileID: 7739099513802048380, guid: bc57fbb76ee1a314381acf51bb069d3e, type: 3}
+  - {fileID: 6996006399230431456, guid: 8eb12bc1da8cb6c44af03b5393d96a3a, type: 3}
+  - {fileID: 7363493471067815230, guid: 8f859e02ba15b304ba2d25410617bfce, type: 3}
   enemyForcefieldPrefab: {fileID: 3639917087683709169, guid: f67373ff934d9464d814b59be4030ef6, type: 3}
   enemyForcefieldScale: 1
   pathfindingGrid: {fileID: 1986833165}

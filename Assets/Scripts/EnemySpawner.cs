@@ -35,11 +35,12 @@ public class EnemySpawner : MonoBehaviour
         timer = spawnInterval;
         maxSpawnInterval = spawnInterval; // Default to current setting
         
-        // Try to find the room this spawner is in
-        currentRoom = Room.GetRoomContaining(transform.position);
+        // Prioritize hierarchy to find the correct room reliably
+        currentRoom = GetComponentInParent<Room>();
         if (currentRoom == null)
         {
-            currentRoom = GetComponentInParent<Room>();
+            // Fallback for manually placed spawners not in a room prefab
+            currentRoom = Room.GetRoomContaining(transform.position);
         }
         
         if (currentRoom != null)
@@ -56,15 +57,43 @@ public class EnemySpawner : MonoBehaviour
         spawnInterval = Mathf.Lerp(maxSpawnInterval, minSpawnInterval, pressurePercent);
     }
 
+    private GameObject assignedPrefab;
+
+    private void Start()
+    {
+        // 1. Assign the Single Random Enemy Type for this Spawner
+        if (enemyPrefabs != null && enemyPrefabs.Count > 0)
+        {
+            int randomIndex = Random.Range(0, enemyPrefabs.Count);
+            assignedPrefab = enemyPrefabs[randomIndex];
+        }
+        else if (RoomManager.Instance != null && RoomManager.Instance.globalEnemyPrefabs != null && RoomManager.Instance.globalEnemyPrefabs.Count > 0)
+        {
+             int globalIndex = Random.Range(0, RoomManager.Instance.globalEnemyPrefabs.Count);
+             assignedPrefab = RoomManager.Instance.globalEnemyPrefabs[globalIndex];
+        }
+        
+        if (assignedPrefab == null)
+        {
+             Debug.LogError($"EnemySpawner {name}: Could not assign ANY enemy prefab (Local or Global empty).");
+        }
+        else
+        {
+             Debug.Log($"EnemySpawner {name}: Assigned Type -> {assignedPrefab.name}");
+        }
+    }
+
     private void Update()
     {
         // Cleanup nulls
         activeSpawns.RemoveAll(x => x == null);
         
-        // Stop spawning if the room is cleared OR player hasn't entered
-        if (currentRoom != null && (currentRoom.IsCleared || !currentRoom.PlayerHasEntered)) return;
+        // Debugging
+        if (currentRoom == null) return;
+        if (currentRoom.IsCleared) return; 
+        if (!currentRoom.PlayerHasEntered) return;
         
-        // Stop spawning if active enemies limit reached
+        // Continuous Spawning Logic (Reverted)
         if (activeSpawns.Count < maxActiveEnemies)
         {
             timer -= Time.deltaTime;
@@ -78,50 +107,20 @@ public class EnemySpawner : MonoBehaviour
 
     public void Spawn()
     {
-        // Check if we have room for more enemies before spawning
-        if (activeSpawns.Count >= maxActiveEnemies) return;
-        
+        if (assignedPrefab == null) return;
+
         // Spawn enemies based on configuration
         for (int i = 0; i < enemiesPerSpawn; i++)
         {
+            // Check limit again inside loop
+            if (activeSpawns.Count >= maxActiveEnemies) return;
+
             Vector3 spawnPos = transform.position;
             
-            GameObject newEnemyObj = null;
-            EnemyAI enemyScript = null;
-
-            if (enemyPrefabs == null || enemyPrefabs.Count == 0)
-            {
-                // No prefabs assigned, spawn nothing (per user request)
-                return;
-            }
+            GameObject newEnemyObj = Instantiate(assignedPrefab, spawnPos, Quaternion.identity);
+            newEnemyObj.transform.localScale = Vector3.one * 0.5f; 
+            EnemyAI enemyScript = newEnemyObj.GetComponent<EnemyAI>();
             
-            // Pick random prefab
-            int randomIndex = Random.Range(0, enemyPrefabs.Count);
-            GameObject selectedPrefab = enemyPrefabs[randomIndex];
-
-            if (selectedPrefab != null)
-            {
-                newEnemyObj = Instantiate(selectedPrefab, spawnPos, Quaternion.identity);
-                // Also reduce scale of prefabs if needed? User asked: "size is smaller".
-                // Prefer procedural scale for now, assuming user relies on procedural given the context.
-                // But let's safely downscale the prefab instances too.
-                newEnemyObj.transform.localScale = Vector3.one * 0.5f; 
-                enemyScript = newEnemyObj.GetComponent<EnemyAI>();
-            }
-            
-            // Fallback if list is empty or selected prefab was null
-            // We return early now for empty lists, so this only runs if Instantiate failed
-            if (newEnemyObj == null)
-            {
-                // Procedurally generate generic Spitter (Only if prefabs existed but were null)
-                // Actually, let's keep it strict: If instantiation failed, don't spawn.
-                // Or maybe keep fallback ONLY for broken prefabs?
-                // User said "if the list is empty", implying if they don't assign anything.
-                // So if list is NOT empty but prefab is null, maybe fallback is okay?
-                // Let's stick to simple: If empty, return. If instantiation fails, return.
-                return; 
-            }
-
             if (enemyScript != null)
             {
                 activeSpawns.Add(enemyScript);
@@ -133,15 +132,12 @@ public class EnemySpawner : MonoBehaviour
                     protection.duration = 3.0f; // 3 seconds invincibility
                 }
                 
-                // Register with Room if possible so it counts towards clearing the room
+                // Register with Room
                 if (currentRoom != null)
                 {
                     currentRoom.RegisterEnemy(enemyScript);
-                    
-                    // Explicitly tell the enemy about the room so it knows who to notify when it dies
                     enemyScript.AssignRoom(currentRoom);
                     
-                    // If the room is already active (player is there), ensure enemy wakes up
                     if (currentRoom.PlayerHasEntered && !currentRoom.IsCleared)
                     {
                         enemyScript.SetActive(true);
@@ -149,7 +145,6 @@ public class EnemySpawner : MonoBehaviour
                 }
                 else
                 {
-                    // If no room, just activate immediately
                     enemyScript.SetActive(true);
                 }
             }

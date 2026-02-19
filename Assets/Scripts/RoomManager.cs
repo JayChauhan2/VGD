@@ -9,6 +9,7 @@ public class RoomManager : MonoBehaviour
     public GameObject mimicPrefab;
     public GameObject ghostEnemyPrefab; // Assigned by User
     [Header("Global Assets")]
+    public List<GameObject> globalEnemyPrefabs; // Fallback pool
     public GameObject enemyForcefieldPrefab; // Assigned by User
     public float enemyForcefieldScale = 0.8f;
     [SerializeField] PathfindingGrid pathfindingGrid;

@@ -58,6 +58,41 @@ public class Room : MonoBehaviour
         }
     }
     
+    private void Start()
+    {
+        // Dynamic Enemy Balancing
+        // 1 Spawner -> 4 enemies
+        // 2 Spawners -> 3 enemies
+        // 3 Spawners -> 2 enemies
+        // 4+ Spawners -> 1 enemy
+        
+        int spawnerCount = activeSpawners.Count;
+        int countPerSpawner = 1;
+
+        if (spawnerCount <= 1) countPerSpawner = 4;
+        else if (spawnerCount == 2) countPerSpawner = 3;
+        else if (spawnerCount == 3) countPerSpawner = 2;
+        else countPerSpawner = 1; // 4+
+        
+        foreach(var sp in activeSpawners)
+        {
+            if (sp != null)
+            {
+                sp.enemiesPerSpawn = countPerSpawner;
+                sp.maxActiveEnemies = countPerSpawner + 1; // Allow slightly more max active to prevent stalling? Or just match?
+                // User requirement was "three enemies spawn each time". 
+                // Let's interpret this as "enemiesPerSpawn".
+                // maxActiveEnemies should probably scale too, otherwise we might spawn 4 but max is 5 (default).
+                // Let's set max active to roughly 1.5x - 2x spawn count so waves can overlap slightly?
+                // Or just keep it simple. If we spawn 3, max should be at least 3.
+                // Let's set maxActiveEnemies to countPerSpawner * 2.
+                sp.maxActiveEnemies = countPerSpawner * 2;
+            }
+        }
+        
+        Debug.Log($"Room {name} Balanced: {spawnerCount} Spawners -> {countPerSpawner} Enemies/Spawn each.");
+    }
+    
     private void OnDestroy()
     {
         if (AllRooms.Contains(this)) AllRooms.Remove(this);

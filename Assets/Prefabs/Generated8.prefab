@@ -9904,6 +9904,22 @@ PrefabInstance:
       propertyPath: roomSize.y
       value: 18
       objectReference: {fileID: 0}
+    - target: {fileID: 3180609315460112588, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: topDoorObj
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3180609315460112588, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: leftDoorObj
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3180609315460112588, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: rightDoorObj
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3180609315460112588, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: bottomDoorObj
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 3330017180762919768, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: m_SortingLayer
       value: 3
@@ -10029,7 +10045,9 @@ PrefabInstance:
       value: 1898995881
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 2444146398686038778, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+    - {fileID: 5093718792484633254, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 5810123716084620248, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       insertIndex: -1

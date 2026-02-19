@@ -15,10 +15,13 @@ public class RoomVignette : MonoBehaviour
     public string sortingLayerName = "Ground"; // Strictly Background
     public int sortingOrder = 32000; // on Top of Floor tiles, but below Objects
 
+    private Transform overlayTransform;
+
     private void Start()
     {
         // Create Sprite Renderer
         GameObject bgObj = new GameObject("VignetteOverlay");
+        overlayTransform = bgObj.transform;
         bgObj.transform.SetParent(transform);
         bgObj.transform.localPosition = Vector3.zero;
         
@@ -61,7 +64,12 @@ public class RoomVignette : MonoBehaviour
             // We need it to be width x height units.
             float spriteUnitSize = resolution / 100f;
             
-            bgObj.transform.localScale = new Vector3(width / spriteUnitSize, height / spriteUnitSize, 1f);
+            // Correction for rooms that are scaled differently (e.g. Boss/Shop at 1.0 vs Normal at 0.6)
+            // We want the vignette to appear consistent with the 0.6 scaled rooms.
+            // If scale is 1.0, correction is 0.6. If scale is 0.6, correction is 1.0.
+            float scaleCorrection = 0.6f / transform.localScale.x;
+            
+            bgObj.transform.localScale = new Vector3((width / spriteUnitSize) * scaleCorrection, (height / spriteUnitSize) * scaleCorrection, 1f);
         }
         else
         {
@@ -114,5 +122,41 @@ public class RoomVignette : MonoBehaviour
         tex.SetPixels(colors);
         tex.Apply();
         return tex;
+    }
+
+    public float GetDarknessAtPosition(Vector3 worldPos)
+    {
+        if (overlayTransform == null) return 0f;
+
+        // Convert world position to local position relative to overlay
+        Vector3 localPos = overlayTransform.InverseTransformPoint(worldPos);
+
+        // Overlay is centered at 0,0 with scale. 
+        // We need to map localPos to UV space (0 to 1).
+        // The sprite method uses 0.5, 0.5 as center.
+        // Local pos range is roughly -0.5 to 0.5 (relative to the quad size before scaling).
+        // Actually, since we scale the transform, InverseTransformPoint gives us position in "unscaled" space?
+        // No, InverseTransformPoint handles the parent's scale. 
+        // Wait, the sprite is 100 pixels per unit. 
+        // The sprite rect is created with pivot 0.5, 0.5.
+        // So local (0,0) is center.
+        // The sprite bounds in local space are from -width/200 to +width/200 (since 100ppu).
+        // We know resolution is 256. 2.56 units wide.
+        // So raw bounds are -1.28 to +1.28.
+        
+        float spriteUnitSize = resolution / 100f; // e.g. 2.56
+        
+        // Unscaled relative position (-0.5 to 0.5 range)
+        float u = (localPos.x / spriteUnitSize) + 0.5f;
+        float v = (localPos.y / spriteUnitSize) + 0.5f;
+        
+        // Distance from center (0.5, 0.5)
+        float dist = Vector2.Distance(new Vector2(u, v), new Vector2(0.5f, 0.5f));
+        
+        // Same calculation as texture generation
+        float alpha = Mathf.SmoothStep(clearCenterSize, clearCenterSize + softness, dist * 2f);
+        
+        // Multiply by max darkness/opacity
+        return alpha * edgeDarkness;
     }
 }

@@ -33,8 +33,16 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 originalLocalPos;
     private Vector3 leanVelocity;
 
+
+    // Vignette Tinting
+    private SpriteRenderer playerSprite;
+    private Color originalSpriteColor = Color.white;
+
     void Start()
     {
+        playerSprite = GetComponentInChildren<SpriteRenderer>();
+        if (playerSprite != null) originalSpriteColor = playerSprite.color;
+
         rb = GetComponent<Rigidbody2D>();
         
         // Auto-assign modelTransform if not set
@@ -148,6 +156,25 @@ public class PlayerMovement : MonoBehaviour
             // Note: 0.1f is a magic number to keep inspector values reasonable (e.g. 0.2 instead of 0.02)
             
             modelTransform.localPosition = Vector3.SmoothDamp(modelTransform.localPosition, targetPos, ref leanVelocity, leanSmoothTime);
+        }
+
+        // Apply Vignette Darkness
+        if (playerSprite != null && RoomManager.Instance != null)
+        {
+            Room currentRoom = RoomManager.Instance.GetRoomAt(transform.position);
+            if (currentRoom != null)
+            {
+                RoomVignette rv = currentRoom.GetComponent<RoomVignette>();
+                if (rv != null)
+                {
+                   float darkness = rv.GetDarknessAtPosition(transform.position);
+                   // darkness is 0 (clear) to edgeDarkness (dark).
+                   // We want player to be White at 0, and Darker at high values.
+                   // Color.Lerp(original, Black, darkness)
+                   
+                   playerSprite.color = Color.Lerp(originalSpriteColor, Color.black, darkness);
+                }
+            }
         }
     }
 

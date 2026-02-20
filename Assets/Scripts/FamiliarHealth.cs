@@ -71,7 +71,8 @@ public class FamiliarHealth : MonoBehaviour
         var tm = label.AddComponent<TextMesh>();
         tm.text = "+";
         tm.color = new Color(0.2f, 0.9f, 0.2f, 1f); // bright green
-        tm.fontSize = 20;
+        tm.fontSize = 20; // Reduced base font size
+        tm.characterSize = 0.5f; // Add character size to scale it down further to a reasonable size
         tm.anchor = TextAnchor.MiddleCenter;
 
         var mr = label.GetComponent<MeshRenderer>();

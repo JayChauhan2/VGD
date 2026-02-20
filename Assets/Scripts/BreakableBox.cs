@@ -27,11 +27,18 @@ public class BreakableBox : MonoBehaviour
     private Image healthFillImage;
     private Canvas healthCanvas;
 
+    // Approximate half-extent used for grid node updates
+    // (covers the box's footprint; adjust if your boxes are larger than 1 unit)
+    private const float GridUpdateRadius = 0.75f;
+
     void Start()
     {
         currentHealth = maxHealth;
         SetupHealthBar();
         SetHealthBarVisible(false); // Hidden by default
+
+        // Tell pathfinding grid this box is an obstacle
+        PathfindingGridUpdater.NotifyObstaclePlaced(transform.position, GridUpdateRadius);
     }
 
     void LateUpdate()
@@ -69,8 +76,14 @@ public class BreakableBox : MonoBehaviour
 
     void Die()
     {
-        // 1. Visual Effects (Debris)
-        // 1. Visual Effects (Debris)
+        // 1. Disable our collider(s) FIRST so the pathfinding re-scan sees open space
+        foreach (Collider2D col in GetComponents<Collider2D>())
+            col.enabled = false;
+
+        // Tell pathfinding grid that this obstacle is gone — nodes can now be walkable
+        PathfindingGridUpdater.NotifyObstacleRemoved(transform.position, GridUpdateRadius);
+
+        // 2. Visual Effects (Debris)
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         if (sr != null && sr.sprite != null)
         {
@@ -81,9 +94,6 @@ public class BreakableBox : MonoBehaviour
         {
             Debug.LogWarning("BreakableBox: No SpriteRenderer or Sprite found for Debris!");
         }
-
-        // 2. Tile Removal - REMOVED per user request (was deleting floor)
-        // RemoveTileAtPosition();
 
         // 3. Drop Loot (Coin)
         DropLoot();

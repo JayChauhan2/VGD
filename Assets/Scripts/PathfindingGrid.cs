@@ -63,6 +63,52 @@ public class PathfindingGrid : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Re-checks walkability for the single node nearest to worldPos.
+    /// Call this when a small obstacle is added at a known point.
+    /// </summary>
+    public void UpdateNode(Vector3 worldPos)
+    {
+        if (grid == null) return;
+        Node n = NodeFromWorldPoint(worldPos);
+        if (n == null) return;
+        float checkRadius = (obstacleCheckRadius > 0) ? obstacleCheckRadius : (nodeRadius + 0.1f);
+        n.walkable = !(Physics2D.OverlapCircle(n.worldPosition, checkRadius, unwalkableMask));
+    }
+
+    /// <summary>
+    /// Re-checks walkability for all nodes whose centre lies within 'radius' of worldPos.
+    /// Call this when an obstacle of non-trivial size is placed or removed.
+    /// </summary>
+    public void UpdateNodesInRadius(Vector3 worldPos, float radius)
+    {
+        if (grid == null) return;
+        float checkRadius = (obstacleCheckRadius > 0) ? obstacleCheckRadius : (nodeRadius + 0.1f);
+        float radiusSq = (radius + nodeRadius) * (radius + nodeRadius);
+
+        // Compute AABB of affected region to limit iteration
+        int minX = Mathf.Max(0, Mathf.FloorToInt(((worldPos.x - transform.position.x) - radius + gridWorldSize.x / 2) / nodeDiameter));
+        int maxX = Mathf.Min(gridSizeX - 1, Mathf.CeilToInt(((worldPos.x - transform.position.x) + radius + gridWorldSize.x / 2) / nodeDiameter));
+        int minY = Mathf.Max(0, Mathf.FloorToInt(((worldPos.y - transform.position.y) - radius + gridWorldSize.y / 2) / nodeDiameter));
+        int maxY = Mathf.Min(gridSizeY - 1, Mathf.CeilToInt(((worldPos.y - transform.position.y) + radius + gridWorldSize.y / 2) / nodeDiameter));
+
+        for (int x = minX; x <= maxX; x++)
+        {
+            for (int y = minY; y <= maxY; y++)
+            {
+                Node n = grid[x, y];
+                if (n == null) continue;
+                // Only update nodes close enough to the obstacle
+                float dx = n.worldPosition.x - worldPos.x;
+                float dy = n.worldPosition.y - worldPos.y;
+                if (dx * dx + dy * dy <= radiusSq)
+                {
+                    n.walkable = !(Physics2D.OverlapCircle(n.worldPosition, checkRadius, unwalkableMask));
+                }
+            }
+        }
+    }
+
     public List<Node> GetNeighbors(Node node)
     {
         List<Node> neighbors = new List<Node>();

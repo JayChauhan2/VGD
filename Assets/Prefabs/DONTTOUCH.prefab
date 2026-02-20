@@ -49,7 +49,9 @@ MonoBehaviour:
   bottomDoorObj: {fileID: 0}
   leftDoorObj: {fileID: 0}
   rightDoorObj: {fileID: 0}
+  type: 0
   roomSize: {x: 32, y: 18}
+  AlwaysOpen: 0
 --- !u!114 &8410271049769413041
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -66,12 +68,14 @@ MonoBehaviour:
   maxPressure: 100
   passiveIncreaseRate: 2
   killReduction: 4
-  damageIncrease: 12
+  damageIncrease: 4
   idleIncreaseMultiplier: 1.5
   lowThreshold: 30
   midThreshold: 60
   highThreshold: 85
   roomStabilized: 0
   isStressActive: 0
+  debugMode: 1
+  forceActivate: 0
   stabilizationTime: 25
-  minimumSurvivalTime: 15
+  minimumSurvivalTime: 5

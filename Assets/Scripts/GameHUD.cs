@@ -95,17 +95,8 @@ public class GameHUD : MonoBehaviour
 
     private void CheckWinCondition(Room room)
     {
-        bool allCleared = true;
-        foreach(var r in Room.AllRooms)
-        {
-            if (!r.IsCleared) 
-            {
-                allCleared = false;
-                break;
-            }
-        }
-        
-        if (allCleared)
+        // New Condition: Win ONLY if the cleared room is the Boss Room
+        if (room.type == Room.RoomType.Boss)
         {
             ShowWinScreen();
         }

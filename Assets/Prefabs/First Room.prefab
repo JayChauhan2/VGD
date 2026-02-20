@@ -764,15 +764,17 @@ MonoBehaviour:
   maxPressure: 100
   passiveIncreaseRate: 2
   killReduction: 4
-  damageIncrease: 12
+  damageIncrease: 4
   idleIncreaseMultiplier: 1.5
   lowThreshold: 30
   midThreshold: 60
   highThreshold: 85
   roomStabilized: 0
   isStressActive: 0
+  debugMode: 1
+  forceActivate: 0
   stabilizationTime: 25
-  minimumSurvivalTime: 15
+  minimumSurvivalTime: 5
 --- !u!1 &1538998924522130889
 GameObject:
   m_ObjectHideFlags: 0

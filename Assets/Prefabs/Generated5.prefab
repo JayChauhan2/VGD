@@ -9824,6 +9824,14 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 3.5
       objectReference: {fileID: 0}
+    - target: {fileID: 8410271049769413041, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: damageIncrease
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 8410271049769413041, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
+      propertyPath: minimumSurvivalTime
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 8679660176662219319, guid: a5460047d5f5e5343b66cd3254b8caef, type: 3}
       propertyPath: m_SortingLayer
       value: 3

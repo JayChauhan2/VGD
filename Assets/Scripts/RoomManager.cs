@@ -38,6 +38,11 @@ public class RoomManager : MonoBehaviour
     public bool isTestingMode;
     public GameObject testingRoomPrefab;
 
+    [Tooltip("Testing Map: Only spawns the Start room + ONE random generated room. All gameplay (familiar, win condition, etc.) works normally.")]
+    public bool isTestingMap;
+    [Tooltip("Optional override prefab for the single generated room in Testing Map mode. If null, a random one from the pool is used.")]
+    public GameObject testingMapRoomPrefab;
+
     [Header("Box Spawning")]
     public GameObject boxPrefab; // Drag BreakableBox prefab here
     [Range(0, 20)] public int minBoxesPerRoom = 3;
@@ -125,6 +130,41 @@ public class RoomManager : MonoBehaviour
         {
             CreateRoomObject(center, testingRoomPrefab);
             Debug.Log("RoomManager: Testing Mode Enabled. Spawning only testing room.");
+        }
+        else if (isTestingMap)
+        {
+            // --- TESTING MAP MODE ---
+            // Spawn only: Start room + exactly ONE generated room adjacent to it.
+            // Shop, Boss, and all other rooms are skipped.
+            // All gameplay systems (familiar, win condition, boxes) function normally.
+            CreateRoomObject(center, firstRoomPrefab);
+            Debug.Log("RoomManager: Testing Map Mode Enabled. Spawning Start + one generated room only.");
+
+            // Pick the generated room prefab to use
+            GameObject chosenPrefab = testingMapRoomPrefab;
+            if (chosenPrefab == null && generatedRoomPrefabs != null && generatedRoomPrefabs.Length > 0)
+            {
+                // Pick a random one from the pool if no override is set
+                chosenPrefab = generatedRoomPrefabs[Random.Range(0, generatedRoomPrefabs.Length)];
+            }
+
+            if (chosenPrefab != null)
+            {
+                // Always place the second room directly to the right of the start room
+                Vector2Int secondRoomIndex = center + Vector2Int.right;
+                roomGrid[secondRoomIndex.x, secondRoomIndex.y] = 1;
+                roomCount++;
+                CreateRoomObject(secondRoomIndex, chosenPrefab);
+                Debug.Log($"RoomManager: Testing Map second room placed at {secondRoomIndex} using prefab '{chosenPrefab.name}'.");
+
+                // Scatter boxes in the second room
+                Room secondRoom = roomComponentGrid[secondRoomIndex.x, secondRoomIndex.y];
+                if (secondRoom != null) ScatterBoxes(secondRoom);
+            }
+            else
+            {
+                Debug.LogWarning("RoomManager: Testing Map Mode is ON but no generated room prefabs are assigned!");
+            }
         }
         else
         {

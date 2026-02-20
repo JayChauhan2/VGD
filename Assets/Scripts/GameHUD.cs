@@ -243,15 +243,26 @@ public class GameHUD : MonoBehaviour
         // Render on the UI sorting layer
         sr.sortingLayerName = "UI"; 
         
-        // 1) Use Custom Sprite if available
-        if (RoomManager.Instance != null && RoomManager.Instance.customEchoMarkerSprite != null)
+        // 1) Use Custom Animation Sprites if available
+        if (RoomManager.Instance != null && RoomManager.Instance.customEchoMarkerSprites != null && RoomManager.Instance.customEchoMarkerSprites.Length > 0)
+        {
+            sr.sprite = RoomManager.Instance.customEchoMarkerSprites[0]; // Set initial frame
+            sr.color = Color.white;
+            
+            // Add animator script
+            EcholocationMarkerAnimation anim = markerObj.AddComponent<EcholocationMarkerAnimation>();
+            anim.sprites = RoomManager.Instance.customEchoMarkerSprites;
+            anim.frameRate = 12f; // Default, user can change in code if needed
+        }
+        // 2) Use Custom Static Sprite if available
+        else if (RoomManager.Instance != null && RoomManager.Instance.customEchoMarkerSprite != null)
         {
             sr.sprite = RoomManager.Instance.customEchoMarkerSprite;
             sr.color = Color.white; // Don't tint custom sprite red
         }
         else
         {
-            // 2) Fallback to default Circle
+            // 3) Fallback to default Circle
             sr.color = Color.red;
             Sprite circle = Resources.Load<Sprite>("Sprites/Circle");
             if (circle == null)

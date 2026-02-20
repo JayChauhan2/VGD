@@ -516,7 +516,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 11
-  m_Sprite: {fileID: 5097786063004615103, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  m_Sprite: {fileID: -1373901321974426141, guid: c9185b05321cefc47a93553910df2005, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1818,6 +1818,10 @@ MonoBehaviour:
   - {fileID: 7363493471067815230, guid: 8f859e02ba15b304ba2d25410617bfce, type: 3}
   enemyForcefieldPrefab: {fileID: 3639917087683709169, guid: f67373ff934d9464d814b59be4030ef6, type: 3}
   customEchoMarkerSprite: {fileID: 1090188955526157524, guid: 681d0c3de0bc01a4d9c76f37d820f717, type: 3}
+  customEchoMarkerSprites:
+  - {fileID: 1090188955526157524, guid: 681d0c3de0bc01a4d9c76f37d820f717, type: 3}
+  - {fileID: -2699401186125658455, guid: 681d0c3de0bc01a4d9c76f37d820f717, type: 3}
+  - {fileID: 1090188955526157524, guid: 681d0c3de0bc01a4d9c76f37d820f717, type: 3}
   enemyForcefieldScale: 1
   pathfindingGrid: {fileID: 1986833165}
   firstRoomPrefab: {fileID: 1299928572387882687, guid: deae6b6425f70c4419fd4b236779d814, type: 3}
@@ -1839,7 +1843,7 @@ MonoBehaviour:
   bossRoomSprite: {fileID: -1237855869, guid: e8abbb4e3f83e6a46b9ba7f7e10297ee, type: 3}
   unvisitedRoomColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
   visitedRoomColor: {r: 1, g: 1, b: 1, a: 1}
-  currentRoomColor: {r: 1, g: 1, b: 1, a: 1}
+  currentRoomColor: {r: 0.28773582, g: 0.7694133, b: 1, a: 1}
   isTestingMode: 0
   testingRoomPrefab: {fileID: 2167945867662251604, guid: ead560bc08016974cad360743600edd4, type: 3}
   isTestingMap: 1

@@ -24,7 +24,7 @@ public class PuppetMinion : EnemyAI
             animator.Play("MiniPuppetSpawn");
         }
 
-        // Fix Shadow Size:
+        // Fix Shadow Size and Y Offset:
         // This enemy is scale 2.0, but normal enemies are ~0.45.
         // We want the shadow to look "normal" (size of a 0.45 enemy).
         // Scale Factor = 0.45 / 2.0 = 0.225.
@@ -33,6 +33,7 @@ public class PuppetMinion : EnemyAI
         if (shadow != null)
         {
             shadow.scale *= 0.225f; // Reduce to ~22.5% of default size
+            shadow.offset *= 0.225f; // Reduce offset so it doesn't appear too low under scaled minion
         }
     }
 

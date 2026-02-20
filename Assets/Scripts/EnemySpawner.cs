@@ -105,6 +105,38 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
+    // How many attempts to find a valid non-overlapping spawn position
+    private const int SpawnPositionAttempts = 15;
+
+    /// <summary>
+    /// Finds a random walkable point within spawnRadius of the spawner.
+    /// Returns the spawner position as a fallback if no clear spot is found.
+    /// </summary>
+    private Vector3 FindSpawnPosition()
+    {
+        for (int attempt = 0; attempt < SpawnPositionAttempts; attempt++)
+        {
+            // Pick a random direction and a random distance within the radius
+            // insideUnitCircle gives [0..1] magnitude, multiply by radius
+            Vector2 offset = Random.insideUnitCircle * spawnRadius;
+            // Ensure we are at least half the radius away so we never land ON the spawner
+            if (offset.magnitude < spawnRadius * 0.4f)
+                offset = offset.normalized * spawnRadius * 0.4f;
+
+            Vector3 candidate = transform.position + new Vector3(offset.x, offset.y, 0f);
+
+            // Check no obstacle overlaps at this candidate (enemy radius ~ 0.3)
+            Collider2D hit = Physics2D.OverlapCircle(candidate, 0.4f, LayerMask.GetMask("Obstacle"));
+            if (hit == null)
+                return candidate; // Valid clear spot found
+        }
+
+        // Couldn't find a clear spot; fallback to spawner position
+        // (better than silently doing nothing — at least the enemy exists)
+        Debug.LogWarning($"EnemySpawner {name}: Could not find clear spawn position after {SpawnPositionAttempts} attempts. Spawning at spawner origin.");
+        return transform.position;
+    }
+
     public void Spawn()
     {
         if (assignedPrefab == null) return;
@@ -115,7 +147,10 @@ public class EnemySpawner : MonoBehaviour
             // Check limit again inside loop
             if (activeSpawns.Count >= maxActiveEnemies) return;
 
-            Vector3 spawnPos = transform.position;
+            // *** FIX: Use spawnRadius to find a valid nearby position ***
+            // Previously this was always transform.position, causing enemies to
+            // stack on top of each other and the spawner object itself.
+            Vector3 spawnPos = FindSpawnPosition();
             
             GameObject newEnemyObj = Instantiate(assignedPrefab, spawnPos, Quaternion.identity);
             newEnemyObj.transform.localScale = Vector3.one * 0.5f; 

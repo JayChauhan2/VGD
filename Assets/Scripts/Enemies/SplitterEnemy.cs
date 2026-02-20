@@ -47,8 +47,27 @@ public class SplitterEnemy : EnemyAI
         }
     }
 
+    // Circuit Breaker for Infinite Loops
+    private static int globalSplitsPerFrame = 0;
+    private static int lastFrameCount = -1;
+    private const int MAX_SPLITS_PER_FRAME = 15; // Global safety limit
+
     void SpawnSplits()
     {
+        // 1. Reset Circuit Breaker if new frame
+        if (Time.frameCount != lastFrameCount)
+        {
+            globalSplitsPerFrame = 0;
+            lastFrameCount = Time.frameCount;
+        }
+
+        // 2. Circuit Breaker Check
+        if (globalSplitsPerFrame >= MAX_SPLITS_PER_FRAME)
+        {
+            Debug.LogError($"SplitterEnemy: Safety Stop! Exceeded {MAX_SPLITS_PER_FRAME} splits in one frame. Possible infinite recursion.");
+            return;
+        }
+
         if (parentRoom == null)
         {
             Debug.LogWarning("SplitterEnemy: No parent room, cannot spawn splits");
@@ -61,6 +80,9 @@ public class SplitterEnemy : EnemyAI
             return;
         }
         
+        // Safety: Ensure spawn health is valid
+        if (spawnHealth <= 0) spawnHealth = 10f;
+
         for (int i = 0; i < splitCount; i++)
         {
             // Calculate spawn position around this enemy
@@ -72,6 +94,9 @@ public class SplitterEnemy : EnemyAI
             // Create wanderer enemy from Prefab
             GameObject splitObj = Instantiate(wandererPrefab, spawnPosition, Quaternion.identity);
             
+            // Increment Circuit Breaker
+            globalSplitsPerFrame++;
+
             // Get EnemyAI component
             EnemyAI enemyAI = splitObj.GetComponent<EnemyAI>();
             if (enemyAI != null)
@@ -81,6 +106,14 @@ public class SplitterEnemy : EnemyAI
                 if (splitSplitter != null)
                 {
                     splitSplitter.generation = this.generation + 1;
+                    
+                    // Extra recursion safety
+                    if (splitSplitter.generation > 10) 
+                    {
+                        Debug.LogError("SplitterEnemy: Generation > 10 detected! Destroying infinite loop object.");
+                        Destroy(splitObj);
+                        continue;
+                    }
                 }
 
                 // IMPORTANT: Start coroutine on the SPAWNED enemy, not this dying one

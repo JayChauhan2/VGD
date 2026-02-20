@@ -48,6 +48,15 @@ public class RoomManager : MonoBehaviour
     public Vector2 boxGridOffset = new Vector2(0.5f, 0.5f); // Use this to center boxes on tiles (e.g. 0.5, 0.5)
 
 
+    [Header("Familiar Drop")]
+    [Tooltip("Assign all 5 Familiar prefabs here. One will be randomly chosen and dropped after a random room is cleared.")]
+    public List<GameObject> familiarPrefabs = new List<GameObject>();
+
+    // The room chosen to drop the familiar, and which familiar prefab to drop
+    private Room _familiarDropRoom;
+    private GameObject _chosenFamiliarPrefab;
+    private bool _familiarDropped = false;
+
     public int roomWidth = 32; 
     public int roomHeight = 16;
 
@@ -98,6 +107,7 @@ public class RoomManager : MonoBehaviour
 
 
         GenerateLevel();
+        Room.OnRoomCleared += OnAnyRoomCleared;
     }
 
     private void GenerateLevel()
@@ -202,6 +212,9 @@ public class RoomManager : MonoBehaviour
                 }
             }
         }
+
+        // 5c. Schedule the familiar drop
+        ScheduleFamiliarDrop();
 
         // 6. Finish
         generationComplete = true;
@@ -527,5 +540,75 @@ public class RoomManager : MonoBehaviour
                 break; // Next box
             }
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // Familiar Drop System
+    // -----------------------------------------------------------------------
+
+    private void ScheduleFamiliarDrop()
+    {
+        if (familiarPrefabs == null || familiarPrefabs.Count == 0) return;
+
+        int centerX = gridSizeX / 2;
+        int centerY = gridSizeY / 2;
+        Vector2Int startIndex = new Vector2Int(centerX, centerY);
+
+        var eligible = new System.Collections.Generic.List<Room>();
+        foreach (var obj in roomObjects)
+        {
+            if (obj == null) continue;
+            Room r = obj.GetComponent<Room>();
+            if (r == null) continue;
+            if (r.RoomIndex == startIndex) continue; // Skip start room
+            eligible.Add(r);
+        }
+
+        if (eligible.Count == 0)
+        {
+            Debug.LogWarning("RoomManager: No eligible rooms for familiar drop.");
+            return;
+        }
+
+        _familiarDropRoom     = eligible[Random.Range(0, eligible.Count)];
+        _chosenFamiliarPrefab = familiarPrefabs[Random.Range(0, familiarPrefabs.Count)];
+        _familiarDropped      = false;
+
+        Debug.Log($"RoomManager: Familiar drop → '{_familiarDropRoom.name}' ({_chosenFamiliarPrefab.name}).");
+    }
+
+    private void OnAnyRoomCleared(Room room)
+    {
+        if (_familiarDropped) return;
+        if (room != _familiarDropRoom) return;
+        if (_chosenFamiliarPrefab == null) return;
+
+        _familiarDropped = true;
+
+        // Find a clear landing spot inside the cleared room
+        Vector3 dropPos = FamiliarDropper.FindClearSpot(room, obstacleLayer, 0.3f);
+
+        // Build a dropper shell at the landing position
+        GameObject dropperGO = new GameObject("FamiliarDropper");
+        dropperGO.transform.position = dropPos;
+
+        // Give it the Familiar's sprite so it looks like the item falling
+        SpriteRenderer dropSR = dropperGO.AddComponent<SpriteRenderer>();
+        dropSR.sortingLayerName = "Object";
+        dropSR.sortingOrder = 20;
+        SpriteRenderer familiarSR = _chosenFamiliarPrefab.GetComponent<SpriteRenderer>();
+        if (familiarSR != null && familiarSR.sprite != null)
+            dropSR.sprite = familiarSR.sprite;
+
+        FamiliarDropper dropper = dropperGO.AddComponent<FamiliarDropper>();
+        dropper.familiarPrefab = _chosenFamiliarPrefab;
+        dropper.obstacleLayer  = obstacleLayer;
+
+        Debug.Log($"RoomManager: FamiliarDropper spawned at {dropPos}.");
+    }
+
+    private void OnDestroy()
+    {
+        Room.OnRoomCleared -= OnAnyRoomCleared;
     }
 }

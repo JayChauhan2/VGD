@@ -18,18 +18,8 @@ public class WandererEnemy : EnemyAI
         
         Debug.Log($"WandererEnemy: Initialized with health={maxHealth}");
     }
-
-    protected override void UpdateAnimation(Vector2 velocity)
-    {
-        // Call base for sorting order
-        base.UpdateAnimation(velocity);
-
-        // Override sprite flipping to face TOWARD player (opposite of default)
-        if (spriteRenderer != null && velocity.sqrMagnitude > 0.01f)
-        {
-            // Invert the default logic: flip when moving RIGHT, don't flip when moving LEFT
-            if (velocity.x < -0.01f) spriteRenderer.flipX = false;
-            else if (velocity.x > 0.01f) spriteRenderer.flipX = true;
-        }
-    }
+    // Note: UpdateAnimation uses the base EnemyAI logic:
+    //   velocity.x < 0  (moving left)  → flipX = true  (sprite faces left)
+    //   velocity.x > 0  (moving right) → flipX = false (sprite faces right)
+    // The previous override that inverted these directions has been removed.
 }

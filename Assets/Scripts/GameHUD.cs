@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System.Linq;
 
 public class GameHUD : MonoBehaviour
 {
@@ -93,13 +94,13 @@ public class GameHUD : MonoBehaviour
         currentRoom = room;
     }
 
-    private void CheckWinCondition(Room room)
+    private void CheckWinCondition(Room _)
     {
-        // New Condition: Win ONLY if the cleared room is the Boss Room
-        if (room.type == Room.RoomType.Boss)
-        {
+        // Win only when every room in the level has been cleared
+        int total   = Room.AllRooms.Count;
+        int cleared = Room.AllRooms.Count(r => r != null && r.IsCleared);
+        if (total > 0 && cleared >= total)
             ShowWinScreen();
-        }
     }
     
     private void ShowWinScreen()

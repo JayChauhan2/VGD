@@ -38,9 +38,11 @@ public class RoomManager : MonoBehaviour
     public bool isTestingMode;
     public GameObject testingRoomPrefab;
 
-    [Tooltip("Testing Map: Only spawns the Start room + ONE random generated room. All gameplay (familiar, win condition, etc.) works normally.")]
+    [Tooltip("Testing Map: Only spawns the Start room + a small set of random generated rooms. All gameplay (familiar, win condition, etc.) works normally.")]
     public bool isTestingMap;
-    [Tooltip("Optional override prefab for the single generated room in Testing Map mode. If null, a random one from the pool is used.")]
+    [Range(1, 10), Tooltip("How many generated rooms to spawn in Testing Map mode (not counting the Start room).")]
+    public int testingMapRoomCount = 1;
+    [Tooltip("Optional override prefab for Testing Map mode. If assigned, this same prefab is used for ALL generated slots instead of random picks.")]
     public GameObject testingMapRoomPrefab;
 
     [Header("Box Spawning")]
@@ -134,36 +136,61 @@ public class RoomManager : MonoBehaviour
         else if (isTestingMap)
         {
             // --- TESTING MAP MODE ---
-            // Spawn only: Start room + exactly ONE generated room adjacent to it.
+            // Spawn: Start room + testingMapRoomCount generated rooms placed adjacently.
             // Shop, Boss, and all other rooms are skipped.
             // All gameplay systems (familiar, win condition, boxes) function normally.
             CreateRoomObject(center, firstRoomPrefab);
-            Debug.Log("RoomManager: Testing Map Mode Enabled. Spawning Start + one generated room only.");
+            Debug.Log($"RoomManager: Testing Map Mode Enabled. Spawning Start + {testingMapRoomCount} generated room(s).");
 
-            // Pick the generated room prefab to use
-            GameObject chosenPrefab = testingMapRoomPrefab;
-            if (chosenPrefab == null && generatedRoomPrefabs != null && generatedRoomPrefabs.Length > 0)
+            // Build a shuffled pool of prefabs to pick from (wraps around if count > pool size)
+            List<GameObject> mapPool = new List<GameObject>();
+            if (testingMapRoomPrefab != null)
             {
-                // Pick a random one from the pool if no override is set
-                chosenPrefab = generatedRoomPrefabs[Random.Range(0, generatedRoomPrefabs.Length)];
+                // Override: fill pool with copies of the override prefab
+                for (int i = 0; i < testingMapRoomCount; i++) mapPool.Add(testingMapRoomPrefab);
             }
-
-            if (chosenPrefab != null)
+            else if (generatedRoomPrefabs != null && generatedRoomPrefabs.Length > 0)
             {
-                // Always place the second room directly to the right of the start room
-                Vector2Int secondRoomIndex = center + Vector2Int.right;
-                roomGrid[secondRoomIndex.x, secondRoomIndex.y] = 1;
-                roomCount++;
-                CreateRoomObject(secondRoomIndex, chosenPrefab);
-                Debug.Log($"RoomManager: Testing Map second room placed at {secondRoomIndex} using prefab '{chosenPrefab.name}'.");
-
-                // Scatter boxes in the second room
-                Room secondRoom = roomComponentGrid[secondRoomIndex.x, secondRoomIndex.y];
-                if (secondRoom != null) ScatterBoxes(secondRoom);
+                // Shuffle the source pool
+                List<GameObject> sourcePool = new List<GameObject>(generatedRoomPrefabs);
+                for (int i = 0; i < sourcePool.Count; i++)
+                {
+                    int r = Random.Range(i, sourcePool.Count);
+                    GameObject tmp = sourcePool[i]; sourcePool[i] = sourcePool[r]; sourcePool[r] = tmp;
+                }
+                // Fill mapPool up to testingMapRoomCount, cycling through the shuffled pool
+                for (int i = 0; i < testingMapRoomCount; i++)
+                    mapPool.Add(sourcePool[i % sourcePool.Count]);
             }
             else
             {
                 Debug.LogWarning("RoomManager: Testing Map Mode is ON but no generated room prefabs are assigned!");
+            }
+
+            if (mapPool.Count > 0)
+            {
+                // Grow rooms outward using the same available-spots logic
+                List<Vector2Int> availableSpots = new List<Vector2Int>();
+                AddNeighborsToAvailable(center, availableSpots);
+
+                foreach (GameObject prefab in mapPool)
+                {
+                    if (availableSpots.Count == 0) break;
+
+                    int idx = Random.Range(0, availableSpots.Count);
+                    Vector2Int spot = availableSpots[idx];
+                    availableSpots.RemoveAt(idx);
+
+                    roomGrid[spot.x, spot.y] = 1;
+                    roomCount++;
+                    CreateRoomObject(spot, prefab);
+                    Debug.Log($"RoomManager: Testing Map placed '{prefab.name}' at {spot}.");
+
+                    // Scatter boxes and expose new neighbours for the next room
+                    Room placedRoom = roomComponentGrid[spot.x, spot.y];
+                    if (placedRoom != null) ScatterBoxes(placedRoom);
+                    AddNeighborsToAvailable(spot, availableSpots);
+                }
             }
         }
         else

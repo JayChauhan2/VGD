@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Rendering.Universal;
 
 public class GameHUD : MonoBehaviour
 {
@@ -115,10 +116,79 @@ public class GameHUD : MonoBehaviour
 
     private void Update()
     {
+        SetupWorldUICamera();
         UpdateHealthDisplay();
         UpdateBombDisplay();
         UpdateMarkers();
         UpdateCanvasScaler();
+    }
+    
+    // --- URP Camera Stacking ---
+    private Camera worldUICamera;
+    private Camera lastMainCam;
+
+    private void SetupWorldUICamera()
+    {
+        Camera mainCam = Camera.main;
+        if (mainCam == null) return;
+
+        int uiLayer = LayerMask.NameToLayer("UI");
+        if (uiLayer < 0) return;
+
+        // Optimization: Don't recreate/setup every frame unless camera changes
+        if (mainCam == lastMainCam && worldUICamera != null) 
+        {
+            // Just sync dynamic properties
+            worldUICamera.orthographicSize = mainCam.orthographicSize;
+            return;
+        }
+        lastMainCam = mainCam;
+
+        // 1. Remove UI layer from Main Camera so it doesn't double-render
+        if ((mainCam.cullingMask & (1 << uiLayer)) != 0)
+        {
+            mainCam.cullingMask &= ~(1 << uiLayer);
+        }
+
+        // 2. Setup the Overlay Camera
+        if (worldUICamera == null)
+        {
+            Transform existing = mainCam.transform.Find("WorldUICamera");
+            if (existing != null)
+            {
+                worldUICamera = existing.GetComponent<Camera>();
+            }
+            else
+            {
+                GameObject camObj = new GameObject("WorldUICamera");
+                camObj.transform.SetParent(mainCam.transform, false);
+                camObj.transform.localPosition = Vector3.zero;
+                camObj.transform.localRotation = Quaternion.identity;
+
+                worldUICamera = camObj.AddComponent<Camera>();
+                worldUICamera.cullingMask = 1 << uiLayer;
+                worldUICamera.clearFlags = CameraClearFlags.Nothing;
+                worldUICamera.backgroundColor = new Color(0, 0, 0, 0);
+
+                var camData = worldUICamera.GetUniversalAdditionalCameraData();
+                camData.renderType = CameraRenderType.Overlay;
+            }
+        }
+
+        // 3. Sync permanent Camera settings
+        worldUICamera.orthographic = mainCam.orthographic;
+        worldUICamera.orthographicSize = mainCam.orthographicSize;
+        worldUICamera.fieldOfView = mainCam.fieldOfView;
+        worldUICamera.nearClipPlane = mainCam.nearClipPlane;
+        worldUICamera.farClipPlane = mainCam.farClipPlane;
+
+        // 4. Add to Main Camera's Stack
+        var mainCamData = mainCam.GetUniversalAdditionalCameraData();
+        if (!mainCamData.cameraStack.Contains(worldUICamera))
+        {
+            mainCamData.cameraStack.Add(worldUICamera);
+            Debug.Log("[GameHUD] Successfully added WorldUICamera to URP Stack.");
+        }
     }
     
     private void UpdateCanvasScaler()
@@ -149,6 +219,7 @@ public class GameHUD : MonoBehaviour
 
     public void ShowEnemyMarker(Transform target, Vector3 offset, float duration)
     {
+        Debug.Log($"[GameHUD] ShowEnemyMarker called for target: {(target != null ? target.name : "null")}");
         Marker existing = activeMarkers.Find(m => m.target == target);
         if (existing != null)
         {
@@ -165,46 +236,59 @@ public class GameHUD : MonoBehaviour
         GameObject markerObj = new GameObject("EnemyMarker_World");
         markerObj.transform.SetParent(markerContainer.transform);
         
-        SpriteRenderer sr = markerObj.AddComponent<SpriteRenderer>();
-        sr.color = Color.red;
-        // Set sorting layer to Object so it interacts correctly with world space
-        sr.sortingLayerName = "Object";
-        // Order is dynamically updated in UpdateMarkers to be above the enemy
+        int uiLayer = LayerMask.NameToLayer("UI");
+        if (uiLayer >= 0) markerObj.layer = uiLayer;
         
-        Sprite circle = Resources.Load<Sprite>("Sprites/Circle");
-        if (circle == null)
+        SpriteRenderer sr = markerObj.AddComponent<SpriteRenderer>();
+        // Render on the UI sorting layer
+        sr.sortingLayerName = "UI"; 
+        
+        // 1) Use Custom Sprite if available
+        if (RoomManager.Instance != null && RoomManager.Instance.customEchoMarkerSprite != null)
         {
-            int size = 64; 
-            Texture2D tex = new Texture2D(size, size);
-            tex.filterMode = FilterMode.Bilinear; 
-            
-            Color[] colors = new Color[size*size];
-            Vector2 center = new Vector2(size/2f, size/2f);
-            float radius = (size/2f) - 1; 
-            
-            for(int y=0; y<size; y++)
-            {
-                for(int x=0; x<size; x++)
-                {
-                    float dist = Vector2.Distance(new Vector2(x,y), center);
-                    float alpha = 1f - Mathf.Clamp01(dist - radius + 0.5f);
-                    
-                    if (dist <= radius) colors[y*size + x] = new Color(1, 1, 1, alpha); 
-                    else colors[y*size + x] = Color.clear;
-                }
-            }
-            tex.SetPixels(colors);
-            tex.Apply();
-            circle = Sprite.Create(tex, new Rect(0,0,size,size), new Vector2(0.5f, 0.5f));
+            sr.sprite = RoomManager.Instance.customEchoMarkerSprite;
+            sr.color = Color.white; // Don't tint custom sprite red
         }
-        sr.sprite = circle;
+        else
+        {
+            // 2) Fallback to default Circle
+            sr.color = Color.red;
+            Sprite circle = Resources.Load<Sprite>("Sprites/Circle");
+            if (circle == null)
+            {
+                int size = 64; 
+                Texture2D tex = new Texture2D(size, size);
+                tex.filterMode = FilterMode.Bilinear; 
+                
+                Color[] colors = new Color[size*size];
+                Vector2 center = new Vector2(size/2f, size/2f);
+                float radius = (size/2f) - 1; 
+                
+                for(int y=0; y<size; y++)
+                {
+                    for(int x=0; x<size; x++)
+                    {
+                        float dist = Vector2.Distance(new Vector2(x,y), center);
+                        float alpha = 1f - Mathf.Clamp01(dist - radius + 0.5f);
+                        
+                        if (dist <= radius) colors[y*size + x] = new Color(1, 1, 1, alpha); 
+                        else colors[y*size + x] = Color.clear;
+                    }
+                }
+                tex.SetPixels(colors);
+                tex.Apply();
+                circle = Sprite.Create(tex, new Rect(0,0,size,size), new Vector2(0.5f, 0.5f));
+            }
+            sr.sprite = circle;
+        }
+        
         markerObj.transform.localScale = new Vector3(0.5f, 0.5f, 1f); // Make the dot reasonably sized in world space
-
+        
         // Position initially
         if (target != null)
         {
-            markerObj.transform.position = target.position + offset;
-            sr.sortingOrder = Mathf.RoundToInt(target.position.y * -100) + 100; // Guaranteed to be on top of enemy at same position
+             markerObj.transform.position = target.position + offset;
+             sr.sortingOrder = Mathf.RoundToInt(target.position.y * -100) + 100; // Above enemy
         }
         
         Marker m = new Marker();
@@ -247,7 +331,7 @@ public class GameHUD : MonoBehaviour
                 SpriteRenderer sr = m.obj.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    sr.sortingOrder = Mathf.RoundToInt(m.target.position.y * -100) + 100;
+                    sr.sortingOrder = Mathf.RoundToInt(m.target.position.y * -100) + 1000;
                 }
             }
         }
@@ -262,7 +346,7 @@ public class GameHUD : MonoBehaviour
         
         Canvas canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 101; 
+        canvas.sortingOrder = 32000; // VERY High sorting order to draw over everything including Post Processing 
         
         currentScaler = canvasObj.AddComponent<CanvasScaler>();
         currentScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;

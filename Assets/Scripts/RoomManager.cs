@@ -11,6 +11,7 @@ public class RoomManager : MonoBehaviour
     [Header("Global Assets")]
     public List<GameObject> globalEnemyPrefabs; // Fallback pool
     public GameObject enemyForcefieldPrefab; // Assigned by User
+    public Sprite customEchoMarkerSprite; // Custom sprite for echolocation enemy marker
     public float enemyForcefieldScale = 0.8f;
     [SerializeField] PathfindingGrid pathfindingGrid;
 

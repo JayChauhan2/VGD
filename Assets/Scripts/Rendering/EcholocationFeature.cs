@@ -106,7 +106,11 @@ public class EcholocationFeature : ScriptableRendererFeature
     {
         if (settings.material != null)
         {
-            renderer.EnqueuePass(m_ScriptablePass);
+            // Only apply post-processing to Base cameras, skip Overlay cameras so World UI stays clean
+            if (renderingData.cameraData.renderType == CameraRenderType.Base)
+            {
+                renderer.EnqueuePass(m_ScriptablePass);
+            }
         }
     }
 }

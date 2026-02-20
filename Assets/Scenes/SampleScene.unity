@@ -516,7 +516,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 11
-  m_Sprite: {fileID: 5097786063004615103, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  m_Sprite: {fileID: -7612041258342711837, guid: c9185b05321cefc47a93553910df2005, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1817,6 +1817,7 @@ MonoBehaviour:
   - {fileID: 6996006399230431456, guid: 8eb12bc1da8cb6c44af03b5393d96a3a, type: 3}
   - {fileID: 7363493471067815230, guid: 8f859e02ba15b304ba2d25410617bfce, type: 3}
   enemyForcefieldPrefab: {fileID: 3639917087683709169, guid: f67373ff934d9464d814b59be4030ef6, type: 3}
+  customEchoMarkerSprite: {fileID: 1090188955526157524, guid: 681d0c3de0bc01a4d9c76f37d820f717, type: 3}
   enemyForcefieldScale: 1
   pathfindingGrid: {fileID: 1986833165}
   firstRoomPrefab: {fileID: 1299928572387882687, guid: deae6b6425f70c4419fd4b236779d814, type: 3}

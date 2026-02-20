@@ -193,6 +193,9 @@ public class CorruptionBarUI : MonoBehaviour
         go.transform.localPosition = Vector3.zero;
         go.transform.localScale    = Vector3.one;
 
+        int uiLayer = LayerMask.NameToLayer("UI");
+        if (uiLayer >= 0) go.layer = uiLayer;
+
         SpriteRenderer sr = go.GetComponent<SpriteRenderer>();
         if (sr == null) sr = go.AddComponent<SpriteRenderer>();
 

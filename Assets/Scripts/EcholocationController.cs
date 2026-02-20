@@ -56,6 +56,19 @@ public class EcholocationController : MonoBehaviour
             echolocationMaterial.SetFloat("_EdgeWidth", edgeWidth);
             echolocationMaterial.SetColor("_Color", rippleColor);
         }
+        
+        // Safety check configuration of enemyLayerMask
+        if (enemyLayerMask.value == 0)
+        {
+            Debug.LogWarning("[Echolocation] enemyLayerMask is set to Nothing! Auto-assigning 'Enemy' layer.");
+            enemyLayerMask = LayerMask.GetMask("Enemy");
+            if (enemyLayerMask.value == 0) 
+            {
+                 // Fallback if "Enemy" layer doesn't exist by that exact name
+                 Debug.LogWarning("[Echolocation] 'Enemy' layer not found. Trying 'Default'.");
+                 enemyLayerMask = LayerMask.GetMask("Default");
+            }
+        }
     }
 
     [Header("Permanent Visibility")]
@@ -225,6 +238,7 @@ public class EcholocationController : MonoBehaviour
                 float distance = Vector2.Distance(position, jammer.transform.position);
                 if (distance <= jammer.GetJammerRadius())
                 {
+                    Debug.Log($"[EcholocationController] Position {position} is jammed by {jammer.name} at distance {distance}.");
                     return true;
                 }
             }
@@ -255,6 +269,9 @@ public class EcholocationController : MonoBehaviour
         {
             Collider2D hit = hitBuffer[i];
             
+            // Debug every single hit so we can see what the pulse is seeing
+            Debug.Log($"[Echolocation] Raw Hit on Collider: {hit.gameObject.name} (Layer: {LayerMask.LayerToName(hit.gameObject.layer)})");
+            
             // Check if the object is actually an enemy (double check in case layer mask includes other things)
             // Use TryGetComponent to avoid allocation if not found
             if (hit.TryGetComponent<EnemyAI>(out EnemyAI enemy))
@@ -267,7 +284,7 @@ public class EcholocationController : MonoBehaviour
                     if (dist <= currentRadius)
                     {
                         hitEnemies.Add(id);
-                        //Debug.Log($"[Echolocation] Hit Enemy: {enemy.name} at dist {dist}");
+                        Debug.Log($"[Echolocation] Hit Enemy: {enemy.name} at dist {dist} | Sending to GameHUD");
                         enemy.MarkAsDetected();
                     }
                 }
@@ -285,9 +302,15 @@ public class EcholocationController : MonoBehaviour
                         if (dist <= currentRadius)
                         {
                             hitEnemies.Add(id);
+                            Debug.Log($"[Echolocation] Hit Enemy (via Parent): {parentEnemy.name} from child {hit.name} at dist {dist} | Sending to GameHUD");
                             parentEnemy.MarkAsDetected();
                         }
                     }
+                 }
+                 else
+                 {
+                     // Debug failure to find EnemyAI script
+                     Debug.Log($"[Echolocation] Hit {hit.name} but no EnemyAI script found anywhere on it or its parents.");
                  }
             }
         }

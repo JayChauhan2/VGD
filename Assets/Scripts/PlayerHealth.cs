@@ -13,8 +13,23 @@ public class PlayerHealth : MonoBehaviour
         get => _currentHealth;
         private set
         {
-            _currentHealth = value;
+            _currentHealth = Mathf.Clamp(value, 0, maxHealth);
             Debug.Log($"Player Health: {_currentHealth}/{maxHealth}");
+            
+            if (_currentHealth <= 0 && gameObject.activeInHierarchy)
+            {
+                Die();
+            }
+        }
+    }
+    
+    // Safety check for Inspector changes
+    void OnValidate()
+    {
+        // Added time buffer to prevent death during initial play-mode loading
+        if (Application.isPlaying && _currentHealth <= 0 && Time.timeSinceLevelLoad > 0.1f && gameObject.activeInHierarchy)
+        {
+            Die();
         }
     }
     
@@ -40,6 +55,8 @@ public class PlayerHealth : MonoBehaviour
     {
         // Enforce maxHealth to 6 (3 hearts) to override any stale Inspector values
         maxHealth = 6;
+        // Ensure health is full on awake so the proactive death check doesn't trip on spawn
+        _currentHealth = maxHealth;
     }
 
     void Start()
@@ -188,11 +205,8 @@ public class PlayerHealth : MonoBehaviour
             currentRoom.OnPlayerDamaged();
         }
 
-        if (CurrentHealth <= 0)
-        {
-            Die();
-        }
-        else
+        // Death check is now handled automatically by the CurrentHealth property!
+        if (CurrentHealth > 0)
         {
             StartCoroutine(InvincibilityRoutine());
         }

@@ -7,6 +7,10 @@ public class SplitterEnemy : EnemyAI
     public GameObject wandererPrefab;
     public float spawnHealth = 25f;
 
+    [Header("Recursion Safety")]
+    public int maxGenerations = 2; // Limit how many times it can split (if it spawns more Splitters)
+    public int generation = 0; // Current generation index
+
     protected override void OnEnemyStart()
     {
         maxHealth = 90f;
@@ -18,6 +22,13 @@ public class SplitterEnemy : EnemyAI
 
     protected override void OnEnemyDeath()
     {
+        // Recursion Limit Check
+        if (generation >= maxGenerations)
+        {
+            Debug.Log($"SplitterEnemy: Recursion limit reached (Gen {generation} >= {maxGenerations}). Not spawning splits.");
+            return;
+        }
+
         // Spawn smaller enemies on death
         SpawnSplits();
     }
@@ -65,9 +76,16 @@ public class SplitterEnemy : EnemyAI
             EnemyAI enemyAI = splitObj.GetComponent<EnemyAI>();
             if (enemyAI != null)
             {
+                // Pass generation count if it's another Splitter
+                SplitterEnemy splitSplitter = splitObj.GetComponent<SplitterEnemy>();
+                if (splitSplitter != null)
+                {
+                    splitSplitter.generation = this.generation + 1;
+                }
+
                 // IMPORTANT: Start coroutine on the SPAWNED enemy, not this dying one
                 // This enemy is about to be destroyed, so coroutines won't complete
-                enemyAI.StartCoroutine(InitializeSplitCoroutine(enemyAI, parentRoom, IsActive));
+                enemyAI.StartCoroutine(InitializeSplitCoroutine(enemyAI, parentRoom, IsActive, spawnHealth));
             }
             else
             {
@@ -79,7 +97,7 @@ public class SplitterEnemy : EnemyAI
     }
     
     
-    static System.Collections.IEnumerator InitializeSplitCoroutine(EnemyAI enemyAI, Room room, bool shouldActivate)
+    static System.Collections.IEnumerator InitializeSplitCoroutine(EnemyAI enemyAI, Room room, bool shouldActivate, float healthAmount)
     {
         // Wait for the enemy's Start() to complete
         yield return null;
@@ -88,8 +106,10 @@ public class SplitterEnemy : EnemyAI
         
         // Now configure the enemy
         enemyAI.AssignRoom(room);
-        enemyAI.maxHealth = 25f; // Using hardcoded value since we can't access instance field
-        enemyAI.TakeDamage(0); // Trigger health update to sync currentHealth
+        
+        // Using Safe Setter + Max Health Init
+        enemyAI.maxHealth = healthAmount;
+        enemyAI.SetCurrentHealth(healthAmount); // Safe initialization
         
         Debug.Log($"SplitterEnemy: Adding SpawnProtection to {enemyAI.name}");
         
@@ -104,6 +124,6 @@ public class SplitterEnemy : EnemyAI
             enemyAI.SetActive(true);
         }
         
-        Debug.Log($"SplitterEnemy: Split {enemyAI.name} fully initialized");
+        Debug.Log($"SplitterEnemy: Split {enemyAI.name} fully initialized with Health {healthAmount}");
     }
 }

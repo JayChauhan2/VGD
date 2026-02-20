@@ -23,6 +23,7 @@ public class EnemyAI : MonoBehaviour
 
     public bool IsActive { get; private set; } = false;
     public bool IsKnockedBack { get; private set; } = false; // New flag for knockback state
+    protected bool isDying = false;
     
     [Tooltip("If true, this enemy counts towards locking the room. Set false for summoned minions or ghosts.")]
     public bool CountTowardsRoomClear = true;
@@ -137,8 +138,17 @@ public class EnemyAI : MonoBehaviour
         if (target == null) Debug.LogWarning("EnemyAI: Target is null! Enemy will not move.");
     }
 
+    public void SetCurrentHealth(float amount)
+    {
+        currentHealth = amount;
+        if (currentHealth > maxHealth) maxHealth = currentHealth; // Auto-adjust max if needed
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
     public virtual void TakeDamage(float damage)
     {
+        if (isDying) return;
+
         // Check for Spawn Protection (Forcefield)
         var protection = GetComponent<SpawnProtection>();
         if (protection != null && protection.IsActive)
@@ -153,6 +163,7 @@ public class EnemyAI : MonoBehaviour
         
         if (currentHealth <= 0)
         {
+            isDying = true;
             Die();
         }
     }

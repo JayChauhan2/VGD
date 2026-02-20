@@ -43,8 +43,13 @@ public class PressureController : MonoBehaviour
         }
     }
 
+    [Header("Debug")]
+    public bool debugMode = true;
+    public bool forceActivate = false;
+
     public void Activate()
     {
+        if (debugMode) Debug.Log($"[PressureController] Activated on {gameObject.name}");
         isStressActive = true;
         currentPressure = 0f; 
         stableTimer = 0f;
@@ -53,11 +58,14 @@ public class PressureController : MonoBehaviour
 
     public void Deactivate()
     {
+        if (debugMode) Debug.Log($"[PressureController] Deactivated on {gameObject.name}");
         isStressActive = false;
     }
 
     void Update()
     {
+        if (forceActivate && !isStressActive) Activate();
+
         if (!isStressActive || roomStabilized) return;
 
         float rate = passiveIncreaseRate;
@@ -74,6 +82,10 @@ public class PressureController : MonoBehaviour
         CheckStabilization();
 
         OnPressureChanged?.Invoke(currentPressure / maxPressure);
+        if (debugMode && Time.frameCount % 60 == 0) 
+        {
+             Debug.Log($"[PressureController] Pressure: {currentPressure}/{maxPressure} (State: {CurrentState})");
+        }
     }
 
     bool PlayerIsIdle()

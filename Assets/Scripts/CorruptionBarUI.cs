@@ -76,13 +76,19 @@ public class CorruptionBarUI : MonoBehaviour
     // ────────────────────────────────────────────────────────────────────
     #region Unity Lifecycle
 
+    [Header("Debug")]
+    public bool testMode = false;
+    [Range(0f, 1f)] public float testPressure = 0.5f;
+
     private void Awake()
     {
+        Debug.Log($"[CorruptionBarUI] Awake on {gameObject.name}");
         BuildChildren();
     }
 
     private void OnEnable()
     {
+        Debug.Log($"[CorruptionBarUI] OnEnable on {gameObject.name}");
         Room.OnRoomEntered += OnRoomEntered;
 
         // Try to hook up immediately if a room is already active
@@ -91,6 +97,7 @@ public class CorruptionBarUI : MonoBehaviour
         {
             if (r.PlayerHasEntered)
             {
+                Debug.Log($"[CorruptionBarUI] Found active room {r.name}, subscribing to pressure.");
                 SubscribeToPressure(r.Pressure);
                 break;
             }
@@ -103,8 +110,28 @@ public class CorruptionBarUI : MonoBehaviour
         UnsubscribeFromPressure();
     }
 
+    [Header("Positioning")]
+    public bool attachToCamera = true;
+    public Vector3 cameraOffset = new Vector3(8f, 0f, 10f); // Default offset from camera center
+
     private void Update()
     {
+        if (attachToCamera && Camera.main != null)
+        {
+            // Simple follow. Parenting might jitter if camera moves in LateUpdate
+            // and we update in Update. Let's try direct position setting.
+            // Using transform.position = cam.transform.position + offset;
+            // But we need to respect the z-depth.
+            Vector3 camPos = Camera.main.transform.position;
+            transform.position = new Vector3(camPos.x + cameraOffset.x, camPos.y + cameraOffset.y, 0f); 
+        }
+
+        if (testMode)
+        {
+            // Pulse the pressure for visual testing
+            currentPressureNorm = (Mathf.Sin(Time.time * 2f) + 1f) / 2f;
+        }
+
         AnimateWave();
         AnimateFrame();
         ApplyFill();
@@ -184,6 +211,7 @@ public class CorruptionBarUI : MonoBehaviour
 
     private void OnRoomEntered(Room room)
     {
+        Debug.Log($"[CorruptionBarUI] OnRoomEntered: {(room != null ? room.name : "null")}");
         SubscribeToPressure(room?.Pressure);
         // Reset bar when entering a new room
         currentPressureNorm = 0f;
@@ -194,7 +222,14 @@ public class CorruptionBarUI : MonoBehaviour
         UnsubscribeFromPressure();
         trackedPressure = pc;
         if (trackedPressure != null)
+        {
+            Debug.Log($"[CorruptionBarUI] Subscribed to PressureController on {trackedPressure.gameObject.name}");
             trackedPressure.OnPressureChanged += OnPressureChanged;
+        }
+        else
+        {
+             Debug.LogWarning("[CorruptionBarUI] PressureController is NULL, cannot subscribe.");
+        }
     }
 
     private void UnsubscribeFromPressure()
@@ -206,7 +241,11 @@ public class CorruptionBarUI : MonoBehaviour
 
     private void OnPressureChanged(float normalizedPressure)
     {
-        currentPressureNorm = Mathf.Clamp01(normalizedPressure);
+        if (!testMode)
+        {
+             // Debug.Log($"[CorruptionBarUI] Pressure Update: {normalizedPressure}"); // Optional: enable if needed
+             currentPressureNorm = Mathf.Clamp01(normalizedPressure);
+        }
     }
 
     #endregion
@@ -258,6 +297,13 @@ public class CorruptionBarUI : MonoBehaviour
 
         // Hide wave when bar is essentially empty
         waveRenderer.enabled = targetHeight > 0.01f;
+        
+        // DEBUG: Only log if test mode is on to avoid spam, or just once per second? 
+        // Let's rely on visuals for now. debugging scale:
+        if (testMode) 
+        {
+            // Debug.Log($"[CorruptionBarUI] ApplyFill: Pressure={currentPressureNorm:F2}, TargetH={targetHeight:F2}, ScaleY={scaleY:F2}");
+        }
     }
 
     /// <summary>

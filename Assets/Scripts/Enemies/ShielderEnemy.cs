@@ -167,13 +167,25 @@ public class ShielderEnemy : EnemyAI
         }
         
         // Check angle (Optional, implemented for completeness)
+        // Check angle to determine if hit is on Shield or Body
         Vector2 directionToPlayer = (target.position - transform.position).normalized;
-        Vector2 shieldForward = Vector2.right; // Logic handled by rotation + 180 fix if needed, but here simple checking
-        if (shieldTransform != null) shieldForward = shieldTransform.right; // Use shieldTransform instead of animator
+        Vector2 shieldForward = Vector2.right; 
+        
+        if (shieldTransform != null) shieldForward = shieldTransform.right; 
         else if (shieldAnimator != null) shieldForward = shieldAnimator.transform.right;
 
-        float dotProduct = Vector2.Dot(shieldForward, directionToPlayer);
-        // dot > 0 means frontal roughly, but let's assume if it tracks player, it blocks.
+        // Calculate angle between Shield Facing and Player Direction
+        float angle = Vector2.Angle(shieldForward, directionToPlayer);
+
+        // If the angle is OUTSIDE half the arc, the player has flanked the shield
+        if (angle > shieldArc / 2f)
+        {
+            // Debug.Log($"{GetType().Name}: Flanked! Angle: {angle} > {shieldArc/2f}. Taking Body Damage.");
+            base.TakeDamage(damage);
+            return;
+        }
+        
+        // Otherwise, it hits the shield (Frontal Attack)
         
         // Accumulate Damage
         currentShieldHealth -= damage;

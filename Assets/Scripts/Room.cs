@@ -69,10 +69,9 @@ public class Room : MonoBehaviour
         int spawnerCount = activeSpawners.Count;
         int countPerSpawner = 1;
 
-        if (spawnerCount <= 1) countPerSpawner = 4;
-        else if (spawnerCount == 2) countPerSpawner = 3;
-        else if (spawnerCount == 3) countPerSpawner = 2;
-        else countPerSpawner = 1; // 4+
+        if (spawnerCount <= 1) countPerSpawner = 3;
+        else if (spawnerCount == 2) countPerSpawner = 2;
+        else countPerSpawner = 1; // 3+
         
         foreach(var sp in activeSpawners)
         {

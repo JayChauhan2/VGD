@@ -150,7 +150,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   familiarType: 0
-  characteristic: 0
   smoothTime: 0.1
   maxSpeed: 20
   isWild: 1
@@ -257,8 +256,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2195956d677b424ea3a42e0882598e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  familiarType: 0
-  characteristic: 0
+  familiarType: 3
   smoothTime: 0.1
   maxSpeed: 20
   isWild: 1
@@ -365,8 +363,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2195956d677b424ea3a42e0882598e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  familiarType: 0
-  characteristic: 0
+  familiarType: 1
   smoothTime: 0.1
   maxSpeed: 20
   isWild: 1
@@ -1168,8 +1165,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2195956d677b424ea3a42e0882598e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  familiarType: 0
-  characteristic: 0
+  familiarType: 2
   smoothTime: 0.1
   maxSpeed: 20
   isWild: 1
@@ -1846,6 +1842,7 @@ MonoBehaviour:
   isTestingMode: 0
   testingRoomPrefab: {fileID: 2167945867662251604, guid: ead560bc08016974cad360743600edd4, type: 3}
   isTestingMap: 1
+  testingMapRoomCount: 1
   testingMapRoomPrefab: {fileID: 0}
   boxPrefab: {fileID: 3234879982250579851, guid: 9d84c4d0c62944030b97e9297a681f46, type: 3}
   minBoxesPerRoom: 3
@@ -1920,8 +1917,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2195956d677b424ea3a42e0882598e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  familiarType: 0
-  characteristic: 0
+  familiarType: 4
   smoothTime: 0.1
   maxSpeed: 20
   isWild: 1

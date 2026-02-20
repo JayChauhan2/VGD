@@ -15,6 +15,10 @@ Shader "Hidden/Echolocation"
         _AspectRatio ("Aspect Ratio", Float) = 1.77
         _IsOrtho ("Is Orthographic", Float) = 0
         _PixelSize ("Pixel Size", Float) = 1
+        
+        // Player Visibility
+        _PlayerPos ("Player Position", Vector) = (0,0,0,0)
+        _PlayerRadius ("Player Radius", Float) = 1.5
     }
     SubShader
     {
@@ -56,12 +60,15 @@ Shader "Hidden/Echolocation"
             float _Radius;
             float _EdgeWidth;
             float _Darkness;
+            float _PixelSize;
+            
+            float4 _PlayerPos;
+            float _PlayerRadius;
             
             float4 _CameraPos;
             float _OrthographicSize;
             float _AspectRatio;
             float _IsOrtho;
-            float _PixelSize;
 
             Varyings vert (Attributes input)
             {
@@ -71,9 +78,6 @@ Shader "Hidden/Echolocation"
                 output.uv = input.uv;
                 return output;
             }
-
-            float4 _PlayerPos;
-            float _PlayerRadius;
 
             float4 frag (Varyings input) : SV_Target
             {
@@ -122,7 +126,7 @@ Shader "Hidden/Echolocation"
                 if (distPlayer < _PlayerRadius)
                 {
                      // Soft edge math - Vision-like fade
-                     // Start fading at 30% of radius, fully dark at 100%
+                     // Start fading at 30% of radius (The user liked this 'soft' look)
                      float alphaFactor = smoothstep(_PlayerRadius * 0.3, _PlayerRadius, distPlayer);
                      
                      // We want center = Visible (Alpha 0), Outside = Dark

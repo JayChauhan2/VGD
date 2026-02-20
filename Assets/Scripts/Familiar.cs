@@ -2,27 +2,17 @@ using UnityEngine;
 
 public enum FamiliarType
 {
-    Type1,
-    Type2,
-    Type3,
-    Type4,
-    Type5
-}
-
-public enum FamiliarCharacteristic
-{
-    Characteristic1,
-    Characteristic2,
-    Characteristic3,
-    Characteristic4,
-    Characteristic5
+    Type1_Laser,        // Shoots a laser at the nearest enemy
+    Type2_Health,       // Periodically heals the player (green + particles)
+    Type3_Totem,        // One-time life save on death (consumed on use)
+    Type4_Echolocation, // Expands the player's permanent visibility radius
+    Type5_CoinDoubler   // Doubles coin drop chances from enemies
 }
 
 public class Familiar : MonoBehaviour
 {
     [Header("Identity")]
     public FamiliarType familiarType;
-    public FamiliarCharacteristic characteristic;
 
     [Header("Settings")]
     [Tooltip("Time it takes to reach the target. Lower is faster/closer.")]
@@ -41,15 +31,8 @@ public class Familiar : MonoBehaviour
     private Vector3 targetPosition;
     private bool controlledByManager = false;
     private Transform playerTransform;
-
     void Start()
     {
-        // Auto-add Attack component if missing
-        if (GetComponent<FamiliarAttack>() == null)
-        {
-            gameObject.AddComponent<FamiliarAttack>();
-        }
-
         targetPosition = transform.position;
         
         // Cache player transform
@@ -60,19 +43,43 @@ public class Familiar : MonoBehaviour
             if (p != null) playerTransform = p.transform;
         }
 
-        // If not wild, try to register immediately (e.g. pre-owned familiars)
+        // If not wild, try to register and activate behavior immediately
         if (!isWild)
         {
             RegisterWithManager();
-        }
-        else
-        {
-            // Ensure wild familiars are effectively detached logic-wise
-            // Visual detachment happens below
+            ActivateBehavior();
         }
 
         // Detach from parent to ensure independent rotation
         transform.SetParent(null);
+    }
+
+    private void ActivateBehavior()
+    {
+        // Add the correct behavior component based on type
+        switch (familiarType)
+        {
+            case FamiliarType.Type1_Laser:
+                if (GetComponent<FamiliarAttack>() == null)
+                    gameObject.AddComponent<FamiliarAttack>();
+                break;
+            case FamiliarType.Type2_Health:
+                if (GetComponent<FamiliarHealth>() == null)
+                    gameObject.AddComponent<FamiliarHealth>();
+                break;
+            case FamiliarType.Type3_Totem:
+                if (GetComponent<FamiliarTotem>() == null)
+                    gameObject.AddComponent<FamiliarTotem>();
+                break;
+            case FamiliarType.Type4_Echolocation:
+                if (GetComponent<FamiliarEcholocation>() == null)
+                    gameObject.AddComponent<FamiliarEcholocation>();
+                break;
+            case FamiliarType.Type5_CoinDoubler:
+                if (GetComponent<FamiliarCoinDoubler>() == null)
+                    gameObject.AddComponent<FamiliarCoinDoubler>();
+                break;
+        }
     }
 
     void OnDestroy()
@@ -149,8 +156,9 @@ public class Familiar : MonoBehaviour
     {
         isWild = false;
         RegisterWithManager();
+        ActivateBehavior();
         
-        Debug.Log($"Picked up Familiar: Type={familiarType}, Characteristic={characteristic}");
+        Debug.Log($"Picked up Familiar: Type={familiarType}");
         
         // TODO: Trigger notification UI here
     }

@@ -506,17 +506,25 @@ public class EnemyAI : MonoBehaviour
         float roll = Random.value;
         int coinCount = 0;
 
-        // Loot Table
-        // 3 Coins: 5% Chance (Roll < 0.05) - "Half of 2 coins chance"
-        // 2 Coins: 10% Chance (Roll < 0.15) - "Half of 1 coin chance"
-        // 1 Coin: 20% Chance (Roll < 0.35) - "1/5 chance"
-        // Nothing: 65% Chance (Roll >= 0.35)
+        // Loot Table (base)
+        // 3 Coins: 5%  (roll < 0.05)
+        // 2 Coins: 10% (roll < 0.15)
+        // 1 Coin:  20% (roll < 0.35)
+        // Nothing: 65%
+        //
+        // With FamiliarCoinDoubler active, all thresholds are doubled (capped at 1):
+        // 3 Coins: 10% (roll < 0.10)
+        // 2 Coins: 20% (roll < 0.30)
+        // 1 Coin:  40% (roll < 0.70)
+        // Nothing: 30%
+        float multiplier = FamiliarCoinDoubler.IsActive ? 2f : 1f;
+        float t3 = Mathf.Min(0.05f * multiplier, 1f);
+        float t2 = Mathf.Min(0.15f * multiplier, 1f);
+        float t1 = Mathf.Min(0.35f * multiplier, 1f);
 
-        if (roll < 0.05f) coinCount = 3;
-        else if (roll < 0.15f) coinCount = 2; // 0.05 + 0.10
-        else if (roll < 0.35f) coinCount = 1; // 0.15 + 0.20
-        
-        // Removed TEMP 100% drop code
+        if      (roll < t3) coinCount = 3;
+        else if (roll < t2) coinCount = 2;
+        else if (roll < t1) coinCount = 1;
 
         for(int i=0; i<coinCount; i++)
         {

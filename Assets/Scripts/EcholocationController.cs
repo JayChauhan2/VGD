@@ -17,6 +17,10 @@ public class EcholocationController : MonoBehaviour
     public float fadeOutDuration = 0.5f; // Time for ripple to fade after reaching max radius
     public float pixelSize = 1f; // Controls pixelation level (1 = off)
     
+    // Static multiplier from familiars to increase frequency
+    public static float pingIntervalMultiplier = 1.0f;
+    private float lastIntervalMultiplier = 1.0f;
+    
     private Transform centerTransform; // The actual transform to use for position
     private Vector3 pulseOrigin; // The fixed position where the current pulse started
 
@@ -59,9 +63,25 @@ public class EcholocationController : MonoBehaviour
 
     void Update()
     {
+        // Detect frequency shift to adjust timer proportionately (prevents abrupt cutoff)
+        if (pingIntervalMultiplier != lastIntervalMultiplier)
+        {
+            if (lastIntervalMultiplier > 0 && pingIntervalMultiplier > 0)
+            {
+                // Scale timer so the percentage of progress to the next ping remains consistent
+                timer = (timer / (pingInterval * lastIntervalMultiplier)) * (pingInterval * pingIntervalMultiplier);
+            }
+            lastIntervalMultiplier = pingIntervalMultiplier;
+        }
+
         timer += Time.deltaTime;
 
-        if (timer >= pingInterval)
+        // Apply frequency multiplier to the interval
+        float activeInterval = pingInterval * pingIntervalMultiplier;
+        // Scale expansion speed so the pulse 'fits' the new window
+        float activeExpandSpeed = expandSpeed / pingIntervalMultiplier;
+
+        if (timer >= activeInterval)
         {
             StartPing();
             timer = 0;
@@ -69,7 +89,7 @@ public class EcholocationController : MonoBehaviour
 
         if (isExpanding)
         {
-            currentRadius += expandSpeed * Time.deltaTime;
+            currentRadius += activeExpandSpeed * Time.deltaTime;
 
             if (currentRadius >= maxRadius)
             {
@@ -100,10 +120,10 @@ public class EcholocationController : MonoBehaviour
             echolocationMaterial.SetFloat("_Darkness", worldDarkness);
             echolocationMaterial.SetFloat("_PixelSize", pixelSize);
             
-            // --- Player Visibility Update ---
             if (centerTransform != null)
             {
                 echolocationMaterial.SetVector("_PlayerPos", centerTransform.position);
+                // Back to basic radius (0.5 default)
                 echolocationMaterial.SetFloat("_PlayerRadius", playerRadius);
             }
             // --------------------------------

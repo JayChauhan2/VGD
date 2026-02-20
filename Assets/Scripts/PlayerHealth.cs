@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -17,7 +18,11 @@ public class PlayerHealth : MonoBehaviour
         }
     }
     
+    // Fired just before the player dies — listeners can call CancelDeath() to prevent it
+    public static event Action OnPlayerDeath;
+
     public bool IsInvincible { get; private set; }
+    private bool _deathCancelled;
     public float invincibilityDuration = 2.0f;
     public GameObject forceFieldPrefab; // Custom prefab support
     [Header("Visual Settings")]
@@ -204,9 +209,35 @@ public class PlayerHealth : MonoBehaviour
         if (forcefield != null) forcefield.SetActive(false);
     }
 
+    /// <summary>Called by FamiliarTotem to prevent the current death.</summary>
+    public void CancelDeath()
+    {
+        _deathCancelled = true;
+    }
+
+    /// <summary>Heals the player by the given number of half-hearts, clamped to maxHealth.</summary>
+    public void Heal(int halfHearts)
+    {
+        int newHealth = Mathf.Clamp(_currentHealth + halfHearts, 0, maxHealth);
+        CurrentHealth = newHealth;
+    }
+
     void Die()
     {
         Debug.Log("Player Died!");
+
+        // Give familiars (e.g. Totem) a chance to cancel death
+        _deathCancelled = false;
+        OnPlayerDeath?.Invoke();
+
+        if (_deathCancelled)
+        {
+            // Death was cancelled by a totem — grant brief invincibility
+            Debug.Log("PlayerHealth: Death cancelled by Totem!");
+            StartCoroutine(InvincibilityRoutine());
+            return;
+        }
+
         // Add death logic here (e.g., restart level, show game over screen)
         gameObject.SetActive(false);
     }

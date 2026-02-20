@@ -59,6 +59,8 @@ public class PlayerHealth : MonoBehaviour
             shadow.debugMode = false; 
             // Debug.Log("PlayerHealth: Added SimpleShadow component.");
         }
+        
+        CreateForcefieldVisual();
     }
 
     private void CreateForcefieldVisual()
@@ -74,6 +76,10 @@ public class PlayerHealth : MonoBehaviour
             
             // Cache renderers for sorting
             forceFieldRenderers = forcefield.GetComponentsInChildren<Renderer>();
+            foreach(var r in forceFieldRenderers)
+            {
+                r.sortingLayerName = "Object";
+            }
 
             // Auto-adjust duration if requested
             if (autoAdjustDuration)
@@ -140,14 +146,15 @@ public class PlayerHealth : MonoBehaviour
         if (forcefield != null && forcefield.activeInHierarchy && playerSpriteRenderer != null && forceFieldRenderers != null)
         {
             int targetOrder = playerSpriteRenderer.sortingOrder + 10;
-            int targetLayer = playerSpriteRenderer.sortingLayerID;
+            // User requested "Object" layer specifically.
+            string targetLayerName = "Object";
             
             foreach (var r in forceFieldRenderers)
             {
                 if (r != null) 
                 {
                     r.sortingOrder = targetOrder;
-                    r.sortingLayerID = targetLayer;
+                    r.sortingLayerName = targetLayerName;
                 }
             }
         }

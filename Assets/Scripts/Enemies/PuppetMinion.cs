@@ -23,6 +23,17 @@ public class PuppetMinion : EnemyAI
         {
             animator.Play("MiniPuppetSpawn");
         }
+
+        // Fix Shadow Size:
+        // This enemy is scale 2.0, but normal enemies are ~0.45.
+        // We want the shadow to look "normal" (size of a 0.45 enemy).
+        // Scale Factor = 0.45 / 2.0 = 0.225.
+        // We apply this reduction to the SimpleShadow component's settings.
+        var shadow = GetComponent<SimpleShadow>();
+        if (shadow != null)
+        {
+            shadow.scale *= 0.225f; // Reduce to ~22.5% of default size
+        }
     }
 
     private bool isSpawning = false;

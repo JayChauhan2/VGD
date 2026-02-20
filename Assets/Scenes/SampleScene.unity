@@ -519,7 +519,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 11
-  m_Sprite: {fileID: 392565593027928520, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  m_Sprite: {fileID: -7282818538113959424, guid: c9185b05321cefc47a93553910df2005, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -898,7 +898,7 @@ MonoBehaviour:
   damagePerSecond: 100
   orbitRadius: 0.35
   maxEnergy: 100
-  drainRate: 20
+  drainRate: 0
   rechargeRate: 10
   laserFirePoint: {fileID: 1960840414}
   m_lineRenderer: {fileID: 687766237}
@@ -1395,7 +1395,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 12
-  m_Sprite: {fileID: 1178000108287567050, guid: 22dd3387b88c5f44e83f47fb3f8537d2, type: 3}
+  m_Sprite: {fileID: 2900447590193464389, guid: 22dd3387b88c5f44e83f47fb3f8537d2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

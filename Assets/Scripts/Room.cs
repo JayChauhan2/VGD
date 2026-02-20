@@ -409,6 +409,10 @@ public class Room : MonoBehaviour
         {
              IsCleared = true;
              Debug.Log($"Room {name}: Room Cleared! Unlocking Exits.");
+             
+             // Visually drain the pressure bar
+             if (Pressure != null) Pressure.Stabilize();
+
              UnlockDoors();
              OnRoomCleared?.Invoke(this);
         }

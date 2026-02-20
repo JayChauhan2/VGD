@@ -66,7 +66,19 @@ public class PressureController : MonoBehaviour
     {
         if (forceActivate && !isStressActive) Activate();
 
-        if (!isStressActive || roomStabilized) return;
+        // If stabilized, drain pressure to 0 visually
+        if (roomStabilized)
+        {
+            if (currentPressure > 0)
+            {
+                currentPressure -= 200f * Time.deltaTime; // Fast drain
+                if (currentPressure < 0) currentPressure = 0;
+                OnPressureChanged?.Invoke(currentPressure / maxPressure);
+            }
+            return;
+        }
+
+        if (!isStressActive) return;
 
         float rate = passiveIncreaseRate;
 
@@ -171,7 +183,7 @@ public class PressureController : MonoBehaviour
         }
     }
 
-    void Stabilize()
+    public void Stabilize()
     {
         roomStabilized = true;
         isStressActive = false;

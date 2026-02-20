@@ -167,9 +167,9 @@ public class GameHUD : MonoBehaviour
         
         SpriteRenderer sr = markerObj.AddComponent<SpriteRenderer>();
         sr.color = Color.red;
-        // Set sorting layer to Object as requested
+        // Set sorting layer to Object so it interacts correctly with world space
         sr.sortingLayerName = "Object";
-        sr.sortingOrder = 100; // High order to sit on top of enemies
+        // Order is dynamically updated in UpdateMarkers to be above the enemy
         
         Sprite circle = Resources.Load<Sprite>("Sprites/Circle");
         if (circle == null)
@@ -198,11 +198,13 @@ public class GameHUD : MonoBehaviour
             circle = Sprite.Create(tex, new Rect(0,0,size,size), new Vector2(0.5f, 0.5f));
         }
         sr.sprite = circle;
+        markerObj.transform.localScale = new Vector3(0.5f, 0.5f, 1f); // Make the dot reasonably sized in world space
 
         // Position initially
         if (target != null)
         {
             markerObj.transform.position = target.position + offset;
+            sr.sortingOrder = Mathf.RoundToInt(target.position.y * -100) + 100; // Guaranteed to be on top of enemy at same position
         }
         
         Marker m = new Marker();
@@ -236,10 +238,17 @@ public class GameHUD : MonoBehaviour
                 continue;
             }
             
-            // Sync Position
+            // Sync Position in World Space
             if (m.obj != null)
             {
                 m.obj.transform.position = m.target.position + m.offset;
+                
+                // Keep the sorting order correctly above the target as it moves
+                SpriteRenderer sr = m.obj.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                {
+                    sr.sortingOrder = Mathf.RoundToInt(m.target.position.y * -100) + 100;
+                }
             }
         }
     }

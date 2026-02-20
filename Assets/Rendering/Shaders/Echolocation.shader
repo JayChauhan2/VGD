@@ -149,26 +149,25 @@ Shader "Hidden/Echolocation"
                 {
                     // Inside the Ring (The Wave Front):
                     
-                    // A. Calculate Ring Gradient
+                    // Distance from the exact center of the ring band
                     float distFromCenterOfRing = abs(dist - _Radius);
-                    // Use smoothstep for soft edges (S-curve falloff)
-                    // smoothstep(fullWidth, 0, x) creates a smooth transition from 0 to 1 as x goes from fullWidth to 0
-                    // But we want 1 at center (dist=0) and 0 at edge (dist=halfWidth).
-                    // So let's normalize distance first:
                     float normalizedDist = distFromCenterOfRing / max(halfWidth, 0.0001);
-                    // smoothstep(0, 1, normalizedDist) goes 0->1.
-                    // 1.0 - smoothstep(...) goes 1->0.
-                    float ringGradient = 1.0 - smoothstep(0.0, 1.0, normalizedDist); 
                     
-                    // B. Reveal Logic:
-                    float targetAlpha = 0.0;
-                    float ringAlpha = lerp(_Darkness, targetAlpha, ringGradient);
+                    // Determine ring thickness (e.g., 15% of the total half-width, to keep the edges thin)
+                    float ringThickness = 0.15;
+                    
+                    // edgeGradient is 0 in the wide middle area, and ramps up to 1 at the very edges
+                    float edgeGradient = smoothstep(1.0 - ringThickness, 1.0, normalizedDist);
+                    
+                    // The alpha determines how much of the "_Color" is blended over the background.
+                    // At alpha = 0, the world is 100% visible and clear.
+                    // At alpha = _Darkness, the world is obscured by the color.
+                    // We interpolate from 0 (clear world) to _Darkness (solid color ring) based on edge gradient.
+                    float ringAlpha = edgeGradient * _Darkness;
                     
                     finalAlpha = min(finalAlpha, ringAlpha);
                     
-                    // C. Color Overlay (Only apply color if Ring is dominant source of visibility?)
-                    // If we are close to player, maybe don't tint?
-                    // For now, tint if inside ring band.
+                    // We set the color to blue, and the alpha controls its visibility, making it visible only at the edges.
                     finalColor = _Color.rgb;
                 }
 

@@ -450,7 +450,7 @@ GameObject:
   m_Component:
   - component: {fileID: 375149733}
   - component: {fileID: 375149734}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Wave
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -516,7 +516,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 11
-  m_Sprite: {fileID: -7612041258342711837, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  m_Sprite: {fileID: 5097786063004615103, guid: c9185b05321cefc47a93553910df2005, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1325,7 +1325,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1043161064}
   - component: {fileID: 1043161065}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Frame
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1391,7 +1391,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 12
-  m_Sprite: {fileID: 1178000108287567050, guid: 22dd3387b88c5f44e83f47fb3f8537d2, type: 3}
+  m_Sprite: {fileID: 2900447590193464389, guid: 22dd3387b88c5f44e83f47fb3f8537d2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1695,7 +1695,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1124684727}
   - component: {fileID: 1124684728}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2161,37 +2161,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!1 &1963082398
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1963082400}
-  m_Layer: 0
-  m_Name: LightingManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1963082400
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1963082398}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.83726, y: 3.2283, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1986833163
 GameObject:
   m_ObjectHideFlags: 0
@@ -2471,4 +2440,3 @@ SceneRoots:
   - {fileID: 871972230}
   - {fileID: 1528514269}
   - {fileID: 424825944}
-  - {fileID: 1963082400}

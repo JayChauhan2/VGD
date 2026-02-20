@@ -265,12 +265,14 @@ public class EcholocationController : MonoBehaviour
         // Optimization: Use NonAlloc to avoid garbage collection
         int hitCount = Physics2D.OverlapCircleNonAlloc(pulseOrigin, currentRadius, hitBuffer, enemyLayerMask);
         
+        // Calculate the inner radius of the echolocation ring
+        float innerRadius = currentRadius - edgeWidth;
+        // Ensure we don't check negative distances
+        if (innerRadius < 0f) innerRadius = 0f;
+        
         for (int i = 0; i < hitCount; i++)
         {
             Collider2D hit = hitBuffer[i];
-            
-            // Debug every single hit so we can see what the pulse is seeing
-            Debug.Log($"[Echolocation] Raw Hit on Collider: {hit.gameObject.name} (Layer: {LayerMask.LayerToName(hit.gameObject.layer)})");
             
             // Check if the object is actually an enemy (double check in case layer mask includes other things)
             // Use TryGetComponent to avoid allocation if not found
@@ -280,8 +282,8 @@ public class EcholocationController : MonoBehaviour
                 if (!hitEnemies.Contains(id))
                 {
                     float dist = Vector2.Distance(pulseOrigin, enemy.transform.position);
-                    // Check if the enemy is within the current ripple radius
-                    if (dist <= currentRadius)
+                    // Check if the enemy is within the INNER ripple radius
+                    if (dist <= innerRadius)
                     {
                         hitEnemies.Add(id);
                         Debug.Log($"[Echolocation] Hit Enemy: {enemy.name} at dist {dist} | Sending to GameHUD");
@@ -299,7 +301,7 @@ public class EcholocationController : MonoBehaviour
                     if (!hitEnemies.Contains(id))
                     {
                         float dist = Vector2.Distance(pulseOrigin, parentEnemy.transform.position);
-                        if (dist <= currentRadius)
+                        if (dist <= innerRadius)
                         {
                             hitEnemies.Add(id);
                             Debug.Log($"[Echolocation] Hit Enemy (via Parent): {parentEnemy.name} from child {hit.name} at dist {dist} | Sending to GameHUD");
@@ -310,7 +312,7 @@ public class EcholocationController : MonoBehaviour
                  else
                  {
                      // Debug failure to find EnemyAI script
-                     Debug.Log($"[Echolocation] Hit {hit.name} but no EnemyAI script found anywhere on it or its parents.");
+                     // Debug.Log($"[Echolocation] Hit {hit.name} but no EnemyAI script found anywhere on it or its parents.");
                  }
             }
         }

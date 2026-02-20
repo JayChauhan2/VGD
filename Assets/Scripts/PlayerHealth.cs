@@ -6,6 +6,8 @@ public class PlayerHealth : MonoBehaviour
 {
     public int maxHealth = 6;
     
+    private bool _isDying;
+
     [SerializeField]
     private int _currentHealth;
     public int CurrentHealth
@@ -16,7 +18,7 @@ public class PlayerHealth : MonoBehaviour
             _currentHealth = Mathf.Clamp(value, 0, maxHealth);
             Debug.Log($"Player Health: {_currentHealth}/{maxHealth}");
             
-            if (_currentHealth <= 0 && gameObject.activeInHierarchy)
+            if (_currentHealth <= 0 && gameObject.activeInHierarchy && !_isDying)
             {
                 Die();
             }
@@ -238,6 +240,8 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
+        if (_isDying) return;
+        _isDying = true;
         Debug.Log("Player Died!");
 
         // Give familiars (e.g. Totem) a chance to cancel death
@@ -248,6 +252,12 @@ public class PlayerHealth : MonoBehaviour
         {
             // Death was cancelled by a totem — grant brief invincibility
             Debug.Log("PlayerHealth: Death cancelled by Totem!");
+            _isDying = false; // Reset so they can die again later
+            
+            // Make sure health is greater than 0 so the setter doesn't trigger Die() again
+            // The Totem familiar calls Heal() which sets CurrentHealth. 
+            // Heal() should run BEFORE we reach this point if called in the event handler.
+            
             StartCoroutine(InvincibilityRoutine());
             return;
         }

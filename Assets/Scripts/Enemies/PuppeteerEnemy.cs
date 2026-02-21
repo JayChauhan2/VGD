@@ -76,14 +76,21 @@ public class PuppeteerEnemy : EnemyAI
                 Vector3 offset = new Vector3(Mathf.Cos(radians), Mathf.Sin(radians), 0) * 2f;
                 Vector3 spawnPosition = transform.position + offset;
                 
-                // CRASH FIX: Validate spawn position (must be inside room and not in a wall)
+                // BUG FIX: Validate spawn position (must be inside room and not in a wall).
+                // Fallback chain: full offset -> half offset -> puppeteer position -> room center.
+                // Using room center as final fallback (guaranteed inside bounds) instead of
+                // transform.position, which can be at a wall corner and also out of bounds.
                 if (!IsPositionValid(spawnPosition))
                 {
-                    // Try closer...
                     spawnPosition = transform.position + offset * 0.5f;
                     if (!IsPositionValid(spawnPosition))
                     {
-                        spawnPosition = transform.position; // Fallback
+                        spawnPosition = transform.position;
+                        if (!IsPositionValid(spawnPosition))
+                        {
+                            // Final safe fallback: room center is always inside bounds
+                            spawnPosition = parentRoom.transform.position;
+                        }
                     }
                 }
                 
@@ -94,6 +101,11 @@ public class PuppeteerEnemy : EnemyAI
                 // Get valid PuppetMinion script
                 PuppetMinion puppet = puppetObj.GetComponent<PuppetMinion>();
                 if (puppet == null) puppet = puppetObj.AddComponent<PuppetMinion>();
+                
+                // BUG FIX: Assign parentRoom to the puppet BEFORE RegisterEnemy so that
+                // when the puppet's Start() runs (which may call IsPositionValid / GetRoomBounds),
+                // it already knows which room it belongs to and will stay within its bounds.
+                puppet.AssignRoom(parentRoom);
                 
                 // Register with room
                 parentRoom.RegisterEnemy(puppet);

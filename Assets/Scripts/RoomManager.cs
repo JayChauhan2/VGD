@@ -299,12 +299,20 @@ public class RoomManager : MonoBehaviour
         Room startRoom = roomComponentGrid[centerX, centerY];
         if (startRoom != null)
         {
-            // Ensure the first room never locks the player in
-            startRoom.AlwaysOpen = true; 
-            
+            // Ensure the first room never locks the player in via combat
+            startRoom.AlwaysOpen = true;
+
             startRoom.OnPlayerEnter();
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player != null) player.transform.position = startRoom.transform.position;
+
+            // Lock the start room behind the tutorial overlay
+            startRoom.SetTutorialLocked(true);
+
+            // Spawn the tutorial overlay (it will call startRoom.UnlockTutorial() when dismissed)
+            GameObject tutorialGO = new GameObject("TutorialOverlay");
+            TutorialOverlay tutorial = tutorialGO.AddComponent<TutorialOverlay>();
+            tutorial.Initialize(startRoom);
         }
     }
 

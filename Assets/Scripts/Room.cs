@@ -252,6 +252,27 @@ public class Room : MonoBehaviour
     // Flag to force doors to stay open (e.g. for Start Room or special rooms)
     public bool AlwaysOpen = false;
 
+    // Tutorial locking: keeps doors locked until tutorial is dismissed
+    public bool TutorialLocked { get; private set; } = false;
+
+    /// <summary>Called by RoomManager when the tutorial overlay is spawned.</summary>
+    public void SetTutorialLocked(bool locked)
+    {
+        TutorialLocked = locked;
+        if (locked) LockDoors();
+    }
+
+    /// <summary>Called by TutorialOverlay when the player finishes all pages.</summary>
+    public void UnlockTutorial()
+    {
+        TutorialLocked = false;
+        // Only open the doors if combat locking isn't active
+        if (AlwaysOpen || IsCleared)
+        {
+            UnlockDoors();
+        }
+    }
+
     public void OnPlayerEnter()
     {
         // 1. Move Camera
@@ -433,6 +454,9 @@ public class Room : MonoBehaviour
 
     private void UnlockDoors()
     {
+        // Don't open while tutorial is still active
+        if (TutorialLocked) return;
+
         Debug.Log($"Room {name}: UnlockDoors called.");
         if (topDoor != null) { topDoor.SetLocked(false); Debug.Log($"Room {name}: Unlocked top door"); } else Debug.Log($"Room {name}: TopDoor is NULL (no neighbor or failed setup)");
         if (bottomDoor != null) { bottomDoor.SetLocked(false); Debug.Log($"Room {name}: Unlocked bottom door"); } else Debug.Log($"Room {name}: BottomDoor is NULL (no neighbor or failed setup)");

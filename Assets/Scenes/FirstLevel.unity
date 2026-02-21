@@ -965,7 +965,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 12
-  m_Sprite: {fileID: 2900447590193464389, guid: 22dd3387b88c5f44e83f47fb3f8537d2, type: 3}
+  m_Sprite: {fileID: 1178000108287567050, guid: 22dd3387b88c5f44e83f47fb3f8537d2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1138,7 +1138,7 @@ MonoBehaviour:
   pingInterval: 4.37
   edgeWidth: 12.82
   rippleColor: {r: 0, g: 1, b: 1, a: 1}
-  worldDarkness: 0
+  worldDarkness: 1
   fadeOutDuration: 2.3
   pixelSize: 6
   playerRadius: 2.5

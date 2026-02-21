@@ -80,6 +80,7 @@ public class RoomManager : MonoBehaviour
     private int roomCount;
     private Room[,] roomComponentGrid; 
 
+    private Room currentRoom;
     private bool generationComplete = false;
     private bool roomsLinked = false;
     public bool IsInitialized() => generationComplete;
@@ -273,6 +274,8 @@ public class RoomManager : MonoBehaviour
             GameObject tutorialGO = new GameObject("TutorialOverlay");
             TutorialOverlay tutorial = tutorialGO.AddComponent<TutorialOverlay>();
             tutorial.Initialize(startRoom);
+
+            UpdateRoomVisibility(startRoom);
         }
     }
 
@@ -322,6 +325,7 @@ public class RoomManager : MonoBehaviour
         if (!CanTeleport) return;
         lastTeleportTime = Time.time;
 
+        UpdateRoomVisibility(room);
         room.OnPlayerEnter();
 
         GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -344,6 +348,35 @@ public class RoomManager : MonoBehaviour
                 spawnOffset = new Vector3(roomWidth/2f - doorExitOffset, 0, 0);
                 
             player.transform.position = roomCenter + spawnOffset;
+        }
+    }
+
+    private void UpdateRoomVisibility(Room activeRoom)
+    {
+        if (activeRoom == null) return;
+        currentRoom = activeRoom;
+
+        foreach (var roomObj in roomObjects)
+        {
+            if (roomObj != null) roomObj.SetActive(false);
+        }
+
+        activeRoom.gameObject.SetActive(true);
+
+        Vector2Int[] neighbors = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+        Vector2Int activeIdx = activeRoom.RoomIndex;
+
+        foreach (var dir in neighbors)
+        {
+            Vector2Int neighborIdx = activeIdx + dir;
+            if (neighborIdx.x >= 0 && neighborIdx.x < gridSizeX && neighborIdx.y >= 0 && neighborIdx.y < gridSizeY)
+            {
+                Room neighbor = roomComponentGrid[neighborIdx.x, neighborIdx.y];
+                if (neighbor != null)
+                {
+                    neighbor.gameObject.SetActive(true);
+                }
+            }
         }
     }
 

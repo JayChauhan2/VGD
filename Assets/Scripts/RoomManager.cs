@@ -48,6 +48,12 @@ public class RoomManager : MonoBehaviour
     [Tooltip("Optional override prefab for Testing Map mode. If assigned, this same prefab is used for ALL generated slots instead of random picks.")]
     public GameObject testingMapRoomPrefab;
 
+    [Header("Level Progression")]
+    [Tooltip("The name of the scene to load after winning this level.")]
+    public string nextLevelName;
+    [Tooltip("If true, winning this level shows the 'You Win' screen instead of loading a next level.")]
+    public bool isFinalLevel;
+
     [Header("Box Spawning")]
     public GameObject boxPrefab; // Drag BreakableBox prefab here
     [Range(0, 20)] public int minBoxesPerRoom = 3;

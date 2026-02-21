@@ -101,7 +101,34 @@ public class GameHUD : MonoBehaviour
         int total   = Room.AllRooms.Count;
         int cleared = Room.AllRooms.Count(r => r != null && r.IsCleared);
         if (total > 0 && cleared >= total)
+        {
+            Debug.Log("GameHUD: All rooms cleared! Showing win screen.");
+
             ShowWinScreen();
+
+            // If there's a next level, transition after a delay so the player can see the win text
+            if (RoomManager.Instance != null && !RoomManager.Instance.isFinalLevel && !string.IsNullOrEmpty(RoomManager.Instance.nextLevelName))
+            {
+                StartCoroutine(WaitAndTransition(RoomManager.Instance.nextLevelName));
+            }
+        }
+    }
+
+    private System.Collections.IEnumerator WaitAndTransition(string nextLevelName)
+    {
+        yield return new WaitForSeconds(2.0f);
+
+        // Remove internal spaces so "First Level" matches "FirstLevel"
+        string nextScene = nextLevelName.Replace(" ", "").Trim();
+        Debug.Log($"GameHUD: Transitioning to next level: '{nextScene}'");
+
+        if (SceneTransitionManager.Instance != null)
+            SceneTransitionManager.Instance.FadeToLevel(nextScene);
+        else
+        {
+            Debug.LogWarning("GameHUD: SceneTransitionManager not found. Loading directly.");
+            UnityEngine.SceneManagement.SceneManager.LoadScene(nextScene);
+        }
     }
     
     private void ShowWinScreen()
@@ -111,7 +138,7 @@ public class GameHUD : MonoBehaviour
             winText.gameObject.SetActive(true);
             winText.text = "Congrats you won!";
         }
-        Time.timeScale = 0; 
+        // Time.timeScale = 0; // Let's keep the game running so the win text stays up comfortably
     }
 
     private void Update()

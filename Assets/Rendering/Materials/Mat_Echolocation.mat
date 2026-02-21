@@ -41,7 +41,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AspectRatio: 1.777592
+    - _AspectRatio: 1.7777778
     - _Darkness: 0
     - _EdgeWidth: 12.82
     - _EnableExternalAlpha: 0
@@ -50,13 +50,13 @@ Material:
     - _OrthographicSize: 5.4
     - _PixelSize: 6
     - _PlayerRadius: 2.5
-    - _Radius: 30.395319
+    - _Radius: -0.57386357
     - _ZWrite: 0
     m_Colors:
-    - _CameraPos: {r: 0.12499926, g: 11.000416, b: -12.89, a: 0}
-    - _Center: {r: 9.076586, g: 6.4389024, b: 0, a: 0}
+    - _CameraPos: {r: -6.5875745e-14, g: -6.3482605e-14, b: -12.89, a: 0}
+    - _Center: {r: 0, g: 0, b: 0, a: 0}
     - _Color: {r: 0, g: 1, b: 1, a: 1}
-    - _PlayerPos: {r: 9.076586, g: 6.4389024, b: 0, a: 0}
+    - _PlayerPos: {r: 0, g: 0, b: 0, a: 0}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

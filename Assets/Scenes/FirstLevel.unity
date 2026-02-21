@@ -195,7 +195,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 11
-  m_Sprite: {fileID: -7612041258342711837, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  m_Sprite: {fileID: 5097786063004615103, guid: c9185b05321cefc47a93553910df2005, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -444,8 +444,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   coinPosition: {x: -20, y: -20}
   healthPosition: {x: -20, y: -50}
-  fontSize: 24
-  textColor: {r: 0, g: 0, b: 0, a: 1}
+  fontSize: 14
+  textColor: {r: 1, g: 1, b: 1, a: 1}
   referenceResolution: {x: 1920, y: 1080}
   matchWidthOrHeight: 0.5
   uiScale: 1.5
@@ -965,7 +965,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 12
-  m_Sprite: {fileID: 1178000108287567050, guid: 22dd3387b88c5f44e83f47fb3f8537d2, type: 3}
+  m_Sprite: {fileID: 2900447590193464389, guid: 22dd3387b88c5f44e83f47fb3f8537d2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1420,9 +1420,11 @@ MonoBehaviour:
   currentRoomColor: {r: 0.28773582, g: 0.7694133, b: 1, a: 1}
   isTestingMode: 0
   testingRoomPrefab: {fileID: 2167945867662251604, guid: ead560bc08016974cad360743600edd4, type: 3}
-  isTestingMap: 0
-  testingMapRoomCount: 3
+  isTestingMap: 1
+  testingMapRoomCount: 1
   testingMapRoomPrefab: {fileID: 0}
+  nextLevelName: SecondLevel
+  isFinalLevel: 0
   boxPrefab: {fileID: 3234879982250579851, guid: 9d84c4d0c62944030b97e9297a681f46, type: 3}
   minBoxesPerRoom: 3
   maxBoxesPerRoom: 8
@@ -1469,7 +1471,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd3986339f4d5b344936398e5083f1ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startingBombs: 299
+  startingBombs: 5
   bombPrefab: {fileID: 5184259077466523281, guid: de132c464bdaf614eb485b8011650a76, type: 3}
 --- !u!1 &1744082141
 GameObject:

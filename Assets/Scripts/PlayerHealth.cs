@@ -214,15 +214,82 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-    private IEnumerator InvincibilityRoutine()
+    private IEnumerator InvincibilityRoutine(bool isTotemRevive = false)
     {
         IsInvincible = true;
+
+        Color[] originalColors = null;
+        Color[] originalEndColors = null;
+        if (isTotemRevive && forceFieldRenderers != null)
+        {
+            originalColors = new Color[forceFieldRenderers.Length];
+            originalEndColors = new Color[forceFieldRenderers.Length];
+            for (int i = 0; i < forceFieldRenderers.Length; i++)
+            {
+                var r = forceFieldRenderers[i];
+                if (r == null) continue;
+
+                if (r is SpriteRenderer sr)
+                {
+                    originalColors[i] = sr.color;
+                    sr.color = new Color(1f, 1f, 0f, sr.color.a);
+                }
+                else if (r is LineRenderer lr)
+                {
+                    originalColors[i] = lr.startColor;
+                    originalEndColors[i] = lr.endColor;
+                    lr.startColor = new Color(1f, 1f, 0f, lr.startColor.a);
+                    lr.endColor = new Color(1f, 0.8f, 0.2f, lr.endColor.a);
+                }
+                else if (r.TryGetComponent<ParticleSystem>(out var ps))
+                {
+                    originalColors[i] = ps.main.startColor.color;
+                    var main = ps.main;
+                    main.startColor = new Color(1f, 1f, 0f, originalColors[i].a);
+                }
+                else if (r.material != null && r.material.HasProperty("_Color"))
+                {
+                    originalColors[i] = r.material.color;
+                    r.material.color = new Color(1f, 1f, 0f, originalColors[i].a);
+                }
+            }
+        }
+
         if (forcefield != null) forcefield.SetActive(true);
 
         yield return new WaitForSeconds(invincibilityDuration);
 
         IsInvincible = false;
         if (forcefield != null) forcefield.SetActive(false);
+
+        // Revert colors
+        if (isTotemRevive && forceFieldRenderers != null && originalColors != null)
+        {
+            for (int i = 0; i < forceFieldRenderers.Length; i++)
+            {
+                var r = forceFieldRenderers[i];
+                if (r == null) continue;
+
+                if (r is SpriteRenderer sr)
+                {
+                    sr.color = originalColors[i];
+                }
+                else if (r is LineRenderer lr)
+                {
+                    lr.startColor = originalColors[i];
+                    lr.endColor = originalEndColors[i];
+                }
+                else if (r.TryGetComponent<ParticleSystem>(out var ps))
+                {
+                    var main = ps.main;
+                    main.startColor = originalColors[i];
+                }
+                else if (r.material != null && r.material.HasProperty("_Color"))
+                {
+                    r.material.color = originalColors[i];
+                }
+            }
+        }
     }
 
     /// <summary>Called by FamiliarTotem to prevent the current death.</summary>
@@ -258,7 +325,7 @@ public class PlayerHealth : MonoBehaviour
             // The Totem familiar calls Heal() which sets CurrentHealth. 
             // Heal() should run BEFORE we reach this point if called in the event handler.
             
-            StartCoroutine(InvincibilityRoutine());
+            StartCoroutine(InvincibilityRoutine(true));
             return;
         }
 

@@ -516,7 +516,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 11
-  m_Sprite: {fileID: 5097786063004615103, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  m_Sprite: {fileID: 7159423286996259094, guid: c9185b05321cefc47a93553910df2005, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -899,6 +899,8 @@ MonoBehaviour:
   rechargeRate: 10
   laserFirePoint: {fileID: 1960840414}
   m_lineRenderer: {fileID: 687766237}
+  beamCount: 10
+  beamWidth: 0.2
   flashlightOnSprite: {fileID: 2547833562694337563, guid: 91db661b70518a0429ed9e0a072fd00b, type: 3}
   flashlightOffSprite: {fileID: -5913738696227704600, guid: 91db661b70518a0429ed9e0a072fd00b, type: 3}
   overheatThreshold: 20
@@ -1847,7 +1849,7 @@ MonoBehaviour:
   isTestingMode: 0
   testingRoomPrefab: {fileID: 2167945867662251604, guid: ead560bc08016974cad360743600edd4, type: 3}
   isTestingMap: 1
-  testingMapRoomCount: 1
+  testingMapRoomCount: 3
   testingMapRoomPrefab: {fileID: 0}
   boxPrefab: {fileID: 3234879982250579851, guid: 9d84c4d0c62944030b97e9297a681f46, type: 3}
   minBoxesPerRoom: 3

@@ -19,6 +19,11 @@ public class Laser : MonoBehaviour
     public LineRenderer m_lineRenderer;
     Transform m_transform;
 
+    [Header("Multi-Ray Experiment")]
+    public int beamCount = 10;
+    public float beamWidth = 0.25f;
+    private LineRenderer[] beamRenderers;
+
     [Header("Visuals")]
     public Sprite flashlightOnSprite;
     public Sprite flashlightOffSprite;
@@ -36,6 +41,38 @@ public class Laser : MonoBehaviour
         m_transform = GetComponent<Transform>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         currentEnergy = maxEnergy;
+
+        if (m_lineRenderer != null)
+        {
+            beamRenderers = new LineRenderer[beamCount];
+            beamRenderers[0] = m_lineRenderer;
+
+            // Make the segments slightly thicker than the mathematical slice so they overlap and form a solid block
+            float segmentWidth = beamCount > 0 ? (beamWidth / beamCount) * 1.5f : m_lineRenderer.startWidth;
+            m_lineRenderer.startWidth = segmentWidth;
+            m_lineRenderer.endWidth = segmentWidth;
+
+            for (int i = 1; i < beamCount; i++)
+            {
+                GameObject beamObj = new GameObject("LaserBeam_" + i);
+                beamObj.transform.SetParent(m_lineRenderer.transform.parent, false);
+                LineRenderer lr = beamObj.AddComponent<LineRenderer>();
+
+                lr.sharedMaterial = m_lineRenderer.sharedMaterial;
+                lr.colorGradient = m_lineRenderer.colorGradient;
+                lr.startWidth = segmentWidth;
+                lr.endWidth = segmentWidth;
+                lr.sortingLayerID = m_lineRenderer.sortingLayerID;
+                lr.sortingLayerName = m_lineRenderer.sortingLayerName;
+                lr.sortingOrder = m_lineRenderer.sortingOrder;
+                lr.textureMode = m_lineRenderer.textureMode;
+                lr.numCapVertices = m_lineRenderer.numCapVertices;
+                lr.numCornerVertices = m_lineRenderer.numCornerVertices;
+                lr.alignment = m_lineRenderer.alignment;
+
+                beamRenderers[i] = lr;
+            }
+        }
     }
 
     private void Update()
@@ -171,7 +208,15 @@ public class Laser : MonoBehaviour
 
     void DisableLaser()
     {
-        if (m_lineRenderer != null) m_lineRenderer.enabled = false;
+        if (beamRenderers != null)
+        {
+            foreach (var lr in beamRenderers)
+            {
+                if (lr != null) lr.enabled = false;
+            }
+        }
+        else if (m_lineRenderer != null) m_lineRenderer.enabled = false;
+
         if (spriteRenderer != null && flashlightOffSprite != null)
         {
             spriteRenderer.sprite = flashlightOffSprite;
@@ -183,111 +228,134 @@ public class Laser : MonoBehaviour
 
     void ShootLaser()
     {
-        if (m_lineRenderer != null) m_lineRenderer.enabled = true;
+        if (beamRenderers != null)
+        {
+            foreach (var lr in beamRenderers)
+            {
+                if (lr != null) lr.enabled = true;
+            }
+        }
+        else if (m_lineRenderer != null) m_lineRenderer.enabled = true;
+
         if (spriteRenderer != null && flashlightOnSprite != null)
         {
             spriteRenderer.sprite = flashlightOnSprite;
         }
 
-        // Raycast 1
-        RaycastHit2D _hit = Physics2D.Raycast(m_transform.position, transform.right, defDistanceRay);
-        
-        Vector2 firstEndPos = _hit.collider != null ? _hit.point : (Vector2)laserFirePoint.position + (Vector2)transform.right * defDistanceRay;
         bool isHitEnemy = false;
-        
-        // Handle First Hit
-        if (_hit.collider != null)
+        Vector2 right = transform.right;
+        Vector2 up = transform.up;
+        System.Collections.Generic.HashSet<Collider2D> damagedEnemiesThisFrame = new System.Collections.Generic.HashSet<Collider2D>();
+        System.Collections.Generic.HashSet<Collider2D> damagedShieldsThisFrame = new System.Collections.Generic.HashSet<Collider2D>();
+        System.Collections.Generic.HashSet<BreakableBox> damagedBoxesThisFrame = new System.Collections.Generic.HashSet<BreakableBox>();
+        System.Collections.Generic.HashSet<Collider2D> damagedPlayerThisFrame = new System.Collections.Generic.HashSet<Collider2D>();
+
+        for (int i = 0; i < beamCount; i++)
         {
-            // CHECK FOR REFLECTOR (Body or Shield)
-            // Use GetComponentInParent to handle hitting the Shield Child OR the Body
-            ReflectorEnemy reflector = _hit.collider.GetComponentInParent<ReflectorEnemy>();
+            float t = (beamCount <= 1) ? 0.5f : (float)i / (beamCount - 1);
+            float offset = Mathf.Lerp(-beamWidth / 2f, beamWidth / 2f, t);
             
-            // Determine if we specifically hit the Shield Object
-            bool hitShieldObject = false;
-            if (reflector != null)
+            // Offset start position perpendicular to the laser direction
+            Vector2 startPos = (Vector2)laserFirePoint.position + up * offset;
+            
+            // Raycast starting from the offset position
+            RaycastHit2D _hit = Physics2D.Raycast(startPos, right, defDistanceRay);
+            Vector2 firstEndPos = _hit.collider != null ? _hit.point : startPos + right * defDistanceRay;
+            
+            LineRenderer currentLR = (beamRenderers != null && i < beamRenderers.Length) ? beamRenderers[i] : m_lineRenderer;
+            
+            if (currentLR != null)
             {
-                GameObject shieldObj = reflector.GetShieldGameObject();
-                if (shieldObj != null && _hit.collider.gameObject == shieldObj)
-                {
-                    hitShieldObject = true;
-                }
+                currentLR.positionCount = 2;
+                currentLR.SetPosition(0, startPos);
+                currentLR.SetPosition(1, firstEndPos);
             }
 
-            if (reflector != null && hitShieldObject && reflector.IsReflecting(transform.right))
+            if (_hit.collider != null)
             {
-                // REFLECTION LOGIC
-                // 1. Calculate Reflection Vector
-                Vector2 incomingDir = transform.right;
-                Vector2 normal = _hit.normal;
-                Vector2 reflectDir = Vector2.Reflect(incomingDir, normal).normalized;
-                
-                // 2. Raycast 2 (Bounce)
-                RaycastHit2D _hit2 = Physics2D.Raycast(_hit.point + reflectDir * 0.1f, reflectDir, defDistanceRay);
-                Vector2 secondEndPos = _hit2.collider != null ? _hit2.point : _hit.point + reflectDir * defDistanceRay;
-                
-                // Draw 3 points
-                m_lineRenderer.positionCount = 3;
-                m_lineRenderer.SetPosition(0, laserFirePoint.position);
-                m_lineRenderer.SetPosition(1, firstEndPos);
-                m_lineRenderer.SetPosition(2, secondEndPos);
-                
-                // Handle Damage for Second Hit
-                if (_hit2.collider != null)
+                ReflectorEnemy reflector = _hit.collider.GetComponentInParent<ReflectorEnemy>();
+                bool hitShieldObject = false;
+                if (reflector != null)
                 {
-                    EnemyAI enemy2 = _hit2.collider.GetComponent<EnemyAI>();
-                    if (enemy2 != null) enemy2.TakeDamage(damagePerSecond * Time.deltaTime);
-                    else if (_hit2.collider.CompareTag("Player"))
+                    GameObject shieldObj = reflector.GetShieldGameObject();
+                    if (shieldObj != null && _hit.collider.gameObject == shieldObj) hitShieldObject = true;
+                }
+
+                if (reflector != null && hitShieldObject && reflector.IsReflecting(right))
+                {
+                    Vector2 incomingDir = right;
+                    Vector2 normal = _hit.normal;
+                    Vector2 reflectDir = Vector2.Reflect(incomingDir, normal).normalized;
+                    
+                    RaycastHit2D _hit2 = Physics2D.Raycast(_hit.point + reflectDir * 0.1f, reflectDir, defDistanceRay);
+                    Vector2 secondEndPos = _hit2.collider != null ? _hit2.point : _hit.point + reflectDir * defDistanceRay;
+                    
+                    if (currentLR != null)
                     {
-                         PlayerHealth ph = _hit2.collider.GetComponent<PlayerHealth>();
-                         if (ph != null) ph.TakeDamage(10f * Time.deltaTime, reflectDir);
+                        currentLR.positionCount = 3;
+                        currentLR.SetPosition(2, secondEndPos);
+                    }
+                    
+                    if (_hit2.collider != null)
+                    {
+                        EnemyAI enemy2 = _hit2.collider.GetComponent<EnemyAI>();
+                        if (enemy2 != null && !damagedEnemiesThisFrame.Contains(_hit2.collider))
+                        {
+                            enemy2.TakeDamage(damagePerSecond * Time.deltaTime);
+                            damagedEnemiesThisFrame.Add(_hit2.collider);
+                        }
+                        else if (_hit2.collider.CompareTag("Player") && !damagedPlayerThisFrame.Contains(_hit2.collider))
+                        {
+                             PlayerHealth ph = _hit2.collider.GetComponent<PlayerHealth>();
+                             if (ph != null) ph.TakeDamage(10f * Time.deltaTime, reflectDir);
+                             damagedPlayerThisFrame.Add(_hit2.collider);
+                        }
+                    }
+                    
+                    if (!damagedShieldsThisFrame.Contains(_hit.collider))
+                    {
+                        reflector.TakeDamage(damagePerSecond * Time.deltaTime);
+                        damagedShieldsThisFrame.Add(_hit.collider);
+                    }
+                    isHitEnemy = true; 
+                    continue; // Done with this ray
+                }
+                 
+                EnemyAI enemy = _hit.collider.GetComponent<EnemyAI>();
+                if (enemy == null) enemy = _hit.collider.GetComponentInParent<EnemyAI>();
+
+                if (enemy != null)
+                {
+                    if (!damagedEnemiesThisFrame.Contains(_hit.collider))
+                    {
+                        enemy.TakeDamage(damagePerSecond * Time.deltaTime);
+                        damagedEnemiesThisFrame.Add(_hit.collider);
+                    }
+                    isHitEnemy = true;
+                }
+                else
+                {
+                    BreakableBox box = _hit.collider.GetComponent<BreakableBox>();
+                    if (box != null)
+                    {
+                        if (!damagedBoxesThisFrame.Contains(box))
+                        {
+                            box.TakeDamage(damagePerSecond * Time.deltaTime, right);
+                            damagedBoxesThisFrame.Add(box);
+                        }
+                        isHitEnemy = true;
                     }
                 }
                 
-                // Damage Shield
-                reflector.TakeDamage(damagePerSecond * Time.deltaTime);
-                
-                isHitEnemy = true; 
-                return; 
-            }
-            
-            // Standard Enemy Hit (Body or Non-Reflecting Shield)
-            // If we hit the Reflector Body (not shield), take damage.
-            // If we hit the Shield but it's not reflecting (e.g. broken), take damage (handled by TakeDamage logic).
-             
-            EnemyAI enemy = _hit.collider.GetComponent<EnemyAI>();
-            // If we hit the Shield Child (which implies no EnemyAI on it), we need to get it from Parent
-            if (enemy == null) enemy = _hit.collider.GetComponentInParent<EnemyAI>();
-
-            if (enemy != null)
-            {
-                enemy.TakeDamage(damagePerSecond * Time.deltaTime);
-                isHitEnemy = true;
-            }
-            else
-            {
-                // Check for BreakableBox
-                BreakableBox box = _hit.collider.GetComponent<BreakableBox>();
-                if (box != null)
+                EnemyProjectile proj = _hit.collider.GetComponent<EnemyProjectile>();
+                if (proj != null)
                 {
-                    box.TakeDamage(damagePerSecond * Time.deltaTime, transform.right);
-                    isHitEnemy = true;
+                    Destroy(proj.gameObject);
+                    isHitEnemy = true; 
                 }
-            }
-            
-            // Projectile Hit
-            EnemyProjectile proj = _hit.collider.GetComponent<EnemyProjectile>();
-            if (proj != null)
-            {
-                Destroy(proj.gameObject);
-                isHitEnemy = true; 
             }
         }
         
-        // No Reflection / Standard Draw
-        m_lineRenderer.positionCount = 2;
-        Draw2DRay(laserFirePoint.position, firstEndPos);
-        
-        // Miss Logic
         if (!isHitEnemy)
         {
             Room room = Room.GetRoomContaining(transform.position);
@@ -296,11 +364,5 @@ public class Laser : MonoBehaviour
                 room.Pressure.OnMissed(missPressureRate * Time.deltaTime);
             }
         }
-    }
-
-    void Draw2DRay(Vector2 startPos, Vector2 endPos)
-    {
-        m_lineRenderer.SetPosition(0, startPos);
-        m_lineRenderer.SetPosition(1, endPos);
     }
 }

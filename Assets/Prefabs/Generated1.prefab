@@ -6444,7 +6444,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0.24832064, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -6454,7 +6454,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 4}
+  m_Size: {x: 0.5033587, y: 4}
   m_EdgeRadius: 0
 --- !u!1 &6887417143058362739
 GameObject:
@@ -6621,7 +6621,7 @@ Tilemap:
     second:
       serializedVersion: 2
       m_TileIndex: 20
-      m_TileSpriteIndex: 22
+      m_TileSpriteIndex: 44
       m_TileMatrixIndex: 0
       m_TileColorIndex: 7
       m_TileObjectToInstantiateIndex: 65535
@@ -6741,7 +6741,7 @@ Tilemap:
     second:
       serializedVersion: 2
       m_TileIndex: 24
-      m_TileSpriteIndex: 36
+      m_TileSpriteIndex: 43
       m_TileMatrixIndex: 0
       m_TileColorIndex: 7
       m_TileObjectToInstantiateIndex: 65535
@@ -6751,7 +6751,7 @@ Tilemap:
     second:
       serializedVersion: 2
       m_TileIndex: 29
-      m_TileSpriteIndex: 38
+      m_TileSpriteIndex: 42
       m_TileMatrixIndex: 0
       m_TileColorIndex: 7
       m_TileObjectToInstantiateIndex: 65535
@@ -6871,7 +6871,7 @@ Tilemap:
     second:
       serializedVersion: 2
       m_TileIndex: 33
-      m_TileSpriteIndex: 33
+      m_TileSpriteIndex: 41
       m_TileMatrixIndex: 0
       m_TileColorIndex: 7
       m_TileObjectToInstantiateIndex: 65535
@@ -6881,7 +6881,7 @@ Tilemap:
     second:
       serializedVersion: 2
       m_TileIndex: 32
-      m_TileSpriteIndex: 32
+      m_TileSpriteIndex: 38
       m_TileMatrixIndex: 0
       m_TileColorIndex: 7
       m_TileObjectToInstantiateIndex: 65535
@@ -7551,7 +7551,7 @@ Tilemap:
     second:
       serializedVersion: 2
       m_TileIndex: 18
-      m_TileSpriteIndex: 21
+      m_TileSpriteIndex: 37
       m_TileMatrixIndex: 0
       m_TileColorIndex: 7
       m_TileObjectToInstantiateIndex: 65535
@@ -7561,7 +7561,7 @@ Tilemap:
     second:
       serializedVersion: 2
       m_TileIndex: 19
-      m_TileSpriteIndex: 20
+      m_TileSpriteIndex: 36
       m_TileMatrixIndex: 0
       m_TileColorIndex: 7
       m_TileObjectToInstantiateIndex: 65535
@@ -7691,7 +7691,7 @@ Tilemap:
     second:
       serializedVersion: 2
       m_TileIndex: 12
-      m_TileSpriteIndex: 15
+      m_TileSpriteIndex: 35
       m_TileMatrixIndex: 0
       m_TileColorIndex: 7
       m_TileObjectToInstantiateIndex: 65535
@@ -7821,7 +7821,7 @@ Tilemap:
     second:
       serializedVersion: 2
       m_TileIndex: 31
-      m_TileSpriteIndex: 31
+      m_TileSpriteIndex: 33
       m_TileMatrixIndex: 0
       m_TileColorIndex: 7
       m_TileObjectToInstantiateIndex: 65535
@@ -7956,8 +7956,6 @@ Tilemap:
     m_Data: {fileID: -2074481036, guid: 31256d0d8bb1d3a4882041486ca17f59, type: 3}
   - m_RefCount: 0
     m_Data: {fileID: 0}
-  - m_RefCount: 1
-    m_Data: {fileID: 989939876, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
   - m_RefCount: 0
     m_Data: {fileID: 0}
   - m_RefCount: 0
@@ -7966,12 +7964,14 @@ Tilemap:
     m_Data: {fileID: 0}
   - m_RefCount: 0
     m_Data: {fileID: 0}
-  - m_RefCount: 1
-    m_Data: {fileID: 491667056, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
-  - m_RefCount: 1
-    m_Data: {fileID: 811883402020642435, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
-  - m_RefCount: 1
-    m_Data: {fileID: 390535878, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
+  - m_RefCount: 0
+    m_Data: {fileID: 0}
+  - m_RefCount: 0
+    m_Data: {fileID: 0}
+  - m_RefCount: 0
+    m_Data: {fileID: 0}
+  - m_RefCount: 0
+    m_Data: {fileID: 0}
   - m_RefCount: 11
     m_Data: {fileID: 242234458, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
   - m_RefCount: 0
@@ -7988,34 +7988,34 @@ Tilemap:
     m_Data: {fileID: 0}
   - m_RefCount: 11
     m_Data: {fileID: 1558693150, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
+  - m_RefCount: 0
+    m_Data: {fileID: 0}
+  - m_RefCount: 0
+    m_Data: {fileID: 0}
   - m_RefCount: 1
     m_Data: {fileID: 1518558936, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
-  - m_RefCount: 1
-    m_Data: {fileID: 1785730143, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
-  - m_RefCount: 1
-    m_Data: {fileID: 1490240528, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
   - m_RefCount: 6
     m_Data: {fileID: -1856740731, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
   - m_RefCount: 1
-    m_Data: {fileID: 816319226, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
+    m_Data: {fileID: 989939876, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
   - m_RefCount: 1
-    m_Data: {fileID: -1796276633, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
+    m_Data: {fileID: 491667056, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
+  - m_RefCount: 1
+    m_Data: {fileID: 811883402020642435, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
+  - m_RefCount: 1
+    m_Data: {fileID: 1785730143, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
   - m_RefCount: 6
     m_Data: {fileID: -650973397, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
   - m_RefCount: 6
     m_Data: {fileID: 1360396364, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
+  - m_RefCount: 1
+    m_Data: {fileID: 1490240528, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
+  - m_RefCount: 1
+    m_Data: {fileID: -1796276633, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
+  - m_RefCount: 1
+    m_Data: {fileID: 816319226, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
+  - m_RefCount: 1
+    m_Data: {fileID: 390535878, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
   - m_RefCount: 6
     m_Data: {fileID: 1498244555, guid: fd3e51a196312e54abecd10ce37e290b, type: 3}
   - m_RefCount: 12
@@ -8497,7 +8497,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -0.25041315, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -8507,7 +8507,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 4}
+  m_Size: {x: 0.4991737, y: 4}
   m_EdgeRadius: 0
 --- !u!1001 &872661908896325867
 PrefabInstance:

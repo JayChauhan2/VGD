@@ -147,23 +147,22 @@ public class PathfindingGrid : MonoBehaviour
     {
         if (grid == null) return null;
 
-        // Convert world pos to grid percent
-        float percentX = (worldPosition.x + gridWorldSize.x / 2) / gridWorldSize.x; // Assumes grid center is 0,0 relative to transform? No, see calculation below.
-        
         // Adjust for grid center being at transform.position
-        // (worldPosition - transform.position) gives local pos relative to center
         Vector3 localPos = worldPosition - transform.position;
-        percentX = (localPos.x + gridWorldSize.x / 2) / gridWorldSize.x;
+        
+        // Calculate percentages using clamping to handle points slightly outside the grid bounds
+        float percentX = (localPos.x + gridWorldSize.x / 2) / gridWorldSize.x;
         float percentY = (localPos.y + gridWorldSize.y / 2) / gridWorldSize.y;
         
         percentX = Mathf.Clamp01(percentX);
         percentY = Mathf.Clamp01(percentY);
 
-        int x = Mathf.RoundToInt((gridSizeX - 1) * percentX);
-        int y = Mathf.RoundToInt((gridSizeY - 1) * percentY);
+        int x = Mathf.FloorToInt(Mathf.Min(gridSizeX * percentX, gridSizeX - 1));
+        int y = Mathf.FloorToInt(Mathf.Min(gridSizeY * percentY, gridSizeY - 1));
+
         if (x < 0 || x >= gridSizeX || y < 0 || y >= gridSizeY)
         {
-            Debug.LogWarning($"PathfindingGrid: Requested node out of bounds. WorldPos: {worldPosition}, GridIndex: {x},{y}, Dimensions: {gridSizeX}x{gridSizeY}");
+            // This should be impossible with Clamp01 and the FloorToInt logic, but kept as safety
             return null;
         }
 

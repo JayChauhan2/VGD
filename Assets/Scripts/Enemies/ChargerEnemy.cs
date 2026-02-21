@@ -52,8 +52,16 @@ public class ChargerEnemy : EnemyAI
                 break;
                 
             case ChargeState.Charging:
-                // Move in charge direction at high speed
-                transform.position += (Vector3)chargeDirection * chargeSpeed * Time.deltaTime;
+                // Move in charge direction at high speed using Physics to prevent clipping
+                if (rb != null)
+                {
+                    Vector2 nextPos = (Vector2)transform.position + chargeDirection * chargeSpeed * Time.deltaTime;
+                    rb.MovePosition(nextPos);
+                }
+                else
+                {
+                    transform.position += (Vector3)chargeDirection * chargeSpeed * Time.deltaTime;
+                }
                 
                 stateTimer -= Time.deltaTime;
                 if (stateTimer <= 0)

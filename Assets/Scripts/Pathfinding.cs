@@ -47,8 +47,16 @@ public class Pathfinding : MonoBehaviour
         HashSet<Node> closedSet = new HashSet<Node>();
         openSet.Add(startNode);
 
+        int iterations = 0;
         while (openSet.Count > 0)
         {
+            iterations++;
+            if (iterations > 10000)
+            {
+                Debug.LogError("Pathfinding: A* loop safety break triggered! Search exceeded 10,000 nodes. Grid might be too large or logic trapped.");
+                return null;
+            }
+
             Node currentNode = openSet[0];
             for (int i = 1; i < openSet.Count; i++)
             {

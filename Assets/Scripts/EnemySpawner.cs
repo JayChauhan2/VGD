@@ -170,7 +170,6 @@ public class EnemySpawner : MonoBehaviour
                 // Register with Room
                 if (currentRoom != null)
                 {
-                    currentRoom.RegisterEnemy(enemyScript);
                     enemyScript.AssignRoom(currentRoom);
                     
                     if (currentRoom.PlayerHasEntered && !currentRoom.IsCleared)

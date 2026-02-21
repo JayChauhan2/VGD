@@ -31,11 +31,17 @@ public class BreakableBox : MonoBehaviour
     // (covers the box's footprint; adjust if your boxes are larger than 1 unit)
     private const float GridUpdateRadius = 0.75f;
 
-    void Start()
+    System.Collections.IEnumerator Start()
     {
         currentHealth = maxHealth;
         SetupHealthBar();
         SetHealthBarVisible(false); // Hidden by default
+
+        // Wait for pathfinding grid to be ready before registering
+        while (PathfindingGridUpdater.IsGridInitialized == false)
+        {
+             yield return null;
+        }
 
         // Tell pathfinding grid this box is an obstacle
         PathfindingGridUpdater.NotifyObstaclePlaced(transform.position, GridUpdateRadius);

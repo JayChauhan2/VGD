@@ -20,6 +20,8 @@ public static class PathfindingGridUpdater
         }
     }
 
+    public static bool IsGridInitialized => Grid != null && Grid.IsInitialized;
+
     /// <summary>
     /// Call when an obstacle (e.g. a box) is placed in the world.
     /// Marks nearby pathfinding nodes as blocked.

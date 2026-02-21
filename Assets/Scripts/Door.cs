@@ -60,6 +60,12 @@ public class Door : MonoBehaviour
         // Locked: Visible + Solid Barrier (Not Trigger)
         // Unlocked: Invisible + Exit Trigger (Is Trigger)
         
+        // If there is no neighbor, this door must remain a solid locked wall.
+        if (!locked && ConnectedRoom == null)
+        {
+            locked = true;
+        }
+
         Debug.Log($"Door {name}: SetLocked({locked})");
 
         if (doorCollider != null)
@@ -72,16 +78,54 @@ public class Door : MonoBehaviour
         {
             if (doorVisuals == gameObject)
             {
-                // If visuals are the root object, don't disable gameObject (kills script/collider)
-                // Disable Renderer instead if present
+                // Just keep it visible
                 var renderer = GetComponent<Renderer>();
-                if (renderer != null) renderer.enabled = !locked;
+                if (renderer != null) renderer.enabled = true;
             }
             else
             {
-                // Visuals are a child/separate object
-                doorVisuals.SetActive(!locked);
+                doorVisuals.SetActive(true);
             }
+        }
+
+        // Animation control
+        Animator anim = GetComponentInChildren<Animator>();
+        if (anim != null)
+        {
+            if (locked)
+            {
+                anim.Rebind();
+                anim.Update(0f);
+                anim.speed = 0f;
+            }
+            else
+            {
+                if (anim.speed == 0f)
+                {
+                    anim.speed = 1f;
+                    anim.Play(anim.GetCurrentAnimatorStateInfo(0).shortNameHash, 0, 0f); // Play from start
+                    StartCoroutine(FreezeAnimationAtEnd(anim));
+                }
+            }
+        }
+    }
+
+    private System.Collections.IEnumerator FreezeAnimationAtEnd(Animator anim)
+    {
+        // Wait a frame for the animation to start playing and update state info
+        yield return null;
+        
+        // Wait until the animation finishes (normalized time >= 1)
+        while (anim != null && anim.GetCurrentAnimatorStateInfo(0).normalizedTime < 0.95f)
+        {
+            yield return null;
+        }
+
+        // Freeze it near the very end to prevent it wrapping to 0
+        if (anim != null)
+        {
+            anim.speed = 0f;
+            anim.Play(anim.GetCurrentAnimatorStateInfo(0).shortNameHash, 0, 0.99f);
         }
     }
 

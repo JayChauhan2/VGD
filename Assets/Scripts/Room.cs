@@ -189,34 +189,25 @@ public class Room : MonoBehaviour
     private void SetupDoor(GameObject doorObj, Room neighbor, Vector2Int dir, ref Door doorRef)
     {
         Debug.Log($"Room {name}: SetupDoor called for Dir {dir}. Neighbor: {neighbor}, DoorObj: {doorObj}");
-        if (neighbor == null)
+        
+        if (doorObj != null)
         {
-            // No neighbor, deactivate door entirely (wall)
-            if (doorObj != null) 
-            {
-                doorObj.SetActive(false);
-                Debug.Log($"Room {name}: Deactivated door {dir} (No neighbor)");
-            }
+            doorObj.SetActive(true);
+            doorRef = doorObj.GetComponent<Door>();
+            if (doorRef == null) doorRef = doorObj.AddComponent<Door>(); // Add script if missing
+            
+            doorRef.Initialize(neighbor, dir);
+            // Start doors in locked state (Visible/Solid) - they'll unlock when room is entered/cleared
+            doorRef.SetLocked(true);
+            
+            if (neighbor != null)
+                Debug.Log($"Room {name}: SetupDoor Success for {dir}. DoorRef: {doorRef}");
+            else
+                Debug.Log($"Room {name}: Door {dir} has no neighbor, will remain locked. DoorRef: {doorRef}");
         }
         else
         {
-            // Activate and Setup
-            if (doorObj != null)
-            {
-                doorObj.SetActive(true);
-                doorRef = doorObj.GetComponent<Door>();
-                if (doorRef == null) doorRef = doorObj.AddComponent<Door>(); // Add script if missing
-                
-                doorRef.Initialize(neighbor, dir);
-                // Start doors in locked state (Visible/Solid) - they'll unlock when room is entered/cleared
-                doorRef.SetLocked(true);
-                
-                Debug.Log($"Room {name}: SetupDoor Success for {dir}. DoorRef: {doorRef}");
-            }
-            else
-            {
-                Debug.LogError($"Room {name}: Trying to setup door towards {dir} (Neighbor: {neighbor.name}), but Door Object is NULL!");
-            }
+            Debug.LogError($"Room {name}: Trying to setup door towards {dir} (Neighbor: {neighbor?.name}), but Door Object is NULL!");
         }
     }
 

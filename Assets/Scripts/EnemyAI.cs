@@ -11,18 +11,16 @@ public class EnemyAI : MonoBehaviour
     [Header("Loot Settings")]
     public GameObject coinPrefab;
 
-    // Optional override for health bar position
     public virtual Vector3? HealthBarOffsetOverride => null;
 
     protected Pathfinding pathfinding;
     protected List<Node> path;
     protected int targetIndex;
     
-    // Performance Optimization: Allow disabling pathfinding for enemies that don't need it (e.g. Teleporters)
     public bool usePathfinding = true;
 
     public bool IsActive { get; private set; } = false;
-    public bool IsKnockedBack { get; private set; } = false; // New flag for knockback state
+    public bool IsKnockedBack { get; private set; } = false; 
     protected bool isDying = false;
     
     [Tooltip("If true, this enemy counts towards locking the room. Set false for summoned minions or ghosts.")]
@@ -39,11 +37,9 @@ public class EnemyAI : MonoBehaviour
     protected Animator animator;
     protected SpriteRenderer spriteRenderer;
 
-    // Public method to explicitly assign room (e.g. from Spawner)
     public void AssignRoom(Room room)
     {
         parentRoom = room;
-        Debug.Log($"EnemyAI: Room explicitly assigned: {(room != null ? room.name : "null")}");
     }
 
     void Start()
@@ -53,15 +49,13 @@ public class EnemyAI : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
-        // Ensure physics settings are correct for collision
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous; // Helps with getting stuck
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous; 
         }
 
-        // Auto-add health bar if missing
         if (GetComponent<EnemyHealthBar>() == null)
         {
             gameObject.AddComponent<EnemyHealthBar>();
@@ -70,31 +64,24 @@ public class EnemyAI : MonoBehaviour
         currentHealth = maxHealth;
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         
-        // Ensure visibility by forcing the sorting layer
         {
             spriteRenderer.sortingLayerName = "Object";
-            // Removed hardcoded sortingOrder = 5 to allow dynamic depth sorting
         }
 
-        // Add Shadow
         if (GetComponent<SimpleShadow>() == null)
         {
             gameObject.AddComponent<SimpleShadow>();
         }
         
-        // If room not already assigned (e.g. by Spawner), try to find it
         if (parentRoom == null)
         {
-            // 1. Try Hierarchy
             parentRoom = GetComponentInParent<Room>();
             
-            // 2. Try Spatial Lookup via RoomManager
             if (parentRoom == null && RoomManager.Instance != null && RoomManager.Instance.IsInitialized())
             {
                 parentRoom = RoomManager.Instance.GetRoomAt(transform.position);
             }
             
-            // 3. Try Global Room Search (Handle manually placed rooms)
             if (parentRoom == null)
             {
                 parentRoom = Room.GetRoomContaining(transform.position);
@@ -103,45 +90,34 @@ public class EnemyAI : MonoBehaviour
 
         if (parentRoom != null)
         {
-            Debug.Log($"EnemyAI: Found Room '{parentRoom.name}' and registering myself.");
             parentRoom.RegisterEnemy(this);
         }
-        else
-        {
-            Debug.LogError($"EnemyAI: Could not find ANY Room for enemy at {transform.position}! Tried: Parent, Manager, and Bounds.");
-        }
 
-        // Try to find the Player if target not assigned
         if (target == null)
         {
             FindPlayer();
-            if (target == null) Debug.LogWarning("EnemyAI: Player with tag 'Player' not found in Start. Will keep searching.");
         }
 
         CheckPathfinding();
         StartCoroutine(UpdatePath());
         
-        // Virtual hook for subclasses
         OnEnemyStart();
     }
     
-    // Virtual method for subclasses to override
     protected virtual void OnEnemyStart() { }
     
     void CheckPathfinding()
     {
-        pathfinding = FindFirstObjectByType<Pathfinding>(); // Unity 2023+ standard
-        // if (pathfinding == null) pathfinding = FindObjectOfType<Pathfinding>(); // Deprecated fix
+        pathfinding = FindFirstObjectByType<Pathfinding>(); 
 
 
-        if (pathfinding == null) Debug.LogError("EnemyAI: Pathfinding component not found via FindFirstObjectByType or FindObjectOfType!");
-        if (target == null) Debug.LogWarning("EnemyAI: Target is null! Enemy will not move.");
+        if (pathfinding == null) Debug.LogError("EnemyAI: Pathfinding component not found!");
     }
 
     public void SetCurrentHealth(float amount)
     {
         currentHealth = amount;
-        if (currentHealth > maxHealth) maxHealth = currentHealth; // Auto-adjust max if needed
+        if (currentHealth > maxHealth) maxHealth = currentHealth; 
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 
@@ -149,17 +125,14 @@ public class EnemyAI : MonoBehaviour
     {
         if (isDying) return;
 
-        // Check for Spawn Protection (Forcefield)
         var protection = GetComponent<SpawnProtection>();
         if (protection != null && protection.IsActive)
         {
-            // Invincible!
             return;
         }
 
         currentHealth -= damage;
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
-        Debug.Log($"Enemy Health: {currentHealth}/{maxHealth}");
         
         if (currentHealth <= 0)
         {
@@ -170,49 +143,38 @@ public class EnemyAI : MonoBehaviour
 
     protected virtual void Die()
     {
-        // Play death animation effect (explosion + ghost) - Scaled to enemy size
-        // Pass parentRoom so we can register ghosts if the RNG succeeds
         EnemyDeathEffect.PlayDeathEffect(transform.position, spriteRenderer?.sprite, transform.localScale.x, parentRoom);
         
         DropLoot();
-        // Virtual hook for subclasses (called before room notification)
         OnEnemyDeath();
         
         if (parentRoom != null)
         {
-            Debug.Log($"EnemyAI: Dying, telling Room {parentRoom.name} I am dead.");
             parentRoom.EnemyDefeated(this);
-        }
-        else
-        {
-            Debug.LogError("EnemyAI: Dying but I have NO PARENT ROOM! I cannot unlock doors.");
         }
         Destroy(gameObject);
     }
     
-    // Virtual method for subclasses to override (e.g., spawn enemies, explode)
     protected virtual void OnEnemyDeath() { }
 
     protected virtual IEnumerator UpdatePath()
     {
         while (pathfinding == null || !pathfinding.IsGridReady)
         {
-            if (!usePathfinding) yield break; // Exit if pathfinding disabled
-            Debug.LogWarning($"EnemyAI: Waiting for Pathfinding Grid... (Pathfinding Obj: '{(pathfinding != null ? pathfinding.name : "null")}', IsGridReady: {pathfinding?.IsGridReady})");
+            if (!usePathfinding) yield break; 
             yield return new WaitForSeconds(1.0f);
         }
 
         while (true)
         {
-            if (!usePathfinding) yield break; // Exit if pathfinding disabled
+            if (!usePathfinding) yield break; 
 
-            if (!IsActive || IsKnockedBack) // Pause path updates if knocked back
+            if (!IsActive || IsKnockedBack) 
             {
                 yield return new WaitForSeconds(pathUpdateDelay);
                 continue;
             }
 
-            // Retry finding player if missing
             if (target == null)
             {
                 FindPlayer();
@@ -225,26 +187,19 @@ public class EnemyAI : MonoBehaviour
                 {
                     targetIndex = 0;
                 }
-                else
-                {
-                     Debug.LogWarning($"EnemyAI: Path calculation failed (Result null or empty). TargetPos: {target.position}");
-                }
             }
             yield return new WaitForSeconds(pathUpdateDelay);
         }
     }
 
-    // Flag to control if enemy stops when no path is available
     protected bool stopWhenNoPath = true;
 
     void Update()
     {
         if (!IsActive) return;
         
-        // suspend movement logic while knocked back so physics can work
         if (IsKnockedBack) return; 
         
-        // Virtual hook for subclasses to add custom update logic
         OnEnemyUpdate();
         
         Vector2 velocity = Vector2.zero;
@@ -257,7 +212,6 @@ public class EnemyAI : MonoBehaviour
         {
             Vector3 currentWaypoint = path[targetIndex].worldPosition;
             
-            // Move towards waypoint using Physics if available
             if (rb != null)
             {
                 Vector2 dir = (currentWaypoint - transform.position).normalized;
@@ -271,7 +225,6 @@ public class EnemyAI : MonoBehaviour
                 transform.position = nextPosition;
             }
 
-            // Check if close to waypoint
             if (Vector3.Distance(transform.position, currentWaypoint) < 0.1f)
             {
                 targetIndex++;
@@ -291,8 +244,6 @@ public class EnemyAI : MonoBehaviour
 
         if (spriteRenderer != null)
         {
-             // Dynamic Depth Sorting
-             // Multiply Y by -100 to give lower objects higher order (draw on top)
              spriteRenderer.sortingOrder = Mathf.RoundToInt(transform.position.y * -100);
 
             if (velocity.sqrMagnitude > 0.01f)
@@ -303,7 +254,6 @@ public class EnemyAI : MonoBehaviour
         }
     }
     
-    // Virtual method for subclasses to add custom update behavior
     protected virtual void OnEnemyUpdate() { }
 
     protected virtual void FindPlayer()
@@ -312,9 +262,7 @@ public class EnemyAI : MonoBehaviour
         if (player != null)
         {
             target = player.transform;
-            Debug.Log($"EnemyAI: Player found (Name: {player.name}) and assigned as target.");
             
-            // Ignore collision with Player so we don't push them around
             IgnoreCollisionWithPlayer(player);
         }
     }
@@ -331,7 +279,6 @@ public class EnemyAI : MonoBehaviour
                 Physics2D.IgnoreCollision(myCol, playerCol, true);
             }
         }
-        // Debug.Log("EnemyAI: Ignored collision with Player.");
     }
 
     void OnDrawGizmos()
@@ -358,16 +305,14 @@ public class EnemyAI : MonoBehaviour
 
     private float lastDamageTime;
     public float damageCooldown = 1.0f;
-    public float touchDamageRange = 0.8f; // Distance to check for "touching" player
+    public float touchDamageRange = 0.8f; 
 
-    // Replaced OnCollisionStay2D with custom check in Update
     protected void CheckTouchDamage()
     {
         if (target != null)
         {
             float distance = Vector2.Distance(transform.position, target.position);
             
-            // Check if close enough to "touch"
             if (distance <= touchDamageRange)
             {
                 if (Time.time >= lastDamageTime + damageCooldown)
@@ -378,32 +323,11 @@ public class EnemyAI : MonoBehaviour
                         Vector2 knockbackDir = (target.position - transform.position).normalized;
                         playerHealth.TakeDamage(10f, knockbackDir);
                         lastDamageTime = Time.time;
-                        // Debug.Log($"EnemyAI: Touched Player! Dealt Damage. Distance: {distance}");
                     }
                 }
             }
         }
     }
-
-    /* 
-    // Removed to allow passing through player
-    void OnCollisionStay2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            if (Time.time >= lastDamageTime + damageCooldown)
-            {
-                PlayerHealth playerHealth = collision.gameObject.GetComponent<PlayerHealth>();
-                if (playerHealth != null)
-                {
-                    Vector2 knockbackDir = (collision.transform.position - transform.position).normalized;
-                    playerHealth.TakeDamage(10f, knockbackDir);
-                    lastDamageTime = Time.time;
-                }
-            }
-        }
-    }
-    */
 
     private Coroutine activationCoroutine;
 
@@ -411,9 +335,8 @@ public class EnemyAI : MonoBehaviour
     {
         if (active)
         {
-            if (IsActive) return; // Already active
+            if (IsActive) return; 
 
-            // Start delay if not already running
             if (activationCoroutine != null) StopCoroutine(activationCoroutine);
             activationCoroutine = StartCoroutine(ActivateRoutine());
         }
@@ -421,7 +344,6 @@ public class EnemyAI : MonoBehaviour
         {
             if (activationCoroutine != null) StopCoroutine(activationCoroutine);
             IsActive = false;
-            Debug.Log($"EnemyAI: Active state set to {active}");
         }
     }
 
@@ -429,15 +351,12 @@ public class EnemyAI : MonoBehaviour
     {
         yield return new WaitForSeconds(0.5f);
         IsActive = true;
-        Debug.Log($"EnemyAI: Active state set to true (after delay)");
         OnEnemyActivated();
         activationCoroutine = null;
     }
     
-    // Virtual method for subclasses to override when enemy becomes active
     protected virtual void OnEnemyActivated() { }
     
-    // Helper method for subclasses to get room bounds
     protected Bounds GetRoomBounds()
     {
         if (parentRoom != null)
@@ -448,18 +367,14 @@ public class EnemyAI : MonoBehaviour
         }
         return new Bounds(transform.position, new Vector3(32f, 16f, 1f));
     }
-    // Helper method to check if a position is valid (not inside a wall)
     protected bool IsPositionValid(Vector3 position, float radius = 0.3f)
     {
-        // Check for walls at the position
         Collider2D hit = Physics2D.OverlapCircle(position, radius, LayerMask.GetMask("Obstacle"));
         if (hit != null) return false;
         
-        // Also check if inside room bounds
         if (parentRoom != null)
         {
             Bounds bounds = GetRoomBounds();
-            // Shrink bounds slightly to avoid hugging walls too closely
             bounds.Expand(-1f); 
             if (!bounds.Contains(position)) return false;
         }
@@ -467,20 +382,16 @@ public class EnemyAI : MonoBehaviour
         return true;
     }
 
-    // Helper method for safe movement (stops at walls)
     protected void MoveSafely(Vector3 direction, float distance)
     {
-        // Cast a ray to check for walls
         RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, distance + 0.5f, LayerMask.GetMask("Obstacle"));
         
         if (hit.collider == null)
         {
-            // Clear path, move normally
             transform.position += direction * distance;
         }
         else
         {
-            // Wall detected, limit movement to hit point (minus buffer)
             float safeDistance = Mathf.Max(0, hit.distance - 0.5f);
             if (safeDistance > 0)
             {
@@ -491,7 +402,6 @@ public class EnemyAI : MonoBehaviour
 
     public virtual void DropLoot()
     {
-        // Fallback: Try to load from RoomManager if not locally assigned
         if (coinPrefab == null && RoomManager.Instance != null)
         {
             coinPrefab = RoomManager.Instance.coinPrefab;
@@ -499,24 +409,12 @@ public class EnemyAI : MonoBehaviour
 
         if (coinPrefab == null) 
         {
-             Debug.LogWarning("EnemyAI: coinPrefab is missing! Please assign it in RoomManager or on the Enemy.");
              return;
         }
 
         float roll = Random.value;
         int coinCount = 0;
 
-        // Loot Table (base)
-        // 3 Coins: 5%  (roll < 0.05)
-        // 2 Coins: 10% (roll < 0.15)
-        // 1 Coin:  20% (roll < 0.35)
-        // Nothing: 65%
-        //
-        // With FamiliarCoinDoubler active, all thresholds are doubled (capped at 1):
-        // 3 Coins: 10% (roll < 0.10)
-        // 2 Coins: 20% (roll < 0.30)
-        // 1 Coin:  40% (roll < 0.70)
-        // Nothing: 30%
         float multiplier = FamiliarCoinDoubler.IsActive ? 2f : 1f;
         float t3 = Mathf.Min(0.05f * multiplier, 1f);
         float t2 = Mathf.Min(0.15f * multiplier, 1f);
@@ -531,72 +429,48 @@ public class EnemyAI : MonoBehaviour
             float mimicRoll = Random.value;
             GameObject prefabToSpawn = coinPrefab;
             
-            // Each coin has a 1/8 (12.5%) chance to be a Mimic
             if (mimicRoll < 0.125f && RoomManager.Instance != null && RoomManager.Instance.mimicPrefab != null)
             {
                 prefabToSpawn = RoomManager.Instance.mimicPrefab;
-                Debug.Log("EnemyAI: Spawning Mimic instead of Coin!");
             }
             
             Vector2 offset = Random.insideUnitCircle * 0.5f;
             Instantiate(prefabToSpawn, transform.position + (Vector3)offset, Quaternion.identity);
         }
-        
-        if (coinCount > 0) Debug.Log($"EnemyAI: Dropped {coinCount} items (Roll: {roll:F3})");
     }
 
     public virtual void MarkAsDetected()
     {
-        // Debug.Log($"EnemyAI: MarkAsDetected called on {gameObject.name}");
         
         if (GameHUD.Instance != null)
         {
-            // Request UI marker (always visible on top of darkness)
-            // Offset 0 so it's ON the enemy
             GameHUD.Instance.ShowEnemyMarker(transform, Vector3.zero, 2.0f);
         }
     }
 
     public virtual void ApplyKnockback(Vector2 force, float duration)
     {
-        // Allow knockback even if not active (e.g. idle enemy gets hit)
-        // We rely on IsKnockedBack flag to pause AI, which works even if not active yet.
-        
-        // Don't call StopCoroutine(UpdatePath()) because checking the flag in the loop is cleaner
-        // and StopCoroutine(Method()) doesn't work as intended here anyway.
-        
         StartCoroutine(KnockbackRoutine(force, duration));
     }
 
     private IEnumerator KnockbackRoutine(Vector2 force, float duration)
     {
         IsKnockedBack = true;
-        Debug.Log($"EnemyAI: Knockback started. Force: {force}");
         
         float originalDrag = 0f;
         if (rb != null)
         {
-            rb.bodyType = RigidbodyType2D.Dynamic; // Explicitly set Dynamic (isKinematic = false is same but this is clearer)
-            rb.constraints = RigidbodyConstraints2D.FreezeRotation; // Allow X/Y movement, freeze rotation
+            rb.bodyType = RigidbodyType2D.Dynamic; 
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation; 
             
             originalDrag = rb.linearDamping;
-            rb.linearDamping = 0; // Remove drag so they fly freely for the duration
+            rb.linearDamping = 0; 
             
-            // Apply velocity directly. 
-            // Note: If 'force' is actually a force vector (N), we should use AddForce.
-            // But if we want instant predictable speed, we set velocity.
-            // The previous code passed "30 * distancePercent", which is a scalar speed if treated as velocity.
-            // Let's rely on setting velocity for arcade responsiveness.
             rb.linearVelocity = force; 
-            
-            Debug.Log($"EnemyAI: Applied Velocity {rb.linearVelocity} | Constraints: {rb.constraints} | BodyType: {rb.bodyType}");
         }
         
         yield return new WaitForSeconds(duration);
         
-        Debug.Log("EnemyAI: Knockback ended.");
-        
-        // Recovery
         if (rb != null)
         {
              rb.linearVelocity = Vector2.zero; 
@@ -605,7 +479,6 @@ public class EnemyAI : MonoBehaviour
         
         IsKnockedBack = false;
         
-        // Reset path to ensure we recalculate immediately after recovery
         targetIndex = 0; 
         path = null; 
     }

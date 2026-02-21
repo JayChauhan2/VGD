@@ -195,7 +195,7 @@ SpriteRenderer:
   m_SortingLayerID: 1898995881
   m_SortingLayer: 3
   m_SortingOrder: 11
-  m_Sprite: {fileID: 5097786063004615103, guid: c9185b05321cefc47a93553910df2005, type: 3}
+  m_Sprite: {fileID: 392565593027928520, guid: c9185b05321cefc47a93553910df2005, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1442,6 +1442,8 @@ MonoBehaviour:
     m_Bits: 64
   minBoxDistance: 1.5
   boxGridOffset: {x: 0, y: 0}
+  backgroundMusic: {fileID: 8300000, guid: e801292fc847e5843a521d38eb058fd5, type: 3}
+  musicVolume: 0.37
   familiarPrefabs:
   - {fileID: 8952308957230528635, guid: cf52573aebc47a042a32acc7890e0fee, type: 3}
   - {fileID: 4574673874317755865, guid: 53f32f2c6c5b31147bfa5ff295878e8e, type: 3}

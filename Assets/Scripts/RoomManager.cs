@@ -63,6 +63,11 @@ public class RoomManager : MonoBehaviour
     public float minBoxDistance = 1.5f; 
     public Vector2 boxGridOffset = new Vector2(0.5f, 0.5f); 
 
+    [Header("Audio")]
+    public AudioClip backgroundMusic;
+    [Range(0f, 1f)] public float musicVolume = 0.5f;
+    private AudioSource musicSource;
+
 
     [Header("Familiar Scatter")]
     [Tooltip("Assign all Familiar prefabs here. They will be scattered across the map during generation.")]
@@ -115,7 +120,14 @@ public class RoomManager : MonoBehaviour
             if (pathfindingGrid == null) Debug.LogWarning("RoomManager: PathfindingGrid still not found after auto-search.");
         }
 
-
+        if (backgroundMusic != null)
+        {
+            musicSource = gameObject.AddComponent<AudioSource>();
+            musicSource.clip = backgroundMusic;
+            musicSource.loop = true;
+            musicSource.playOnAwake = false;
+            musicSource.Play();
+        }
 
         GenerateLevel();
     }
@@ -325,6 +337,7 @@ public class RoomManager : MonoBehaviour
         if (!CanTeleport) return;
         lastTeleportTime = Time.time;
 
+        UpdateMusicVolume();
         UpdateRoomVisibility(room);
         room.OnPlayerEnter();
 
@@ -348,6 +361,19 @@ public class RoomManager : MonoBehaviour
                 spawnOffset = new Vector3(roomWidth/2f - doorExitOffset, 0, 0);
                 
             player.transform.position = roomCenter + spawnOffset;
+        }
+    }
+
+    private void Update()
+    {
+        UpdateMusicVolume();
+    }
+
+    private void UpdateMusicVolume()
+    {
+        if (musicSource != null)
+        {
+            musicSource.volume = musicVolume;
         }
     }
 

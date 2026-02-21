@@ -47,16 +47,16 @@ Material:
     - _EnableExternalAlpha: 0
     - _InnerRadiusFactor: 0.8
     - _IsOrtho: 1
-    - _OrthographicSize: 5.4
+    - _OrthographicSize: 5.3999996
     - _PixelSize: 6
     - _PlayerRadius: 2.5
-    - _Radius: 9.498786
+    - _Radius: 11.915603
     - _ZWrite: 0
     m_Colors:
-    - _CameraPos: {r: 0, g: 0, b: -12.89, a: 0}
-    - _Center: {r: 0, g: 0, b: 0, a: 0}
+    - _CameraPos: {r: 19.999998, g: -1.282947e-16, b: -12.889988, a: 0}
+    - _Center: {r: 24.372171, g: 2.26092, b: 0, a: 0}
     - _Color: {r: 0, g: 1, b: 1, a: 1}
-    - _PlayerPos: {r: 0, g: 0, b: 0, a: 0}
+    - _PlayerPos: {r: 24.372171, g: 2.26092, b: 0, a: 0}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

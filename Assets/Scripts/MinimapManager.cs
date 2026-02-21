@@ -5,14 +5,19 @@ using System.Collections.Generic;
 public class MinimapManager : MonoBehaviour
 {
     [Header("Configuration")]
-    [SerializeField] private Vector2 roomIconSize = new Vector2(32, 16);
-    [SerializeField] private float spacing = 2f;
-    [SerializeField] private Color defaultRoomColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-    [SerializeField] private Color currentRoomColor = new Color(0f, 1f, 0f, 0.8f);
-    [SerializeField] private Color visitedRoomColor = new Color(0.8f, 0.8f, 0.8f, 0.6f);
+    [SerializeField] private Vector2 roomIconSize = new Vector2(28, 14);
+    [SerializeField] private float spacing = 3f;
+
+    // Room state colors
+    [SerializeField] private Color unvisitedColor  = new Color(0.40f, 0.40f, 0.40f, 0.85f); // gray
+    [SerializeField] private Color currentColor    = new Color(0.20f, 0.55f, 1.00f, 1.00f); // blue
+    [SerializeField] private Color visitedColor    = new Color(0.90f, 0.90f, 0.90f, 0.90f); // white
+
+    // Background panel tint
+    [SerializeField] private Color bgColor = Color.clear; // no background
 
     [Header("UI References")]
-    [SerializeField] private RectTransform container; // The panel that holds the icons
+    [SerializeField] private RectTransform container; // inner panel that holds the icons
 
     private Room[,] roomGrid;
     private Dictionary<Room, Image> roomIcons = new Dictionary<Room, Image>();
@@ -44,36 +49,48 @@ public class MinimapManager : MonoBehaviour
 
     private void CreateMinimapUI()
     {
-        // 1. Create Canvas
+        // ── Canvas ─────────────────────────────────────────────────────────────
         GameObject canvasObj = new GameObject("MinimapCanvas");
         Canvas canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 100; // On top of everything
+        canvas.sortingOrder = 100;
         canvasObj.AddComponent<CanvasScaler>();
         canvasObj.AddComponent<GraphicRaycaster>();
         DontDestroyOnLoad(canvasObj);
 
-        // 2. Create Background Panel (Container)
-        GameObject panelObj = new GameObject("MinimapPanel");
-        panelObj.transform.SetParent(canvasObj.transform, false);
-        
-        Image bg = panelObj.AddComponent<Image>();
-        bg.color = Color.clear; // Invisible background
+        // ── Dark background panel ──────────────────────────────────────────────
+        GameObject bgObj = new GameObject("MinimapBackground");
+        bgObj.transform.SetParent(canvasObj.transform, false);
 
-        container = panelObj.GetComponent<RectTransform>();
-        
-        // Align Top-Right
-        container.anchorMin = new Vector2(1, 1);
-        container.anchorMax = new Vector2(1, 1);
-        container.pivot = new Vector2(1, 1);
-        container.anchoredPosition = new Vector2(-20, -100); // Shifted down to avoid coin UI
-        container.sizeDelta = new Vector2(300, 200); // Fixed size for now, or dynamic?
+        Image bg = bgObj.AddComponent<Image>();
+        bg.color = bgColor;
+
+        RectTransform bgRect = bgObj.GetComponent<RectTransform>();
+        bgRect.anchorMin = new Vector2(1, 1);
+        bgRect.anchorMax = new Vector2(1, 1);
+        bgRect.pivot     = new Vector2(1, 1);
+        // Positioned at top-right, shifted down to avoid coin/score UI
+        bgRect.anchoredPosition = new Vector2(-10, -90);
+        bgRect.sizeDelta        = new Vector2(220, 160);
+
+        // ── Icon container (sits inside bg, slightly padded) ───────────────────
+        GameObject containerObj = new GameObject("MinimapPanel");
+        containerObj.transform.SetParent(bgObj.transform, false);
+
+        // Transparent – we only use it as a layout anchor
+        Image containerImg = containerObj.AddComponent<Image>();
+        containerImg.color = Color.clear;
+
+        container = containerObj.GetComponent<RectTransform>();
+        container.anchorMin = new Vector2(0.5f, 0.5f);
+        container.anchorMax = new Vector2(0.5f, 0.5f);
+        container.pivot     = new Vector2(0.5f, 0.5f);
+        container.anchoredPosition = Vector2.zero;
+        container.sizeDelta        = bgRect.sizeDelta - new Vector2(16, 16); // 8 px padding each side
     }
 
     private void Start()
     {
-        // Wait for generation to complete
-        // Since RoomManager runs in Start, we might need to wait a frame or check IsInitialized
         StartCoroutine(WaitForGeneration());
     }
 
@@ -83,7 +100,6 @@ public class MinimapManager : MonoBehaviour
         {
             yield return null;
         }
-
         GenerateMinimap();
     }
 
@@ -105,34 +121,34 @@ public class MinimapManager : MonoBehaviour
         int gridSizeX = roomGrid.GetLength(0);
         int gridSizeY = roomGrid.GetLength(1);
 
-        // Clear existing
+        // Clear existing icons
         foreach (Transform child in container)
-        {
             Destroy(child.gameObject);
-        }
         roomIcons.Clear();
 
-        // Find center for centering in container
-        // Or simply anchor relative to a pivot. 
-        // Let's assume container is Top-Right anchor.
-        
-        // We need to map grid coordinates to UI local position.
-        // Let's assume Grid (0,0) is bottom-left. 
-        // We want to center the whole map in the container? 
-        // Or just map it directly. Let's map directly relative to center of container for now and see.
+        // Resize background to fit the actual grid
+        float totalW = gridSizeX * (roomIconSize.x + spacing) - spacing + 24f;
+        float totalH = gridSizeY * (roomIconSize.y + spacing) - spacing + 24f;
 
+        // Walk up to the background object (container's parent)
+        RectTransform bgRect = container.parent as RectTransform;
+        if (bgRect != null)
+        {
+            bgRect.sizeDelta = new Vector2(Mathf.Max(totalW, 80f), Mathf.Max(totalH, 40f));
+            container.sizeDelta = bgRect.sizeDelta - new Vector2(16, 16);
+        }
+
+        // Create one icon per room
         for (int x = 0; x < gridSizeX; x++)
         {
             for (int y = 0; y < gridSizeY; y++)
             {
                 Room room = roomGrid[x, y];
                 if (room != null)
-                {
                     CreateRoomIcon(room, x, y, gridSizeX, gridSizeY);
-                }
             }
         }
-        
+
         HighlightCurrentRoom();
     }
 
@@ -141,54 +157,18 @@ public class MinimapManager : MonoBehaviour
         GameObject iconObj = new GameObject($"RoomIcon_{gridX}_{gridY}");
         iconObj.transform.SetParent(container, false);
 
+        // Solid rectangle – no sprite needed
         Image img = iconObj.AddComponent<Image>();
-        
-        // --- Custom Sprite Logic ---
-        Sprite iconSprite = null;
-        if (RoomManager.Instance != null)
-        {
-            switch (room.type)
-            {
-                case Room.RoomType.Normal:
-                    iconSprite = RoomManager.Instance.normalRoomSprite;
-                    break;
-                case Room.RoomType.Mysterious:
-                    iconSprite = RoomManager.Instance.mysteriousRoomSprite;
-                    break;
-                case Room.RoomType.Boss:
-                    iconSprite = RoomManager.Instance.bossRoomSprite;
-                    break;
-            }
-        }
-
-        if (iconSprite != null)
-        {
-            img.sprite = iconSprite;
-            // Set initial color for unvisited
-            if (RoomManager.Instance != null)
-                img.color = RoomManager.Instance.unvisitedRoomColor;
-            else
-                img.color = defaultRoomColor; 
-        }
-        else
-        {
-            // Fallback if no sprite assigned
-            img.color = defaultRoomColor;
-        }
+        img.color = unvisitedColor;
 
         RectTransform rect = iconObj.GetComponent<RectTransform>();
         rect.sizeDelta = roomIconSize;
 
-        // Calculate position based on grid
-        // Center the map in the container
-        float mapWidth = gridWidth * (roomIconSize.x + spacing);
-        float mapHeight = gridHeight * (roomIconSize.y + spacing);
+        // Center the whole grid inside the container
+        float posX = gridX * (roomIconSize.x + spacing);
+        float posY = gridY * (roomIconSize.y + spacing);
 
-        float posX = (gridX * (roomIconSize.x + spacing));
-        float posY = (gridY * (roomIconSize.y + spacing));
-
-        // Offset so that the middle of the grid is at (0,0) of the container
-        posX -= ((gridWidth - 1) * (roomIconSize.x + spacing)) / 2f;
+        posX -= ((gridWidth  - 1) * (roomIconSize.x + spacing)) / 2f;
         posY -= ((gridHeight - 1) * (roomIconSize.y + spacing)) / 2f;
 
         rect.anchoredPosition = new Vector2(posX, posY);
@@ -196,7 +176,6 @@ public class MinimapManager : MonoBehaviour
         roomIcons.Add(room, img);
     }
 
-    // Attempt to find and highlight the player's current room immediately after generation
     private void HighlightCurrentRoom()
     {
         GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -204,31 +183,19 @@ public class MinimapManager : MonoBehaviour
         {
             Room currentRoom = RoomManager.Instance.GetRoomAt(player.transform.position);
             if (currentRoom != null)
-            {
                 OnRoomEntered(currentRoom);
-            }
         }
     }
 
     private void OnRoomEntered(Room room)
     {
-        if (roomIcons.ContainsKey(room))
-        {
-            // Reset previous if needed (optional, effectively "visited" state)
-            if (currentRoomIcon != null && currentRoomIcon != roomIcons[room])
-            {
-                // Mark previous as visited (lighter color)
-                if (RoomManager.Instance != null)
-                    currentRoomIcon.color = RoomManager.Instance.visitedRoomColor;
-                else
-                    currentRoomIcon.color = visitedRoomColor;
-            }
+        if (!roomIcons.ContainsKey(room)) return;
 
-            currentRoomIcon = roomIcons[room];
-            if (RoomManager.Instance != null)
-                currentRoomIcon.color = RoomManager.Instance.currentRoomColor;
-            else
-                currentRoomIcon.color = currentRoomColor;
-        }
+        // Mark the previous room as visited
+        if (currentRoomIcon != null && currentRoomIcon != roomIcons[room])
+            currentRoomIcon.color = visitedColor;
+
+        currentRoomIcon = roomIcons[room];
+        currentRoomIcon.color = currentColor;
     }
 }

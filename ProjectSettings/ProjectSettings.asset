@@ -706,7 +706,8 @@ PlayerSettings:
   webGLCloseOnQuit: 0
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
-  scriptingDefineSymbols: {}
+  scriptingDefineSymbols:
+    WebGL: META_INSTANT_GAMES_SDK_V8
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
